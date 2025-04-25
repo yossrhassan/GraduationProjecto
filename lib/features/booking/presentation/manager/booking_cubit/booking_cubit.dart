@@ -16,6 +16,9 @@ class BookingCubit extends Cubit<BookingState> {
     fetchExistingBookings(); // ✅ Load data, but don't force a default date
   }
 
+  DateTime? _lastSelectedDate;
+  int? _lastCourtIndex;
+
   // Method to fetch existing bookings from API
   Future<void> fetchExistingBookings() async {
     print('Fetching existing bookings...');
@@ -198,8 +201,8 @@ class BookingCubit extends Cubit<BookingState> {
     // Keep the CURRENT selected date rather than resetting to today
     final updatedTimeSlots = generateTimeSlots(selectedDate);
     emit(BookingSelection(
-      date: selectedDate, // Keep the selected date, don't reset to today
-      courtIndex: courtIndex,
+      date: _lastSelectedDate ?? selectedDate,
+      courtIndex: _lastCourtIndex ?? courtIndex,
       selectedTimeIndices: [],
       timeSlots: updatedTimeSlots,
     ));
@@ -239,13 +242,13 @@ class BookingCubit extends Cubit<BookingState> {
   }
 
   void updateCourt(int courtIndex) {
+    _lastCourtIndex = courtIndex;
     if (state is BookingSelection) {
       final current = state as BookingSelection;
-      final timeSlots = generateTimeSlots(current.date);
       emit(current.copyWith(
         courtIndex: courtIndex,
-        timeSlots: timeSlots,
         selectedTimeIndices: [],
+        timeSlots: generateTimeSlots(current.date),
       ));
     }
   }
@@ -258,12 +261,12 @@ class BookingCubit extends Cubit<BookingState> {
   }
 
   void updateDate(DateTime date) {
+    _lastSelectedDate = date;
     if (state is BookingSelection) {
       final current = state as BookingSelection;
-      final timeSlots = generateTimeSlots(date);
       emit(current.copyWith(
         date: date,
-        timeSlots: timeSlots,
+        timeSlots: generateTimeSlots(date),
         selectedTimeIndices: [],
       ));
     }

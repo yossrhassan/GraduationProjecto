@@ -35,11 +35,6 @@ class _BookingViewBodyState extends State<BookingViewBody> {
       cubit.updateBooking(DateTime.now(), 0); // ✅ only set default once
     }
 
-    final state = cubit.state;
-    if (state is BookingSelection) {
-      cubit.updateBooking(state.date, state.courtIndex);
-    }
-
     // Check authentication status
     _checkAuthentication();
 
@@ -104,9 +99,9 @@ class _BookingViewBodyState extends State<BookingViewBody> {
         context.read<BookingCubit>().fetchExistingBookings();
 
         // The cubit should keep the date/court selection, but for extra safety:
-        context
-            .read<BookingCubit>()
-            .updateBooking(selectedDate, selectedCourtIndex);
+        // context
+        //     .read<BookingCubit>()
+        //     .updateBooking(selectedDate, selectedCourtIndex);
       } else {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
@@ -185,18 +180,21 @@ class _BookingViewBodyState extends State<BookingViewBody> {
           );
         }
 
-        DateTime selectedDate = DateTime.now();
-        int selectedCourt = 0;
-        List<Map<String, String>> timeSlots = [];
+        late DateTime selectedDate;
+        late int selectedCourt;
+        late List<Map<String, String>> timeSlots;
 
         if (state is BookingSelection) {
           selectedDate = state.date;
           selectedCourt = state.courtIndex;
           timeSlots = state.timeSlots;
-          // Synchronize our local selected court with state
+
           if (selectedCourtIndex != selectedCourt) {
             selectedCourtIndex = selectedCourt;
           }
+        } else {
+          // optional: show loading
+          return const Center(child: CircularProgressIndicator());
         }
 
         String key = getKey(selectedDate, selectedCourtIndex ?? 0);
