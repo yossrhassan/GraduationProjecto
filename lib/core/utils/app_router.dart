@@ -4,6 +4,9 @@ import 'package:graduation_project/core/utils/auth_manager.dart';
 import 'package:graduation_project/features/booking/data/repos/booking_repo.dart';
 import 'package:graduation_project/features/booking/presentation/manager/booking_cubit/booking_cubit.dart';
 import 'package:graduation_project/features/booking/presentation/views/booking_view.dart';
+import 'package:graduation_project/features/booking_history/data/repos/booking_history_repo.dart';
+import 'package:graduation_project/features/booking_history/presentation/manager/booking_history_cubit/booking_history_cubit.dart';
+import 'package:graduation_project/features/booking_history/presentation/views/booking_history_view.dart';
 import 'package:graduation_project/features/facilities/presentation/views/facilities_view.dart';
 import 'package:graduation_project/features/home/presentation/views/home_view.dart';
 import 'package:graduation_project/features/login/presentation/views/login_view.dart';
@@ -17,6 +20,7 @@ abstract class AppRouter {
   static const kLoginView = '/loginView';
   static const kRegisterView = '/registerView';
   static const kHomeView = '/homeView';
+  static const kBookingHistoryView = '/bookingHistoryView';
 
   static final router = GoRouter(
     routes: [
@@ -45,6 +49,15 @@ abstract class AppRouter {
           // Get the BookingRepo from the service locator
           create: (context) => BookingCubit(GetIt.instance<BookingRepo>()),
           child: const BookingView(),
+        ),
+      ),
+      GoRoute(
+        path: kBookingHistoryView,
+        builder: (context, state) => BlocProvider(
+          // Get the BookingRepo from the service locator
+          create: (context) =>
+              BookingHistoryCubit(GetIt.instance<BookingHistoryRepo>()),
+          child: const BookingHistoryView(),
         ),
       ),
       GoRoute(

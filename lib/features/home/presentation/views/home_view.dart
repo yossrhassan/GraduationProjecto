@@ -15,7 +15,11 @@ class HomeView extends StatelessWidget {
       appBar: AppBar(
         backgroundColor: kPrimaryColor,
         elevation: 0,
-        title: const Text("Home", style: TextStyle(fontSize: 26,fontWeight: FontWeight.bold,color: Colors.white)),
+        title: const Text("Home",
+            style: TextStyle(
+                fontSize: 26,
+                fontWeight: FontWeight.bold,
+                color: Colors.white)),
       ),
       bottomNavigationBar: BottomNavigationBar(
         backgroundColor: Colors.white,
@@ -64,7 +68,9 @@ class HomeView extends StatelessWidget {
                 icon: Icons.calendar_month,
                 label: "My Bookings",
                 filled: false,
-                onPressed: () {},
+                onPressed: () {
+                  GoRouter.of(context).push(AppRouter.kBookingHistoryView);
+                },
               ),
             ],
           ),
