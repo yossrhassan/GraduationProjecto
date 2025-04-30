@@ -16,14 +16,12 @@ class FacilitiesListView extends StatelessWidget {
           return Expanded(
             child: ListView.builder(
                 padding: EdgeInsets.zero,
-                physics: BouncingScrollPhysics(),
+                physics:  BouncingScrollPhysics(),
                 itemCount: state.facilities.length,
                 itemBuilder: (context, index) {
                   return Padding(
-                    padding: const EdgeInsets.only(bottom: 20),
-                    child: FacilitiesTile(
-                      facilitiesModel: state.facilities[index],
-                    ),
+                    padding:const EdgeInsets.only(bottom: 20),
+                    child: FacilitiesTile(facilitiesModel: state.facilities[index],),
                   );
                 }),
           );

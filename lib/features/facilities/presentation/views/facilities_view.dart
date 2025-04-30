@@ -5,6 +5,6 @@ class FacilitiesView extends StatelessWidget {
   const FacilitiesView({super.key});
   @override
   Widget build(BuildContext context) {
-    return FacilitiesViewBody();
+    return  FacilitiesViewBody();
   }
 }

@@ -19,6 +19,7 @@ class FacilitiesRepoImpl implements FacilitiesRepo {
           .toList();
 
       return right(facilities);
+      
     } catch (e) {
       if (e is DioError) {
         return left(ServerFailure.fromDioError(e));

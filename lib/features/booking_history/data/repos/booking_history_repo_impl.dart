@@ -3,7 +3,7 @@ import 'package:dartz/dartz.dart';
 import 'package:dio/dio.dart';
 import 'package:graduation_project/core/errors/failures.dart';
 import 'package:graduation_project/core/utils/api_service.dart';
-import 'package:graduation_project/features/booking_history/data/models/booking/booking.history.model.dart';
+import 'package:graduation_project/features/booking_history/data/models/booking/booking_history_model.dart';
 import 'package:graduation_project/features/booking_history/data/repos/booking_history_repo.dart';
 
 class BookingHistoryRepoImpl implements BookingHistoryRepo {

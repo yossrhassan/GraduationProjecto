@@ -3,9 +3,7 @@ import 'package:graduation_project/features/booking_history/presentation/views/w
 import 'package:graduation_project/features/facilities/data/models/facilities/facilities.model.dart';
 
 class BookingHistoryView extends StatelessWidget {
-  const BookingHistoryView({
-    super.key,
-  });
+  const BookingHistoryView({super.key,});
 
   @override
   Widget build(BuildContext context) {

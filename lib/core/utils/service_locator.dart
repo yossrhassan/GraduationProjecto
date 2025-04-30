@@ -24,5 +24,5 @@ void setup() {
   getIt.registerSingleton<BookingHistoryRepo>(
       BookingHistoryRepoImpl(getIt.get<ApiService>()));
 
-  getIt.registerSingleton<CourtsRepo>(CourtsRepoImpl(getIt.get<ApiService>()));
+      getIt.registerSingleton<CourtsRepo>(CourtsRepoImpl(getIt.get<ApiService>()));
 }

@@ -5,20 +5,20 @@ import 'package:graduation_project/features/facilities/data/models/facilities/fa
 class DescriptionFacilitiesTile extends StatelessWidget {
   const DescriptionFacilitiesTile({super.key, required this.facilitiesModel});
 
-  final FacilitiesModel facilitiesModel;
+final FacilitiesModel facilitiesModel;
 
   @override
   Widget build(BuildContext context) {
-    return Padding(
+    return  Padding(
       padding: EdgeInsets.only(left: 12),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(
-            facilitiesModel.name ?? '',
+           facilitiesModel.name??'' ,
             maxLines: 2,
             overflow: TextOverflow.ellipsis,
-            style: const TextStyle(
+            style:const  TextStyle(
               color: Colors.white,
               fontSize: 22,
               fontWeight: FontWeight.bold,
@@ -27,16 +27,16 @@ class DescriptionFacilitiesTile extends StatelessWidget {
           const SizedBox(
             height: 8,
           ),
-          Row(
+        Row(
             children: [
               const Icon(
                 Icons.location_on,
                 color: kPrimaryColor,
               ),
               Text(
-                facilitiesModel.address!.city!,
+                facilitiesModel.address!.city! ,
                 maxLines: 2,
-                style: TextStyle(color: Colors.white, fontSize: 16),
+                style:  TextStyle(color: Colors.white, fontSize: 16),
               ),
             ],
           )

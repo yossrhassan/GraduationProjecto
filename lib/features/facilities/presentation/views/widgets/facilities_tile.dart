@@ -9,11 +9,10 @@ import 'package:graduation_project/features/facilities/presentation/views/widget
 // cached network image
 class FacilitiesTile extends StatelessWidget {
   const FacilitiesTile({
-    super.key,
-    required this.facilitiesModel,
+    super.key, required this.facilitiesModel,
   });
 
-  final FacilitiesModel facilitiesModel;
+ final FacilitiesModel facilitiesModel;
 
   @override
   Widget build(BuildContext context) {
@@ -23,8 +22,7 @@ class FacilitiesTile extends StatelessWidget {
         //     MaterialPageRoute(builder: (BuildContext context) {
         //   return const BookingView();
         // }));
-        GoRouter.of(context)
-            .push(AppRouter.kBookingView, extra: facilitiesModel);
+        GoRouter.of(context).push(AppRouter.kBookingView,extra: facilitiesModel);
       },
       child: Container(
         decoration: BoxDecoration(
@@ -47,9 +45,7 @@ class FacilitiesTile extends StatelessWidget {
             const SizedBox(
               height: 12,
             ),
-            DescriptionFacilitiesTile(
-              facilitiesModel: facilitiesModel,
-            ),
+            DescriptionFacilitiesTile(facilitiesModel:facilitiesModel ,),
           ],
         ),
       ),

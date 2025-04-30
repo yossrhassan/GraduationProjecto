@@ -28,6 +28,10 @@ class _SplashViewBodyState extends State<SplashViewBody>
     navigateToHome();
   }
 
+<<<<<<< HEAD
+=======
+
+>>>>>>> my-local-version
   @override
   void dispose() {
     super.dispose();
@@ -35,6 +39,7 @@ class _SplashViewBodyState extends State<SplashViewBody>
     animationController.dispose();
   }
 
+<<<<<<< HEAD
   @override
   Widget build(BuildContext context) {
     return Stack(
@@ -71,14 +76,62 @@ class _SplashViewBodyState extends State<SplashViewBody>
     slidingAnimation =
         Tween<Offset>(begin: const Offset(0, 2), end: Offset.zero)
             .animate(animationController);
+=======
+@override
+Widget build(BuildContext context) {
+  return Stack(
+    children: [
+      // Background Image
+      Positioned.fill(
+        child: Image.asset(
+          AssetsData.backgroundImage, 
+          fit: BoxFit.cover,
+        ),
+      ),
+      
+      // Foreground Content
+      Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 36),
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            Image.asset(AssetsData.logo),
+            const SizedBox(height: 14),
+            SlidingText(slidingAnimation: slidingAnimation),
+          ],
+        ),
+      ),
+    ],
+  );
+}
+
+  void initSlidingAnimation() {
+    animationController =
+        AnimationController(vsync: this, duration:const Duration(seconds: 1));
+
+    slidingAnimation = Tween<Offset>(begin:const Offset(0, 2), end: Offset.zero)
+        .animate(animationController);
+>>>>>>> my-local-version
 
     animationController.forward();
   }
 
+<<<<<<< HEAD
   void navigateToHome() {
+=======
+
+
+
+    void navigateToHome() {
+>>>>>>> my-local-version
     Future.delayed(const Duration(seconds: 3), () {
       // Get.to(() => const LoginView(), transition: Transition.fade ,duration: kTransitionDuration);
       GoRouter.of(context).push(AppRouter.kLoginView);
     });
   }
+<<<<<<< HEAD
+=======
+
+>>>>>>> my-local-version
 }

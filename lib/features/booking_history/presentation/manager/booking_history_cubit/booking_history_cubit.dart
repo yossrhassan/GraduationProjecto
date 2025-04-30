@@ -1,6 +1,6 @@
 // booking_history_cubit.dart
 import 'package:bloc/bloc.dart';
-import 'package:graduation_project/features/booking_history/data/models/booking/booking.history.model.dart';
+import 'package:graduation_project/features/booking_history/data/models/booking/booking_history_model.dart';
 import 'package:graduation_project/features/booking_history/data/repos/booking_history_repo.dart';
 
 part 'booking_history_state.dart';

@@ -32,12 +32,10 @@ class LoginService {
 
       if (data is Map<String, dynamic>) {
         final userModel = LoginModel.fromJson(data);
-        print(
-            "Parsed LoginModel: id=${userModel.id}, token=${userModel.token}, email=${userModel.email}");
+        print("Parsed LoginModel: id=${userModel.id}, token=${userModel.token}, email=${userModel.email}");
 
         if (userModel.token == null || userModel.token!.isEmpty) {
-          throw Exception(
-              "Login failed: Token is null or empty. Parsed data: $data");
+          throw Exception("Login failed: Token is null or empty. Parsed data: $data");
         }
 
         await AuthManager.setAuthToken(userModel.token!);

@@ -18,9 +18,7 @@ class LoginModel {
   factory LoginModel.fromJson(Map<String, dynamic> json) {
     print("Parsing LoginModel from JSON: $json");
     return LoginModel(
-      id: json['data']['id'] is int
-          ? json['id']
-          : int.tryParse(json['id']?.toString() ?? '') ?? 0,
+      id: json['data']['id'] is int ? json['id'] : int.tryParse(json['id']?.toString() ?? '') ?? 0,
       name: json['data']['name']?.toString(),
       email: json['data']['email']?.toString(),
       token: json['data']['token']?.toString(),

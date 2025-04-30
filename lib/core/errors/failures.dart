@@ -7,7 +7,11 @@ abstract class Failure {
 
 class ServerFailure extends Failure {
   ServerFailure(super.errMessage);
+<<<<<<< HEAD
 
+=======
+  
+>>>>>>> my-local-version
   factory ServerFailure.fromDioError(DioError dioError) {
     switch (dioError.type) {
       case DioExceptionType.connectionTimeout:
@@ -35,19 +39,31 @@ class ServerFailure extends Failure {
         return ServerFailure('Unexpected error occurred');
     }
   }
+<<<<<<< HEAD
 
+=======
+  
+>>>>>>> my-local-version
   factory ServerFailure.fromResponse(int statusCode, dynamic response) {
     if (statusCode == 400 || statusCode == 401 || statusCode == 403) {
       // Handle null or unexpected response structures
       if (response == null) {
         return ServerFailure('Authentication error');
       }
+<<<<<<< HEAD
 
       try {
         // Try to safely access error message
         if (response is Map && response['error'] is Map) {
           return ServerFailure(response['error']['message']?.toString() ??
               'Authentication error');
+=======
+      
+      try {
+        // Try to safely access error message
+        if (response is Map && response['error'] is Map) {
+          return ServerFailure(response['error']['message']?.toString() ?? 'Authentication error');
+>>>>>>> my-local-version
         } else if (response is Map && response['message'] != null) {
           return ServerFailure(response['message'].toString());
         } else {
@@ -62,4 +78,8 @@ class ServerFailure extends Failure {
       return ServerFailure('Server error with status code: $statusCode');
     }
   }
+<<<<<<< HEAD
 }
+=======
+}
+>>>>>>> my-local-version

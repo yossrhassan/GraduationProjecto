@@ -4,9 +4,9 @@ import 'package:go_router/go_router.dart';
 import 'package:graduation_project/constants.dart';
 import 'package:graduation_project/core/utils/app_router.dart';
 import 'package:graduation_project/core/utils/auth_manager.dart';
-import 'package:graduation_project/features/booking/data/models/courts/courts.model.dart';
+import 'package:graduation_project/features/booking/data/models/courts.model.dart';
 import 'package:graduation_project/features/booking/presentation/manager/booking_cubit/booking_cubit.dart';
-import 'package:graduation_project/features/booking/presentation/manager/courts_cubit/courts_cubit.dart';
+import 'package:graduation_project/features/booking/presentation/manager/booking_cubit/courts_cubit.dart';
 import 'package:graduation_project/features/booking/presentation/views/widgets/bottom_booking_confirmation.dart';
 import 'package:graduation_project/features/booking/presentation/views/widgets/date_picker.dart';
 import 'package:graduation_project/features/facilities/data/models/facilities/facilities.model.dart';
@@ -189,9 +189,9 @@ class _BookingViewBodyState extends State<BookingViewBody> {
             backgroundColor: kBackGroundColor,
             title: Text(widget.facilitiesModel.name!,
                 style: const TextStyle(
-                  fontSize: 28,
-                  fontWeight: FontWeight.w500,
-                )),
+                    fontSize: 28,
+                    fontWeight: FontWeight.w500,
+                    )),
             centerTitle: true,
           ),
           body: BlocBuilder<BookingCubit, BookingState>(

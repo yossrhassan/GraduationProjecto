@@ -60,8 +60,7 @@ class _DatePickerWidgetState extends State<DatePickerWidget> {
                 child: DatePicker(
                   DateTime.now(),
                   daysCount: 7,
-                  initialSelectedDate:
-                      currentDate, // Always use the current selection
+                  initialSelectedDate: currentDate,  // Always use the current selection
                   selectionColor: kPrimaryColor,
                   selectedTextColor: Colors.white,
                   dayTextStyle: const TextStyle(

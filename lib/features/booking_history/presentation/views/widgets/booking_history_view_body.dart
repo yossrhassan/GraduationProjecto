@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:graduation_project/constants.dart';
-import 'package:graduation_project/features/booking_history/data/models/booking/booking.history.model.dart';
+import 'package:graduation_project/features/booking_history/data/models/booking/booking_history_model.dart';
 import 'package:graduation_project/features/booking_history/presentation/manager/booking_history_cubit/booking_history_cubit.dart';
 import 'package:intl/intl.dart';
 import 'package:url_launcher/url_launcher.dart';
