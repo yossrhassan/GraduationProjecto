@@ -11,7 +11,7 @@ class BottomBookingConfirmation extends StatelessWidget {
     required this.selectedTimeIndices,
     required this.onConfirm, required this.priceSlot,
   });
-  final int priceSlot;
+  final num priceSlot;
   final DateTime selectedDate;
   final List<Map<String, String>> timeSlots;
   final List<int> selectedTimeIndices;
@@ -40,7 +40,7 @@ List<List<int>> _groupConsecutiveIndices(List<int> indices) {
 
     final groupedSlots = _groupConsecutiveIndices(selectedTimeIndices);
 
-    int totalPrice = selectedTimeIndices.length *priceSlot ;
+    num totalPrice = selectedTimeIndices.length *priceSlot ;
 
     return Container(
       width: double.infinity,

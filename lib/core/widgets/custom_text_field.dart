@@ -8,7 +8,8 @@ class CustomTextField extends StatelessWidget {
       this.onchanged,
       this.obsecureText = false,
       this.prefixicon,
-      this.suffexicon, this.height});
+      this.suffexicon,
+      this.height});
 
   final String? hintText;
   final Function(String)? onchanged;
@@ -19,17 +20,17 @@ class CustomTextField extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return SizedBox(
-      height: height?? 50,
+      height: height ?? 50,
       child: TextFormField(
-        style: const TextStyle(color:kPrimaryColor ),
+        style: const TextStyle(color: kPrimaryColor),
         obscureText: obsecureText!,
         validator: (data) {
           if (data!.isEmpty) return 'field is required';
         },
         onChanged: onchanged,
-         textAlignVertical: TextAlignVertical.bottom,
+        textAlignVertical: TextAlignVertical.bottom,
         decoration: InputDecoration(
-            // filled: true, 
+            // filled: true,
             // fillColor: Color(0xff48444E),
             hintText: hintText,
             hintStyle: const TextStyle(color: Color(0xff7E807B)),

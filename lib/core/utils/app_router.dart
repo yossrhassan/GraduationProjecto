@@ -7,6 +7,7 @@ import 'package:graduation_project/features/booking/presentation/views/booking_v
 import 'package:graduation_project/features/booking_history/data/repos/booking_history_repo.dart';
 import 'package:graduation_project/features/booking_history/presentation/manager/booking_history_cubit/booking_history_cubit.dart';
 import 'package:graduation_project/features/booking_history/presentation/views/booking_history_view.dart';
+import 'package:graduation_project/features/facilities/data/models/facilities/facilities.model.dart';
 import 'package:graduation_project/features/facilities/presentation/views/facilities_view.dart';
 import 'package:graduation_project/features/home/presentation/views/home_view.dart';
 import 'package:graduation_project/features/login/presentation/views/login_view.dart';
@@ -26,6 +27,10 @@ abstract class AppRouter {
     routes: [
       GoRoute(
         path: '/',
+        builder: (context, state) => const SplashView(),
+      ),
+      GoRoute(
+        path: kLoginView,
         builder: (context, state) {
           final isAuthenticated = AuthManager.isAuthenticated;
           return isAuthenticated ? const HomeView() : const LoginView();
@@ -48,7 +53,9 @@ abstract class AppRouter {
         builder: (context, state) => BlocProvider(
           // Get the BookingRepo from the service locator
           create: (context) => BookingCubit(GetIt.instance<BookingRepo>()),
-          child: const BookingView(),
+          child: BookingView(
+            facilitiesModel: state.extra as FacilitiesModel,
+          ),
         ),
       ),
       GoRoute(

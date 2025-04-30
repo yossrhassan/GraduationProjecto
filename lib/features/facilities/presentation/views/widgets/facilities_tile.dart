@@ -22,7 +22,7 @@ class FacilitiesTile extends StatelessWidget {
         //     MaterialPageRoute(builder: (BuildContext context) {
         //   return const BookingView();
         // }));
-        GoRouter.of(context).push(AppRouter.kBookingView);
+        GoRouter.of(context).push(AppRouter.kBookingView,extra: facilitiesModel);
       },
       child: Container(
         decoration: BoxDecoration(

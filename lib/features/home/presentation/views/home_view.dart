@@ -13,28 +13,12 @@ class HomeView extends StatelessWidget {
     return Scaffold(
       backgroundColor: kBackGroundColor,
       appBar: AppBar(
-        backgroundColor: kPrimaryColor,
         elevation: 0,
         title: const Text("Home",
             style: TextStyle(
                 fontSize: 26,
                 fontWeight: FontWeight.bold,
-                color: Colors.white)),
-      ),
-      bottomNavigationBar: BottomNavigationBar(
-        backgroundColor: Colors.white,
-        selectedItemColor: kPrimaryColor,
-        unselectedItemColor: Colors.grey,
-        showUnselectedLabels: true,
-        items: const [
-          BottomNavigationBarItem(icon: Icon(Icons.home), label: "Home"),
-          BottomNavigationBarItem(
-              icon: Icon(Icons.emoji_events), label: "Tournaments"),
-          BottomNavigationBarItem(
-              icon: Icon(Icons.favorite_border), label: "Favorites"),
-          BottomNavigationBarItem(
-              icon: Icon(Icons.settings), label: "Settings"),
-        ],
+                color: kPrimaryColor)),
       ),
       body: SafeArea(
         child: Padding(
@@ -56,14 +40,6 @@ class HomeView extends StatelessWidget {
                   itemCount: 3,
                 ),
               ),
-              const SizedBox(height: 20),
-              CustomHomeButton(
-                icon: Icons.access_time,
-                label: "Search for Courts by Time",
-                filled: true,
-                onPressed: () {},
-              ),
-              const SizedBox(height: 10),
               CustomHomeButton(
                 icon: Icons.calendar_month,
                 label: "My Bookings",
@@ -72,6 +48,7 @@ class HomeView extends StatelessWidget {
                   GoRouter.of(context).push(AppRouter.kBookingHistoryView);
                 },
               ),
+             const SizedBox(height: 30,)
             ],
           ),
         ),

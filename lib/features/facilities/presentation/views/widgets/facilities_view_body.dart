@@ -16,10 +16,10 @@ class FacilitiesViewBody extends StatelessWidget {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title:const Text(
+        title: const Text(
           'Facilities',
           style: TextStyle(
-            color: Colors.white,
+            color: kPrimaryColor,
             fontSize: 26,
             fontWeight: FontWeight.bold,
           ),
@@ -27,46 +27,47 @@ class FacilitiesViewBody extends StatelessWidget {
         actions: [
           IconButton(
             onPressed: () {},
-            icon:const Icon(
+            icon: const Icon(
               Icons.notifications,
               color: kPrimaryColor,
             ),
           ),
-          IconButton(onPressed: () {}, icon:const Icon(FontAwesomeIcons.circleUser))
+          IconButton(
+              onPressed: () {}, icon: const Icon(FontAwesomeIcons.circleUser,color: kPrimaryColor,))
         ],
         // backgroundColor: Colors.transparent,
-        backgroundColor: kPrimaryColor,
         elevation: 0,
       ),
       extendBodyBehindAppBar: true,
       body: Container(
         decoration: BoxDecoration(
-          // gradient: RadialGradient(
-          //   center: Alignment.topLeft,
-          //   radius: 0.7,
-          //   colors: [
-          //     lighterColor,
-          //     lighterColor,
-          //     lighterColor,
-          //     Colors.black, // Darker outer area
-          //   ],
-          // ),
-          color: kBackGroundColor
-        ),
+            // gradient: RadialGradient(
+            //   center: Alignment.topLeft,
+            //   radius: 0.7,
+            //   colors: [
+            //     lighterColor,
+            //     lighterColor,
+            //     lighterColor,
+            //     Colors.black, // Darker outer area
+            //   ],
+            // ),
+            color: kBackGroundColor),
         child: const Padding(
-          padding:  EdgeInsets.only(top: 90, right: 20, left: 20),
+          padding: EdgeInsets.only(top: 90, right: 20, left: 20),
           child: Column(
             children: [
-              SizedBox(height: 20,),
+              SizedBox(
+                height: 20,
+              ),
               CustomTextField.CustomformTextField(
                 height: 40,
                 hintText: 'Search Court',
                 prefixicon: Icon(
                   Icons.search,
-                  color: Colors.white,
+                  color: kPrimaryColor,
                 ),
               ),
-             SizedBox(
+              SizedBox(
                 height: 20,
               ),
               FacilitiesListView()

@@ -63,23 +63,41 @@ class BookingRepoImpl implements BookingRepo {
     }
   }
 
+// In booking_repo_impl.dart, update the getBookings method
+
   @override
-  @override
-  Future<Either<Failure, Map<String, dynamic>>> getBookings() async {
+  Future<Either<Failure, Map<String, dynamic>>> getBookings(
+      {int? courtId}) async {
     try {
       // Use current date in ISO format (YYYY-MM-DD)
       final today = DateTime.now();
       final formattedDate =
           "${today.year}-${today.month.toString().padLeft(2, '0')}-${today.day.toString().padLeft(2, '0')}";
 
-      final response =
-          await apiService.get(endPoint: 'Booking/1/$formattedDate');
-      print('Bookings response: $response');
+      // Use facilityId if provided, otherwise default to 1
+      final actualCourtId = courtId ?? 1;
 
-      if (response != null && response is Map<String, dynamic>) {
-        return right(response);
+      // Log the request being made
+      print(
+          'Requesting bookings for facility $actualCourtId on date $formattedDate');
+
+      final response = await apiService.get(
+          endPoint: 'Booking/$actualCourtId/$formattedDate');
+
+      print('Raw booking response: $response');
+
+      if (response != null) {
+        if (response is Map<String, dynamic>) {
+          return right(response);
+        } else if (response is List) {
+          // Handle case where response is a list by wrapping it
+          return right({'bookings': response});
+        } else {
+          print('Unexpected response type: ${response.runtimeType}');
+          return left(ServerFailure('Unexpected response format'));
+        }
       } else {
-        return left(ServerFailure('Unexpected response format'));
+        return left(ServerFailure('Empty response from server'));
       }
     } catch (e) {
       print('Exception in getBookings: $e');

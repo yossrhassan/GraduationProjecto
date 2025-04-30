@@ -11,6 +11,7 @@ part 'booking_state.dart';
 class BookingCubit extends Cubit<BookingState> {
   Map<String, Set<int>> bookedSlots = {};
   final BookingRepo bookingRepo;
+  int? courtId;
 
   BookingCubit(this.bookingRepo) : super(BookingInitial()) {
     fetchExistingBookings(); // ✅ Load data, but don't force a default date
@@ -19,10 +20,21 @@ class BookingCubit extends Cubit<BookingState> {
   DateTime? _lastSelectedDate;
   int? _lastCourtIndex;
 
+  void setCourtId(int id) {
+    courtId = id;
+    fetchExistingBookings(); // Refresh bookings when facility changes
+  }
+
   // Method to fetch existing bookings from API
   Future<void> fetchExistingBookings() async {
-    print('Fetching existing bookings...');
-    final result = await bookingRepo.getBookings();
+    print('Fetching existing bookings for facility ID: $courtId');
+
+    if (courtId == null) {
+      print('No facility ID set, skipping booking fetch');
+      return;
+    }
+
+    final result = await bookingRepo.getBookings(courtId: courtId);
 
     result.fold((failure) {
       print('❌ Failed to load bookings: ${failure.errMessage}');
@@ -36,7 +48,15 @@ class BookingCubit extends Cubit<BookingState> {
         final dynamic rawCourtId = response['courtId'];
 
         if (rawBookingSlots is Map<String, dynamic> && rawCourtId is int) {
-          final courtIndex = rawCourtId - 1;
+          // IMPORTANT FIX: Use the courtIndex from the current UI selection
+          // This ensures the booking slots get marked correctly for the current UI view
+          int? currentCourtIndex;
+          if (state is BookingSelection) {
+            currentCourtIndex = (state as BookingSelection).courtIndex;
+          }
+
+          print(
+              'Processing bookings for court ID: $rawCourtId (UI index: $currentCourtIndex)');
 
           rawBookingSlots.forEach((dateString, slotsList) {
             final date = DateTime.parse(dateString);
@@ -54,8 +74,15 @@ class BookingCubit extends Cubit<BookingState> {
 
                   final slotIndices =
                       _getSlotIndicesForTimeRange(startTime, endTime);
-                  for (var slotIndex in slotIndices) {
-                    bookSlot(courtIndex, date, slotIndex);
+
+                  // Only process if we have a valid court index
+                  if (currentCourtIndex != null) {
+                    for (var slotIndex in slotIndices) {
+                      // Use the currentCourtIndex from UI
+                      bookSlot(currentCourtIndex, date, slotIndex);
+                      print(
+                          'Booking slot: date=$dateString, courtIndex=$currentCourtIndex, slotIndex=$slotIndex');
+                    }
                   }
                 }
               }
@@ -74,7 +101,8 @@ class BookingCubit extends Cubit<BookingState> {
         emit(BookingSelection(
           date: current.date,
           courtIndex: current.courtIndex,
-          selectedTimeIndices: [],
+          selectedTimeIndices:
+              current.selectedTimeIndices, // Preserve selected indices
           timeSlots: generateTimeSlots(current.date),
         ));
       }
@@ -114,10 +142,18 @@ class BookingCubit extends Cubit<BookingState> {
     }
   }
 
+// In booking_cubit.dart, update the confirmBooking method
+
   Future<bool> confirmBooking(DateTime selectedDate, int courtIndex,
       List<int> selectedTimeIndices) async {
     if (selectedTimeIndices.isEmpty) {
       emit(BookingError('No time slots selected'));
+      return false;
+    }
+
+    // Use the actual courtId that was set with setCourtId, not courtIndex + 1
+    if (courtId == null) {
+      emit(BookingError('No court selected'));
       return false;
     }
 
@@ -149,14 +185,8 @@ class BookingCubit extends Cubit<BookingState> {
     for (var group in groupedIndices) {
       if (group.isEmpty) continue;
 
-      print('Processing group: $group'); // Debug group contents
-      for (var index in group) {
-        if (index is! int) {
-          print('Invalid index type in group: $index (${index.runtimeType})');
-          emit(BookingError('Invalid group index type'));
-          return false;
-        }
-      }
+      // Debug output
+      print('Processing group: $group');
 
       final startSlotIndex = group.first;
       final endSlotIndex = group.last;
@@ -165,7 +195,7 @@ class BookingCubit extends Cubit<BookingState> {
       final endTimeString = timeSlots[endSlotIndex]['endTime'];
 
       final booking = BookingModel(
-        courtId: courtIndex + 1,
+        courtId: courtId, // Use the actual courtId from the API
         date: selectedDate.toIso8601String().split('T').first,
         startTime: startTimeString,
         endTime: endTimeString,
@@ -198,7 +228,6 @@ class BookingCubit extends Cubit<BookingState> {
     }
 
     // Always re-emit BookingSelection state with updated data to refresh UI
-    // Keep the CURRENT selected date rather than resetting to today
     final updatedTimeSlots = generateTimeSlots(selectedDate);
     emit(BookingSelection(
       date: _lastSelectedDate ?? selectedDate,
@@ -212,7 +241,7 @@ class BookingCubit extends Cubit<BookingState> {
       // Add short delay before switching back to BookingSelection state
       await Future.delayed(Duration(milliseconds: 200));
       emit(BookingSelection(
-        date: selectedDate, // Keep the selected date here too
+        date: selectedDate,
         courtIndex: courtIndex,
         selectedTimeIndices: [],
         timeSlots: updatedTimeSlots,
@@ -220,9 +249,8 @@ class BookingCubit extends Cubit<BookingState> {
     }
 
     return allSuccess;
-  }
+  } // Helper method to group consecutive indices
 
-  // Helper method to group consecutive indices
   List<List<int>> _groupConsecutiveIndices(List<int> indices) {
     if (indices.isEmpty) return [];
     indices.sort();
@@ -316,7 +344,10 @@ class BookingCubit extends Cubit<BookingState> {
   bool isSlotBooked(DateTime selectedDate, int courtIndex, int slotIndex) {
     final dateKey =
         "${selectedDate.toIso8601String().split('T').first}_court_$courtIndex";
-    return bookedSlots[dateKey]?.contains(slotIndex) ?? false;
+    final isBooked = bookedSlots[dateKey]?.contains(slotIndex) ?? false;
+    print(
+        'Checking if slot is booked: date=${selectedDate.toIso8601String().split('T').first}, courtIndex=$courtIndex, slotIndex=$slotIndex, isBooked=$isBooked');
+    return isBooked;
   }
 
   bool isPastTimeSlot(DateTime slotTime) {

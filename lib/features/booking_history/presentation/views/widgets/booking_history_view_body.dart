@@ -1,8 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:graduation_project/constants.dart';
+import 'package:graduation_project/features/booking_history/data/models/booking/booking_history_model.dart';
 import 'package:graduation_project/features/booking_history/presentation/manager/booking_history_cubit/booking_history_cubit.dart';
 import 'package:intl/intl.dart';
-import 'package:graduation_project/features/booking/data/models/booking.model.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 class BookingHistoryViewBody extends StatefulWidget {
   const BookingHistoryViewBody({super.key});
@@ -29,6 +31,10 @@ class _BookingHistoryViewBodyState extends State<BookingHistoryViewBody>
         title: const Text("My Bookings"),
         bottom: TabBar(
           controller: _tabController,
+          indicatorColor: kPrimaryColor, // underline color
+          labelColor: kPrimaryColor, // selected tab text color
+          unselectedLabelColor: Colors.grey, // unselected tab text color
+          indicatorWeight: 3, // thickness of the underline
           tabs: const [
             Tab(text: "Upcoming"),
             Tab(text: "Past"),
@@ -57,14 +63,14 @@ class _BookingHistoryViewBodyState extends State<BookingHistoryViewBody>
     );
   }
 
-  Widget _buildBookingList(List<BookingModel> bookings,
+  Widget _buildBookingList(List<BookingHistoryModel> bookings,
       {required bool isPast}) {
     if (bookings.isEmpty) {
       return const Center(
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Icon(Icons.calendar_month, size: 80, color: Colors.blue),
+            Icon(Icons.calendar_month, size: 80, color: kPrimaryColor),
             SizedBox(height: 10),
             Text("You have no bookings yet.", style: TextStyle(fontSize: 16)),
           ],
@@ -84,20 +90,26 @@ class _BookingHistoryViewBodyState extends State<BookingHistoryViewBody>
         final day = DateFormat.yMMMEd().format(DateTime.parse(booking.date!));
 
         return Card(
+          color: kBackGroundColor,
           margin: const EdgeInsets.only(bottom: 16),
           child: Padding(
             padding: const EdgeInsets.all(16),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text("Court ${booking.courtId}",
+                // Display facility name at the top
+                Text(booking.facilityName ?? "Unknown Facility",
+                    style: const TextStyle(
+                        fontWeight: FontWeight.bold, fontSize: 20, color: kPrimaryColor)),
+                const SizedBox(height: 8),
+                Text("${booking.courtName}",
                     style: const TextStyle(
                         fontWeight: FontWeight.bold, fontSize: 18)),
                 const SizedBox(height: 4),
                 Text("$start to $end", style: const TextStyle(fontSize: 16)),
                 Text(day, style: const TextStyle(fontSize: 16)),
                 const SizedBox(height: 8),
-                const Text("Total Price: ${'300'} EGP",
+                Text("Total Price: ${booking.totalPrice ?? '300'} EGP",
                     style: const TextStyle(fontSize: 16)),
                 const SizedBox(height: 12),
                 Row(
@@ -110,18 +122,34 @@ class _BookingHistoryViewBodyState extends State<BookingHistoryViewBody>
                                 // Handle cancellation
                               },
                         style: ElevatedButton.styleFrom(
-                          backgroundColor: isPast ? Colors.grey : Colors.red,
+                          backgroundColor: isPast ? Colors.white : Colors.red,
                         ),
-                        child: Text(isPast ? "Past Booking" : "Cancel Booking"),
+                        child: Text(
+                          isPast ? "Past Booking" : "Cancel",
+                          textAlign: TextAlign.center,
+                          style: const TextStyle(color: Colors.white),
+                        ),
                       ),
                     ),
                     const SizedBox(width: 10),
                     ElevatedButton.icon(
-                      onPressed: () {
-                        // Maybe open maps
+                      onPressed: () async {
+                        Uri uri = Uri.parse(
+                            'https://maps.app.goo.gl/qfYRLHfXK6tRzzU59');
+                        if (await canLaunchUrl(uri)) {
+                          await launchUrl(uri);
+                        } else {
+                          print('Could not launch the URL');
+                        }
                       },
-                      icon: const Icon(Icons.map),
-                      label: const Text("Get Directions"),
+                      icon: const Icon(
+                        Icons.map,
+                        color: Colors.white,
+                      ),
+                      label: const Text("Get Directions",
+                          style: TextStyle(
+                            color: Colors.white,
+                          )),
                     ),
                   ],
                 )

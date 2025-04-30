@@ -1,3 +1,4 @@
+// booking_history_state.dart (part of booking_history_cubit.dart)
 part of 'booking_history_cubit.dart';
 
 abstract class BookingHistoryState {}
@@ -5,8 +6,8 @@ abstract class BookingHistoryState {}
 class BookingHistoryLoading extends BookingHistoryState {}
 
 class BookingHistoryLoaded extends BookingHistoryState {
-  final List<BookingModel> upcomingBookings;
-  final List<BookingModel> pastBookings;
+  final List<BookingHistoryModel> upcomingBookings;
+  final List<BookingHistoryModel> pastBookings;
 
   BookingHistoryLoaded(
       {required this.upcomingBookings, required this.pastBookings});
