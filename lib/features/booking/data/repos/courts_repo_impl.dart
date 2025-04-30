@@ -3,7 +3,7 @@ import 'package:dartz/dartz.dart';
 import 'package:dio/dio.dart';
 import 'package:graduation_project/core/errors/failures.dart';
 import 'package:graduation_project/core/utils/api_service.dart';
-import 'package:graduation_project/features/booking/data/models/courts.model.dart';
+import 'package:graduation_project/features/booking/data/models/courts/courts.model.dart';
 import 'package:graduation_project/features/booking/data/repos/courts_repo.dart';
 class CourtsRepoImpl implements CourtsRepo {
   final ApiService apiService;

@@ -4,7 +4,7 @@ import 'package:go_router/go_router.dart';
 import 'package:graduation_project/constants.dart';
 import 'package:graduation_project/core/utils/app_router.dart';
 import 'package:graduation_project/core/utils/auth_manager.dart';
-import 'package:graduation_project/features/booking/data/models/courts.model.dart';
+import 'package:graduation_project/features/booking/data/models/courts/courts.model.dart';
 import 'package:graduation_project/features/booking/presentation/manager/booking_cubit/booking_cubit.dart';
 import 'package:graduation_project/features/booking/presentation/manager/booking_cubit/courts_cubit.dart';
 import 'package:graduation_project/features/booking/presentation/views/widgets/bottom_booking_confirmation.dart';

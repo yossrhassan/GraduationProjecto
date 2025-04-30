@@ -1,6 +1,6 @@
 // courts_cubit.dart
 import 'package:bloc/bloc.dart';
-import 'package:graduation_project/features/booking/data/models/courts.model.dart';
+import 'package:graduation_project/features/booking/data/models/courts/courts.model.dart';
 import 'package:graduation_project/features/booking/data/repos/courts_repo.dart';
 import 'package:meta/meta.dart';
 
