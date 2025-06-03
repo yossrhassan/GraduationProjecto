@@ -125,13 +125,24 @@ class _LoginViewState extends State<LoginView> {
 
                       if (result != null && result['user'] != null) {
                         LoginModel user = result['user'];
+                        print('Login successful. User data: ${user.toJson()}');
 
                         if (user.token != null && user.token!.isNotEmpty) {
                           await AuthManager.setAuthToken(user.token!);
-                          print(
-                              'Token set successfully in LoginView: ${user.token}');
-                          print(
-                              'AuthManager token after login: ${AuthManager.authToken}');
+                          print('Token set successfully: ${user.token}');
+
+                          if (user.id != null) {
+                            print('Setting user ID: ${user.id}');
+                            await AuthManager.setUserId(user.id!);
+                            print('User ID set successfully: ${user.id}');
+                          } else {
+                            print('Warning: User ID is null in login response');
+                          }
+
+                          print('Current AuthManager state:');
+                          print('- Token: ${AuthManager.authToken}');
+                          print('- User ID: ${AuthManager.userId}');
+
                           showSnackBar(context, 'Logged in successfully');
                           GoRouter.of(context).push(AppRouter.kHomeView);
                         } else {

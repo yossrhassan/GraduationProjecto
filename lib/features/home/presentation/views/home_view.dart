@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:graduation_project/core/utils/app_router.dart';
 import 'package:graduation_project/constants.dart';
+import 'package:graduation_project/core/utils/auth_manager.dart';
 import 'package:graduation_project/features/home/presentation/views/widgets/custom_home_button.dart';
 import 'package:graduation_project/features/home/presentation/views/widgets/navigation_card.dart';
 
@@ -10,6 +11,8 @@ class HomeView extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final int? currentUserId = AuthManager.userId;
+    print('Current user ID: ${AuthManager.userId}');
     return Scaffold(
       backgroundColor: kBackGroundColor,
       appBar: AppBar(
@@ -19,6 +22,18 @@ class HomeView extends StatelessWidget {
                 fontSize: 26,
                 fontWeight: FontWeight.bold,
                 color: kPrimaryColor)),
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.logout, color: kPrimaryColor),
+            onPressed: () async {
+              await AuthManager.clearUserId();
+              await AuthManager.clearAuthToken();
+              if (context.mounted) {
+                GoRouter.of(context).push(AppRouter.kLoginView);
+              }
+            },
+          ),
+        ],
       ),
       body: SafeArea(
         child: Padding(
@@ -48,7 +63,20 @@ class HomeView extends StatelessWidget {
                   GoRouter.of(context).push(AppRouter.kBookingHistoryView);
                 },
               ),
-             const SizedBox(height: 30,)
+              const SizedBox(
+                height: 30,
+              ),
+              CustomHomeButton(
+                icon: Icons.calendar_month,
+                label: "player matching",
+                filled: false,
+                onPressed: () {
+                  GoRouter.of(context).push(AppRouter.kMatchesView);
+                },
+              ),
+              const SizedBox(
+                height: 30,
+              )
             ],
           ),
         ),
