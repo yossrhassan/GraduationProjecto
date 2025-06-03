@@ -9,12 +9,15 @@ import 'package:graduation_project/core/utils/auth_manager.dart';
 import 'package:graduation_project/core/utils/service_locator.dart';
 import 'package:graduation_project/features/facilities/data/repos/facilities_repo_impl.dart';
 import 'package:graduation_project/features/facilities/presentation/manager/facilities_cubit/facilities_cubit.dart';
+import 'package:graduation_project/features/player_matching/data/repos/matches_repo.dart';
+import 'package:graduation_project/features/player_matching/presentation/manager/match_cubit/match_cubit.dart';
 import 'package:graduation_project/features/splash/presentation/views/splash_view.dart';
 
 void main() async {
   setup();
   WidgetsFlutterBinding.ensureInitialized();
   await AuthManager.loadAuthToken();
+  await AuthManager.loadUserId();
 
   runApp(const GraduationProject());
 }
@@ -30,12 +33,15 @@ class GraduationProject extends StatelessWidget {
           create: (context) => FacilitiesCubit(getIt.get<FacilitiesRepoImpl>())
             ..fetchFacilities(),
         ),
+        BlocProvider(
+          create: (context) => MatchesCubit(getIt<MatchesRepository>()),
+        ),
       ],
       child: MaterialApp.router(
         routerConfig: AppRouter.router,
         debugShowCheckedModeBanner: false,
         theme: ThemeData.dark().copyWith(
-            scaffoldBackgroundColor: kPrimaryColor,
+            scaffoldBackgroundColor: Colors.black,
             textTheme:
                 GoogleFonts.montserratTextTheme(ThemeData.dark().textTheme)),
       ),

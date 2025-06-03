@@ -4,5 +4,6 @@ import 'package:graduation_project/features/booking/data/models/booking.model.da
 
 abstract class BookingRepo {
   Future<Either<Failure, bool>> confirmBookingApi(BookingModel booking);
-  Future<Either<Failure, Map<String, dynamic>>> getBookings();
+  // Updated to include facilityId parameter
+  Future<Either<Failure, Map<String, dynamic>>> getBookings({int? courtId});
 }

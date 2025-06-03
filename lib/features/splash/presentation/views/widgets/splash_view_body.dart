@@ -28,7 +28,6 @@ class _SplashViewBodyState extends State<SplashViewBody>
     navigateToHome();
   }
 
-
   @override
   void dispose() {
     super.dispose();
@@ -84,5 +83,4 @@ Widget build(BuildContext context) {
       GoRouter.of(context).push(AppRouter.kLoginView);
     });
   }
-
 }

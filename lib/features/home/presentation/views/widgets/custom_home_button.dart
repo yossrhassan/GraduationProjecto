@@ -32,13 +32,13 @@ class CustomHomeButton extends StatelessWidget {
           )
         : OutlinedButton.icon(
             onPressed: onPressed,
-            icon: Icon(icon, color: Colors.white),
+            icon: Icon(icon, color: kPrimaryColor),
             label: Text(
               label,
-              style: const TextStyle(color: Colors.white),
+              style: const TextStyle(color: kPrimaryColor),
             ),
             style: OutlinedButton.styleFrom(
-              side: const BorderSide(color: Colors.white),
+              side: const BorderSide(color: kPrimaryColor),
               minimumSize: const Size(double.infinity, 50),
               shape: RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(20),

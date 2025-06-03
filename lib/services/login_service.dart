@@ -1,4 +1,3 @@
-
 import 'package:graduation_project/core/utils/api.dart';
 import 'package:graduation_project/features/login/data/models/login_model.dart';
 
@@ -7,25 +6,39 @@ class LoginService {
     required String email,
     required String password,
   }) async {
-    final Map<String,String> requestBody = {
+    final Map<String, String> requestBody = {
       'email': email,
       'password': password,
     };
 
     final dynamic response = await Api().post(
-      url: 'http://10.0.2.2:5000/api/Auth/login', 
-      body: requestBody, 
+      url: 'http://10.0.2.2:5000/api/Auth/login',
+      body: requestBody,
     );
-if (response is String) {
-      return {'token': response}; // Return as a map to avoid errors
-    } 
-    // ✅ Check if response is a JSON object (user data)
-    else if (response is Map<String, dynamic>) {
-      return {'user': LoginModel.fromJson(response)};
-    } 
 
-    // ❌ Handle unexpected response type
-    else {
-      throw Exception('Unexpected response format: $response');
-    }  }
+    print("🧪 Full Login Response: $response");
+    print("🧪 Response Type: ${response.runtimeType}");
+
+    if (response is Map<String, dynamic>) {
+      print("🧪 Response Keys: ${response.keys.toList()}");
+
+      if (response.containsKey('data')) {
+        var data = response['data'];
+        print("🧪 Data Type: ${data.runtimeType}");
+        print("🧪 Data Content: $data");
+
+        if (data is Map<String, dynamic>) {
+          print("🧪 Data Keys: ${data.keys.toList()}");
+
+          // Create LoginModel directly from the data
+          final userModel = LoginModel.fromJson(data);
+          print(
+              "🧪 Created LoginModel: id=${userModel.id}, token=${userModel.token}, email=${userModel.email}");
+          return {'user': userModel};
+        }
+      }
+    }
+
+    throw Exception('Unexpected response format: $response');
+  }
 }

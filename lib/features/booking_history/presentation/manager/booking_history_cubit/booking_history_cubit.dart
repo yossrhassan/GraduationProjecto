@@ -1,6 +1,6 @@
+// booking_history_cubit.dart
 import 'package:bloc/bloc.dart';
-import 'package:graduation_project/features/booking/data/models/booking.model.dart';
-import 'package:graduation_project/features/booking/data/repos/booking_repo.dart';
+import 'package:graduation_project/features/booking_history/data/models/booking/booking_history_model.dart';
 import 'package:graduation_project/features/booking_history/data/repos/booking_history_repo.dart';
 
 part 'booking_history_state.dart';
@@ -13,7 +13,7 @@ class BookingHistoryCubit extends Cubit<BookingHistoryState> {
   Future<void> loadBookings() async {
     emit(BookingHistoryLoading());
 
-    final result = await bookinghistoryRepo.getUserBookings(); // implement this
+    final result = await bookinghistoryRepo.getUserBookings();
 
     result.fold(
       (failure) => emit(BookingHistoryError(failure.errMessage)),

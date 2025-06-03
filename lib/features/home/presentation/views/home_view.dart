@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:graduation_project/core/utils/app_router.dart';
 import 'package:graduation_project/constants.dart';
+import 'package:graduation_project/core/utils/auth_manager.dart';
 import 'package:graduation_project/features/home/presentation/views/widgets/custom_home_button.dart';
 import 'package:graduation_project/features/home/presentation/views/widgets/navigation_card.dart';
 
@@ -10,30 +11,28 @@ class HomeView extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final int? currentUserId = AuthManager.userId;
+    print('Current user ID: ${AuthManager.userId}');
     return Scaffold(
       backgroundColor: kBackGroundColor,
       appBar: AppBar(
-        backgroundColor: kPrimaryColor,
         elevation: 0,
         title: const Text("Home",
             style: TextStyle(
                 fontSize: 26,
                 fontWeight: FontWeight.bold,
-                color: Colors.white)),
-      ),
-      bottomNavigationBar: BottomNavigationBar(
-        backgroundColor: Colors.white,
-        selectedItemColor: kPrimaryColor,
-        unselectedItemColor: Colors.grey,
-        showUnselectedLabels: true,
-        items: const [
-          BottomNavigationBarItem(icon: Icon(Icons.home), label: "Home"),
-          BottomNavigationBarItem(
-              icon: Icon(Icons.emoji_events), label: "Tournaments"),
-          BottomNavigationBarItem(
-              icon: Icon(Icons.favorite_border), label: "Favorites"),
-          BottomNavigationBarItem(
-              icon: Icon(Icons.settings), label: "Settings"),
+                color: kPrimaryColor)),
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.logout, color: kPrimaryColor),
+            onPressed: () async {
+              await AuthManager.clearUserId();
+              await AuthManager.clearAuthToken();
+              if (context.mounted) {
+                GoRouter.of(context).push(AppRouter.kLoginView);
+              }
+            },
+          ),
         ],
       ),
       body: SafeArea(
@@ -56,14 +55,6 @@ class HomeView extends StatelessWidget {
                   itemCount: 3,
                 ),
               ),
-              const SizedBox(height: 20),
-              CustomHomeButton(
-                icon: Icons.access_time,
-                label: "Search for Courts by Time",
-                filled: true,
-                onPressed: () {},
-              ),
-              const SizedBox(height: 10),
               CustomHomeButton(
                 icon: Icons.calendar_month,
                 label: "My Bookings",
@@ -72,6 +63,20 @@ class HomeView extends StatelessWidget {
                   GoRouter.of(context).push(AppRouter.kBookingHistoryView);
                 },
               ),
+              const SizedBox(
+                height: 30,
+              ),
+              CustomHomeButton(
+                icon: Icons.calendar_month,
+                label: "player matching",
+                filled: false,
+                onPressed: () {
+                  GoRouter.of(context).push(AppRouter.kMatchesView);
+                },
+              ),
+              const SizedBox(
+                height: 30,
+              )
             ],
           ),
         ),
