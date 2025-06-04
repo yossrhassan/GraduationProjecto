@@ -67,8 +67,9 @@ class ApiService {
         print('Response status: ${e.response?.statusCode}');
         print('Response body: ${e.response?.data}');
         _handleAuthError(e);
-        throw Exception(
-            'Request failed with status: ${e.response?.statusCode}, body: ${e.response?.data}');
+
+        // Preserve the original DioException so repositories can handle specific cases
+        rethrow; // This preserves the original DioException
       } else {
         print('Unexpected error during POST request: $e');
         throw Exception('Unexpected error: $e');
@@ -83,6 +84,3 @@ class ApiService {
     }
   }
 }
-
-
-

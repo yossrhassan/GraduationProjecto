@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:uuid/uuid.dart';
 import 'package:get_it/get_it.dart';
 import 'package:graduation_project/features/booking_history/data/models/booking/booking_history_model.dart';
 import 'package:graduation_project/features/booking_history/presentation/manager/booking_history_cubit/booking_history_cubit.dart';
@@ -65,9 +64,6 @@ class _MatchCreationViewState extends State<MatchCreationView> {
             icon: const Icon(Icons.check, color: Colors.white),
             onPressed: () {
               if (formKey.currentState!.validate() && selectedBooking != null) {
-                // Create match data from form inputs and selected booking
-                final String matchId = const Uuid().v4();
-
                 // Extract match type from the selected option
                 final String matchType = numberOfPlayers.contains('5v5')
                     ? '5v5'
@@ -84,13 +80,12 @@ class _MatchCreationViewState extends State<MatchCreationView> {
                   'sportType': sportType,
                   'teamSize': totalPlayers ~/
                       2, // Divide total players by 2 for team size
-                  'title': '6 october', // Set city name as title
+                  'title':
+                      titleController.text, // Use the actual location input
                   'description': descriptionController.text,
                   'minSkillLevel': minSkillLevel,
                   'maxSkillLevel': maxSkillLevel,
                   'isPrivate': isPrivate,
-                  // Additional data for UI
-                  'id': matchId,
                   'date': selectedBooking!.date,
                   'time':
                       '${selectedBooking!.startTime} - ${selectedBooking!.endTime}',

@@ -18,6 +18,7 @@ void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await AuthManager.loadAuthToken();
   await AuthManager.loadUserId();
+  await AuthManager.loadJoinedMatches();
 
   runApp(const GraduationProject());
 }

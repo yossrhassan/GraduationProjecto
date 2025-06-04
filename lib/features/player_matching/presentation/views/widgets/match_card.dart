@@ -27,11 +27,22 @@ class MatchCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    // Simple status display based on whether user created this match
-    final String displayStatus = isCreator ? 'CREATED' : status;
-    final Color statusColor =
-        isCreator ? const Color(0xFF00A36C) : Colors.transparent;
-    final bool hasBorder = !isCreator;
+    // Status display and color logic
+    String displayStatus;
+    Color statusColor;
+    bool hasBorder = false;
+
+    if (isCreator) {
+      displayStatus = 'CREATED';
+      statusColor = const Color(0xFF00A36C); // Green for created
+    } else if (status.toLowerCase() == 'joined') {
+      displayStatus = 'JOINED';
+      statusColor = const Color(0xFF2196F3); // Blue for joined
+    } else {
+      displayStatus = status.toUpperCase();
+      statusColor = Colors.transparent;
+      hasBorder = true;
+    }
 
     return GestureDetector(
       onTap: onTap,
@@ -95,7 +106,7 @@ class MatchCard extends StatelessWidget {
                   child: Text(
                     displayStatus,
                     style: TextStyle(
-                      color: isCreator ? Colors.white : Colors.black54,
+                      color: hasBorder ? Colors.black54 : Colors.white,
                       fontSize: 12,
                       fontWeight: FontWeight.w500,
                     ),

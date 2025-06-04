@@ -140,6 +140,76 @@ class AuthManager {
   static Future<void> clearAll() async {
     await clearAuthToken();
     await clearUserId();
+    await clearJoinedMatches();
     authStateChanges.value = false;
+  }
+
+  // Joined matches tracking
+  static Set<String> _joinedMatchIds = {};
+  // Track which team user joined for each match
+  static Map<String, String> _joinedMatchTeams = {};
+
+  static Set<String> get joinedMatchIds => _joinedMatchIds;
+
+  static Future<void> addJoinedMatch(String matchId, [String? team]) async {
+    _joinedMatchIds.add(matchId);
+    if (team != null) {
+      _joinedMatchTeams[matchId] = team;
+    }
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.setStringList('joined_matches', _joinedMatchIds.toList());
+      if (_joinedMatchTeams.isNotEmpty) {
+        await prefs.setString(
+            'joined_match_teams', json.encode(_joinedMatchTeams));
+      }
+      print(
+          'Added joined match: $matchId (team: $team). Total joined: ${_joinedMatchIds.length}');
+    } catch (e) {
+      print('Failed to save joined match $matchId: $e');
+    }
+  }
+
+  static Future<void> loadJoinedMatches() async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      final joinedList = prefs.getStringList('joined_matches') ?? [];
+      _joinedMatchIds = joinedList.toSet();
+
+      // Load joined match teams
+      final joinedTeamsJson = prefs.getString('joined_match_teams');
+      if (joinedTeamsJson != null) {
+        final decodedTeams =
+            json.decode(joinedTeamsJson) as Map<String, dynamic>;
+        _joinedMatchTeams = decodedTeams.cast<String, String>();
+      }
+
+      print(
+          'Loaded ${_joinedMatchIds.length} joined matches: $_joinedMatchIds');
+      print('Loaded joined match teams: $_joinedMatchTeams');
+    } catch (e) {
+      print('Failed to load joined matches: $e');
+    }
+  }
+
+  static Future<void> clearJoinedMatches() async {
+    _joinedMatchIds.clear();
+    _joinedMatchTeams.clear();
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.remove('joined_matches');
+      await prefs.remove('joined_match_teams');
+      print('Cleared all joined matches');
+    } catch (e) {
+      print('Failed to clear joined matches: $e');
+    }
+  }
+
+  static bool hasJoinedMatch(String matchId) {
+    return _joinedMatchIds.contains(matchId);
+  }
+
+  static String? getJoinedTeam(String matchId) {
+    return _joinedMatchTeams[matchId];
   }
 }

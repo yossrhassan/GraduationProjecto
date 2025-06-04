@@ -10,24 +10,24 @@ class MatchesLoading extends MatchesState {}
 
 class AvailableMatchesLoaded extends MatchesState {
   final List<MatchModel> matches;
-  
+
   AvailableMatchesLoaded(this.matches);
 }
 
 class MyMatchesLoaded extends MatchesState {
   final List<MatchModel> matches;
-  
+
   MyMatchesLoaded(this.matches);
 }
 
 class MatchDetailsLoaded extends MatchesState {
   final MatchModel match;
-  
+
   MatchDetailsLoaded(this.match);
 }
 
 class MatchesError extends MatchesState {
   final String message;
-  
+
   MatchesError(this.message);
 }

@@ -20,12 +20,17 @@ class MatchesView extends StatefulWidget {
 }
 
 class _MatchesViewState extends State<MatchesView>
-    with SingleTickerProviderStateMixin {
+    with SingleTickerProviderStateMixin, WidgetsBindingObserver {
   late TabController _tabController;
+
+  // Cache for storing previous data to show during loading
+  List<MatchModel>? _cachedAvailableMatches;
+  List<MatchModel>? _cachedMyMatches;
 
   @override
   void initState() {
     super.initState();
+    WidgetsBinding.instance.addObserver(this);
     _tabController = TabController(
       length: 2,
       vsync: this,
@@ -43,8 +48,10 @@ class _MatchesViewState extends State<MatchesView>
     _tabController.addListener(() {
       if (!_tabController.indexIsChanging) {
         if (_tabController.index == 0) {
+          // Load available matches silently in background
           _loadAvailableMatches();
         } else {
+          // Load my matches silently in background
           _loadMyMatches();
         }
       }
@@ -59,10 +66,38 @@ class _MatchesViewState extends State<MatchesView>
     context.read<MatchesCubit>().getMyMatches();
   }
 
+  void _refreshCurrentTab() {
+    if (_tabController.index == 0) {
+      _loadAvailableMatches();
+    } else {
+      _loadMyMatches();
+    }
+  }
+
   @override
   void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
     _tabController.dispose();
     super.dispose();
+  }
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    if (state == AppLifecycleState.resumed) {
+      // Refresh matches when app comes back to foreground
+      _refreshCurrentTab();
+    }
+  }
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    // Refresh current tab silently when returning to this page (e.g., from match details)
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted) {
+        _refreshCurrentTab();
+      }
+    });
   }
 
   @override
@@ -103,33 +138,38 @@ class _MatchesViewState extends State<MatchesView>
           // Available Matches Tab with BlocBuilder
           BlocBuilder<MatchesCubit, MatchesState>(
             builder: (context, state) {
-              if (state is MatchesLoading) {
-                return const Center(child: CircularProgressIndicator());
-              } else if (state is AvailableMatchesLoaded) {
+              if (state is AvailableMatchesLoaded) {
+                // Update cache and show data
+                _cachedAvailableMatches = state.matches;
                 return _buildMatchesList(state.matches, false);
+              } else if (_cachedAvailableMatches != null) {
+                // Always show cached data if available (no loading indicators during tab switches)
+                return _buildMatchesList(_cachedAvailableMatches!, false);
               } else if (state is MatchesError) {
                 return Center(child: Text('Error: ${state.message}'));
               } else {
-                // Initial state or other unhandled states
-                return const Center(child: Text('No matches available'));
+                // Only show loading spinner on initial load when no cache exists
+                return const Center(child: CircularProgressIndicator());
               }
             },
           ),
           // My Matches Tab with BlocBuilder
           BlocBuilder<MatchesCubit, MatchesState>(
             builder: (context, state) {
-              if (state is MatchesLoading) {
-                return const Center(child: CircularProgressIndicator());
-              } else if (state is MyMatchesLoaded) {
+              if (state is MyMatchesLoaded) {
+                // Update cache and show data
+                _cachedMyMatches = state.matches;
                 return _buildMatchesList(state.matches, true);
+              } else if (_cachedMyMatches != null) {
+                // Always show cached data if available (no loading indicators during tab switches)
+                return _buildMatchesList(_cachedMyMatches!, true);
               } else if (state is MatchesError) {
                 return Center(
                     child: Text('Error: ${state.message}',
                         style: TextStyle(color: Colors.white)));
               } else {
-                return const Center(
-                    child: Text('You have no matches',
-                        style: TextStyle(color: Colors.white)));
+                // Only show loading spinner on initial load when no cache exists
+                return const Center(child: CircularProgressIndicator());
               }
             },
           ),
@@ -151,10 +191,47 @@ class _MatchesViewState extends State<MatchesView>
     final int? currentUserId =
         AuthManager.userId; // Make sure this is set after login
 
+    // Helper function to check if user is in a match (either as creator or player)
+    bool isUserInMatch(MatchModel match) {
+      // Check if user is the creator
+      if (match.creatorUserId == currentUserId) {
+        print('Match ${match.id}: User is creator');
+        return true;
+      }
+
+      // Check if user has joined this match locally (since backend doesn't return joined matches)
+      if (AuthManager.hasJoinedMatch(match.id.toString())) {
+        print('Match ${match.id}: User has joined this match locally');
+        return true;
+      }
+
+      // Check if user is in the players list (fallback)
+      if (match.players != null) {
+        bool isInPlayers =
+            match.players!.any((player) => player.userId == currentUserId);
+        if (isInPlayers) {
+          print('Match ${match.id}: User found in players list');
+        } else {
+          print(
+              'Match ${match.id}: User NOT in players list. Players: ${match.players!.map((p) => 'ID:${p.userId}').join(', ')}');
+        }
+        return isInPlayers;
+      }
+
+      print(
+          'Match ${match.id}: User not in match (not creator, not joined locally, no players list)');
+      return false;
+    }
+
     // Filter matches based on the tab
     final filteredMatches = isMyMatches
-        ? matches.where((m) => m.creatorUserId == currentUserId).toList()
-        : matches.where((m) => m.creatorUserId != currentUserId).toList();
+        ? matches.where((m) => isUserInMatch(m)).toList()
+        : matches.where((m) => !isUserInMatch(m)).toList();
+
+    print('Current User ID: $currentUserId');
+    print('Tab: ${isMyMatches ? "My Matches" : "Available Matches"}');
+    print(
+        'Total matches: ${matches.length}, Filtered: ${filteredMatches.length}');
 
     if (filteredMatches.isEmpty) {
       return Center(
@@ -232,6 +309,30 @@ class _MatchesViewState extends State<MatchesView>
             ),
             // Matches for this day
             ...dayMatches.map((match) {
+              // Determine user's relationship to the match
+              bool isCreator = match.creatorUserId == currentUserId;
+              bool hasJoined = false;
+
+              if (!isCreator) {
+                // Check if user has joined this match locally
+                hasJoined = AuthManager.hasJoinedMatch(match.id.toString());
+
+                // Also check players list as fallback
+                if (!hasJoined && match.players != null) {
+                  hasJoined = match.players!
+                      .any((player) => player.userId == currentUserId);
+                }
+              }
+
+              String displayStatus;
+              if (isCreator) {
+                displayStatus = 'Created';
+              } else if (hasJoined) {
+                displayStatus = 'Joined';
+              } else {
+                displayStatus = match.status;
+              }
+
               return Padding(
                 padding: const EdgeInsets.only(bottom: 8.0),
                 child: MatchCard(
@@ -240,16 +341,16 @@ class _MatchesViewState extends State<MatchesView>
                       : 'Time not set',
                   location: match.title,
                   players:
-                      '${match.players?.length ?? 0}/${match.teamSize * 2}',
-                  status: match.status,
-                  isCreator: match.creatorUserId == currentUserId,
+                      '${(match.players?.length ?? 0) < 1 ? 1 : match.players!.length}/${match.teamSize * 2}',
+                  status: displayStatus,
+                  isCreator: isCreator,
                   onTap: () {
                     // Pass the complete match object instead of just loading details
                     GoRouter.of(context).push(
                       '${AppRouter.kMatchDetailsView}/${match.id}',
                       extra: {
                         'match_id': match.id,
-                        'is_creator': match.creatorUserId == currentUserId,
+                        'is_creator': isCreator,
                         'match_data': match, // Pass the complete match object
                       },
                     );

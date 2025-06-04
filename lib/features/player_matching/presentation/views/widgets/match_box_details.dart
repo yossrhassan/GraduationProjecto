@@ -116,7 +116,7 @@ class MatchBoxDetails extends StatelessWidget {
               ),
               const SizedBox(width: 8),
               Text(
-                '${match.players?.length ?? 0}/${match.teamSize * 2} Players',
+                '${(match.players?.length ?? 0) < 1 ? 1 : match.players!.length}/${match.teamSize * 2} Players',
                 style: const TextStyle(
                   color: Colors.white,
                   fontSize: 14,

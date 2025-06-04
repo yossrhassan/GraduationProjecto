@@ -68,16 +68,16 @@ class MatchesCubit extends Cubit<MatchesState> {
   }
 
   Future<void> joinTeam(String matchId, String team) async {
-    emit(MatchesLoading());
     try {
       final result = await matchesRepository.joinTeam(matchId, team);
 
       result.fold(
         (failure) => emit(MatchesError(failure.errMessage)),
         (success) {
-          // After successful join, refresh match details
+          // After successful join (or already joined), refresh match details and lists
+          print('Join successful, refreshing match details and lists');
           getMatchDetails(matchId);
-          // Also refresh available and my matches
+          // Also refresh the matches lists since filtering will change
           getAvailableMatches();
           getMyMatches();
         },

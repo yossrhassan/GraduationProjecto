@@ -42,14 +42,30 @@ class MatchModel {
   });
 
   factory MatchModel.fromJson(Map<String, dynamic> json) {
-    print('Parsing match JSON: $json');
-    // Defensive: convert null to empty string using toString()
-    final date = json['date']?.toString() ?? '';
-    final startTime = json['startTime']?.toString() ?? '';
-    final endTime = json['endTime']?.toString() ?? '';
-    if (date == '') print('Warning: date is missing in match JSON!');
-    if (startTime == '') print('Warning: startTime is missing in match JSON!');
-    if (endTime == '') print('Warning: endTime is missing in match JSON!');
+    // Parse players array
+    List<PlayerModel> playersList = [];
+    if (json['players'] is List) {
+      playersList = (json['players'] as List)
+          .map((player) => PlayerModel.fromJson(player))
+          .toList();
+    }
+
+    // If players list is empty but we have a creator, add the creator as a player
+    if (playersList.isEmpty && json['creatorUserId'] != null) {
+      print(
+          'Adding creator ${json['creatorUserId']} to players list for match ${json['id']}');
+      playersList.add(PlayerModel(
+        id: json['creatorUserId'],
+        userId: json['creatorUserId'],
+        userName: 'Creator',
+        status: 'CheckedIn',
+        team: 'A',
+        invitedAt: DateTime.now(),
+        responseAt: DateTime.now(),
+        checkedInAt: DateTime.now(),
+      ));
+    }
+
     return MatchModel(
       id: json['id'],
       creatorUserId: json['creatorUserId'],
@@ -66,13 +82,10 @@ class MatchModel {
       completedAt: json['completedAt'] != null
           ? DateTime.parse(json['completedAt'])
           : null,
-      players: (json['players'] as List?)
-              ?.map((player) => PlayerModel.fromJson(player))
-              .toList() ??
-          [],
-      date: date,
-      startTime: startTime,
-      endTime: endTime,
+      players: playersList,
+      date: json['date']?.toString() ?? '',
+      startTime: json['startTime']?.toString() ?? '',
+      endTime: json['endTime']?.toString() ?? '',
     );
   }
 

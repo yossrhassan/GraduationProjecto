@@ -1,10 +1,18 @@
 import 'package:flutter/material.dart';
 
 class PlayerAvatar extends StatelessWidget {
-  const PlayerAvatar({super.key, required this.isUser, required this.isCaptain, this.imageUrl, });
-final bool isUser;
-final bool isCaptain;
-final String? imageUrl;
+  const PlayerAvatar({
+    super.key,
+    required this.isUser,
+    required this.isCaptain,
+    this.imageUrl,
+    this.playerName,
+  });
+
+  final bool isUser;
+  final bool isCaptain;
+  final String? imageUrl;
+  final String? playerName;
 
   @override
   Widget build(BuildContext context) {
@@ -63,13 +71,25 @@ final String? imageUrl;
               fontWeight: FontWeight.bold,
             ),
           ),
-        Text(
-          isUser ? 'You' : '',
-          style: const TextStyle(
-            color: Colors.white,
-            fontSize: 14,
+        if (playerName != null)
+          Text(
+            isUser ? 'You' : playerName!,
+            style: const TextStyle(
+              color: Colors.white,
+              fontSize: 14,
+            ),
+            textAlign: TextAlign.center,
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+          )
+        else
+          const Text(
+            '',
+            style: TextStyle(
+              color: Colors.white,
+              fontSize: 14,
+            ),
           ),
-        ),
       ],
     );
   }
