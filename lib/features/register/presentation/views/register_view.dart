@@ -9,7 +9,7 @@ import 'package:graduation_project/features/register/data/repos/register_service
 import 'package:modal_progress_hud_nsn/modal_progress_hud_nsn.dart';
 
 class RegisterView extends StatefulWidget {
- const RegisterView({super.key});
+  const RegisterView({super.key});
 
   static String id = '/RegisterView';
 
@@ -20,6 +20,7 @@ class RegisterView extends StatefulWidget {
 class _RegisterViewState extends State<RegisterView> {
   String? firstName;
   String? lastName;
+  String? userName;
   String? email;
   String? password;
   String? confirmPassword;
@@ -40,11 +41,11 @@ class _RegisterViewState extends State<RegisterView> {
           child: Form(
             key: formkey,
             child: ListView(children: [
-             const SizedBox(
+              const SizedBox(
                 height: 75,
               ),
               Image.asset('assets/images/sportsbookinglogo.png', height: 100),
-             const Row(
+              const Row(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
                   Column(
@@ -68,10 +69,10 @@ class _RegisterViewState extends State<RegisterView> {
                   ),
                 ],
               ),
-             const SizedBox(
+              const SizedBox(
                 height: 75,
               ),
-             const Row(
+              const Row(
                 children: [
                   Text(
                     'Register',
@@ -79,7 +80,7 @@ class _RegisterViewState extends State<RegisterView> {
                   ),
                 ],
               ),
-            const  SizedBox(
+              const SizedBox(
                 height: 20,
               ),
               CustomTextField.CustomformTextField(
@@ -88,7 +89,7 @@ class _RegisterViewState extends State<RegisterView> {
                 },
                 hintText: 'First Name',
               ),
-             const SizedBox(
+              const SizedBox(
                 height: 10,
               ),
               CustomTextField.CustomformTextField(
@@ -97,7 +98,16 @@ class _RegisterViewState extends State<RegisterView> {
                 },
                 hintText: 'Last Name',
               ),
-             const SizedBox(
+              const SizedBox(
+                height: 10,
+              ),
+              CustomTextField.CustomformTextField(
+                onchanged: (data) {
+                  userName = data;
+                },
+                hintText: 'User Name',
+              ),
+              const SizedBox(
                 height: 10,
               ),
               CustomTextField.CustomformTextField(
@@ -106,7 +116,7 @@ class _RegisterViewState extends State<RegisterView> {
                 },
                 hintText: 'Phone Number',
               ),
-             const SizedBox(
+              const SizedBox(
                 height: 10,
               ),
               CustomTextField.CustomformTextField(
@@ -115,7 +125,7 @@ class _RegisterViewState extends State<RegisterView> {
                 },
                 hintText: 'Email',
               ),
-             const SizedBox(
+              const SizedBox(
                 height: 10,
               ),
               CustomTextField.CustomformTextField(
@@ -124,7 +134,7 @@ class _RegisterViewState extends State<RegisterView> {
                 },
                 hintText: 'Password',
               ),
-             const SizedBox(
+              const SizedBox(
                 height: 10,
               ),
               CustomTextField.CustomformTextField(
@@ -133,7 +143,7 @@ class _RegisterViewState extends State<RegisterView> {
                 },
                 hintText: 'Confirm Password',
               ),
-             const SizedBox(
+              const SizedBox(
                 height: 20,
               ),
               CustomButton(
@@ -154,7 +164,8 @@ class _RegisterViewState extends State<RegisterView> {
                           phoneNumber: phoneNumber!,
                           email: email!,
                           password: password!,
-                          confirmPassword: confirmPassword!);
+                          confirmPassword: confirmPassword!,
+                          userName: userName!);
                       showSnackBar(context, 'Registered successfully');
                       GoRouter.of(context).push(AppRouter.kLoginView);
                     } catch (ex) {
@@ -167,13 +178,13 @@ class _RegisterViewState extends State<RegisterView> {
                 },
                 text: 'Register',
               ),
-            const  SizedBox(
+              const SizedBox(
                 height: 10,
               ),
               Row(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                const  Text(
+                  const Text(
                     "already have an account ? ",
                     style: TextStyle(color: Colors.white),
                   ),
@@ -181,13 +192,13 @@ class _RegisterViewState extends State<RegisterView> {
                       onTap: () {
                         Navigator.pop(context);
                       },
-                      child:const Text(
+                      child: const Text(
                         'login',
                         style: TextStyle(color: kPrimaryColor),
                       ))
                 ],
               ),
-             const SizedBox(
+              const SizedBox(
                 height: 150,
               ),
             ]),

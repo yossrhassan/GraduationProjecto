@@ -1,6 +1,7 @@
 // player_matching/presentation/cubit/matches_state.dart
 
 import 'package:graduation_project/features/player_matching/data/models/match_model.dart';
+import 'package:graduation_project/features/player_matching/data/models/sport_model.dart';
 
 abstract class MatchesState {}
 
@@ -24,6 +25,12 @@ class MatchDetailsLoaded extends MatchesState {
   final MatchModel match;
 
   MatchDetailsLoaded(this.match);
+}
+
+class SportsLoaded extends MatchesState {
+  final List<SportModel> sports;
+
+  SportsLoaded(this.sports);
 }
 
 class MatchesError extends MatchesState {

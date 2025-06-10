@@ -7,6 +7,7 @@ import 'package:graduation_project/features/booking/presentation/views/booking_v
 import 'package:graduation_project/features/booking_history/data/repos/booking_history_repo.dart';
 import 'package:graduation_project/features/booking_history/presentation/manager/booking_history_cubit/booking_history_cubit.dart';
 import 'package:graduation_project/features/booking_history/presentation/views/booking_history_view.dart';
+import 'package:graduation_project/features/chat_bot/chat_bot_view.dart';
 import 'package:graduation_project/features/facilities/data/models/facilities/facilities.model.dart';
 import 'package:graduation_project/features/facilities/presentation/views/facilities_view.dart';
 import 'package:graduation_project/features/home/presentation/views/home_view.dart';
@@ -29,6 +30,7 @@ abstract class AppRouter {
   static const kMatchesView = '/matchesView';
   static const kMatchCreationView = '/matchCreationView';
   static const kMatchDetailsView = '/matchDetailsView';
+  static const kChatBotView = '/chatBotView';
 
   static final router = GoRouter(
     routes: [
@@ -66,6 +68,7 @@ abstract class AppRouter {
               matchId: state.pathParameters['id']!,
               isCreator: extra['is_creator'] ?? false,
               matchData: extra['match_data'],
+              fromMyMatches: extra['from_my_matches'] ?? false,
             ),
           );
         },
@@ -115,6 +118,10 @@ abstract class AppRouter {
       GoRoute(
         path: kHomeView,
         builder: (context, state) => const HomeView(),
+      ),
+      GoRoute(
+        path: kChatBotView,
+        builder: (context, state) => ChatPage(),
       ),
     ],
   );

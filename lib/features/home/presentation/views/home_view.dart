@@ -76,6 +76,17 @@ class HomeView extends StatelessWidget {
               ),
               const SizedBox(
                 height: 30,
+              ),
+              CustomHomeButton(
+                icon: Icons.chat_bubble_outline,
+                label: "Chat Bot",
+                filled: false,
+                onPressed: () {
+                  GoRouter.of(context).push(AppRouter.kChatBotView);
+                },
+              ),
+              const SizedBox(
+                height: 30,
               )
             ],
           ),

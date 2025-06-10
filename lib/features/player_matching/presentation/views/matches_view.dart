@@ -5,9 +5,11 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 import 'package:graduation_project/core/utils/app_router.dart';
 import 'package:graduation_project/features/player_matching/data/models/match_model.dart';
+import 'package:graduation_project/features/player_matching/data/models/sport_model.dart';
 import 'package:graduation_project/features/player_matching/presentation/manager/match_cubit/match_cubit.dart';
 import 'package:graduation_project/features/player_matching/presentation/manager/match_cubit/match_state.dart';
 import 'package:graduation_project/features/player_matching/presentation/views/widgets/match_card.dart';
+import 'package:graduation_project/features/player_matching/presentation/views/widgets/sport_filter_dropdown.dart';
 import 'package:graduation_project/core/utils/auth_manager.dart';
 import 'package:intl/intl.dart';
 
@@ -27,6 +29,11 @@ class _MatchesViewState extends State<MatchesView>
   List<MatchModel>? _cachedAvailableMatches;
   List<MatchModel>? _cachedMyMatches;
 
+  // Sport filtering
+  List<SportModel> _sports = [];
+  SportModel? _selectedSport;
+  bool _sportsLoading = false;
+
   @override
   void initState() {
     super.initState();
@@ -36,6 +43,9 @@ class _MatchesViewState extends State<MatchesView>
       vsync: this,
       initialIndex: widget.initialTab ?? 0,
     );
+
+    // Load sports first
+    _loadSports();
 
     // Load matches based on initial tab
     if (widget.initialTab == 1) {
@@ -58,8 +68,19 @@ class _MatchesViewState extends State<MatchesView>
     });
   }
 
+  void _loadSports() {
+    setState(() {
+      _sportsLoading = true;
+    });
+    context.read<MatchesCubit>().getSports();
+  }
+
   void _loadAvailableMatches() {
-    context.read<MatchesCubit>().getAvailableMatches();
+    print(
+        '🔍 Loading available matches with sport filter: ${_selectedSport?.name ?? "All Sports"} (ID: ${_selectedSport?.id})');
+    context.read<MatchesCubit>().getAvailableMatches(
+          sportTypeId: _selectedSport?.id,
+        );
   }
 
   void _loadMyMatches() {
@@ -71,6 +92,21 @@ class _MatchesViewState extends State<MatchesView>
       _loadAvailableMatches();
     } else {
       _loadMyMatches();
+    }
+  }
+
+  void _onSportFilterChanged(SportModel? sport) {
+    setState(() {
+      _selectedSport = sport;
+    });
+
+    // Only filter available matches, not "My Matches"
+    if (_tabController.index == 0) {
+      // Clear cached data to force showing loading state and then new data
+      setState(() {
+        _cachedAvailableMatches = null;
+      });
+      _loadAvailableMatches();
     }
   }
 
@@ -132,48 +168,90 @@ class _MatchesViewState extends State<MatchesView>
         ),
         elevation: 0,
       ),
-      body: TabBarView(
-        controller: _tabController,
-        children: [
-          // Available Matches Tab with BlocBuilder
-          BlocBuilder<MatchesCubit, MatchesState>(
-            builder: (context, state) {
-              if (state is AvailableMatchesLoaded) {
-                // Update cache and show data
-                _cachedAvailableMatches = state.matches;
-                return _buildMatchesList(state.matches, false);
-              } else if (_cachedAvailableMatches != null) {
-                // Always show cached data if available (no loading indicators during tab switches)
-                return _buildMatchesList(_cachedAvailableMatches!, false);
-              } else if (state is MatchesError) {
-                return Center(child: Text('Error: ${state.message}'));
-              } else {
-                // Only show loading spinner on initial load when no cache exists
-                return const Center(child: CircularProgressIndicator());
-              }
-            },
-          ),
-          // My Matches Tab with BlocBuilder
-          BlocBuilder<MatchesCubit, MatchesState>(
-            builder: (context, state) {
-              if (state is MyMatchesLoaded) {
-                // Update cache and show data
-                _cachedMyMatches = state.matches;
-                return _buildMatchesList(state.matches, true);
-              } else if (_cachedMyMatches != null) {
-                // Always show cached data if available (no loading indicators during tab switches)
-                return _buildMatchesList(_cachedMyMatches!, true);
-              } else if (state is MatchesError) {
-                return Center(
-                    child: Text('Error: ${state.message}',
-                        style: TextStyle(color: Colors.white)));
-              } else {
-                // Only show loading spinner on initial load when no cache exists
-                return const Center(child: CircularProgressIndicator());
-              }
-            },
-          ),
-        ],
+      body: BlocListener<MatchesCubit, MatchesState>(
+        listener: (context, state) {
+          if (state is SportsLoaded) {
+            setState(() {
+              _sports = state.sports;
+              _sportsLoading = false;
+            });
+          }
+        },
+        child: Column(
+          children: [
+            // Sport filter dropdown - only show on Available Matches tab
+            AnimatedBuilder(
+              animation: _tabController,
+              builder: (context, child) {
+                return _tabController.index == 0
+                    ? SportFilterDropdown(
+                        sports: _sports,
+                        selectedSport: _selectedSport,
+                        onSportChanged: _onSportFilterChanged,
+                        isLoading: _sportsLoading,
+                      )
+                    : const SizedBox.shrink();
+              },
+            ),
+            Expanded(
+              child: TabBarView(
+                controller: _tabController,
+                children: [
+                  // Available Matches Tab with BlocBuilder
+                  BlocBuilder<MatchesCubit, MatchesState>(
+                    builder: (context, state) {
+                      print(
+                          '🔍 Available matches BlocBuilder state: ${state.runtimeType}');
+
+                      if (state is AvailableMatchesLoaded) {
+                        print(
+                            '🔍 Received ${state.matches.length} available matches');
+                        // Update cache and show data
+                        _cachedAvailableMatches = state.matches;
+                        return _buildMatchesList(state.matches, false);
+                      } else if (state is MatchesLoading) {
+                        // Show loading during filtering
+                        print('🔍 Showing loading indicator for matches');
+                        return const Center(child: CircularProgressIndicator());
+                      } else if (_cachedAvailableMatches != null) {
+                        // Show cached data only if not currently loading
+                        print(
+                            '🔍 Showing cached data: ${_cachedAvailableMatches!.length} matches');
+                        return _buildMatchesList(
+                            _cachedAvailableMatches!, false);
+                      } else if (state is MatchesError) {
+                        return Center(child: Text('Error: ${state.message}'));
+                      } else {
+                        // Initial loading state
+                        return const Center(child: CircularProgressIndicator());
+                      }
+                    },
+                  ),
+                  // My Matches Tab with BlocBuilder
+                  BlocBuilder<MatchesCubit, MatchesState>(
+                    builder: (context, state) {
+                      if (state is MyMatchesLoaded) {
+                        // Update cache and show data
+                        _cachedMyMatches = state.matches;
+                        return _buildMatchesList(state.matches, true);
+                      } else if (_cachedMyMatches != null) {
+                        // Always show cached data if available (no loading indicators during tab switches)
+                        return _buildMatchesList(_cachedMyMatches!, true);
+                      } else if (state is MatchesError) {
+                        return Center(
+                            child: Text('Error: ${state.message}',
+                                style: TextStyle(color: Colors.white)));
+                      } else {
+                        // Only show loading spinner on initial load when no cache exists
+                        return const Center(child: CircularProgressIndicator());
+                      }
+                    },
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ),
       ),
       floatingActionButton: FloatingActionButton(
         onPressed: () {
@@ -199,13 +277,7 @@ class _MatchesViewState extends State<MatchesView>
         return true;
       }
 
-      // Check if user has joined this match locally (since backend doesn't return joined matches)
-      if (AuthManager.hasJoinedMatch(match.id.toString())) {
-        print('Match ${match.id}: User has joined this match locally');
-        return true;
-      }
-
-      // Check if user is in the players list (fallback)
+      // Check if user is in the players list
       if (match.players != null) {
         bool isInPlayers =
             match.players!.any((player) => player.userId == currentUserId);
@@ -219,7 +291,7 @@ class _MatchesViewState extends State<MatchesView>
       }
 
       print(
-          'Match ${match.id}: User not in match (not creator, not joined locally, no players list)');
+          'Match ${match.id}: User not in match (not creator, no players list)');
       return false;
     }
 
@@ -314,11 +386,8 @@ class _MatchesViewState extends State<MatchesView>
               bool hasJoined = false;
 
               if (!isCreator) {
-                // Check if user has joined this match locally
-                hasJoined = AuthManager.hasJoinedMatch(match.id.toString());
-
-                // Also check players list as fallback
-                if (!hasJoined && match.players != null) {
+                // Check if user is in players list
+                if (match.players != null) {
                   hasJoined = match.players!
                       .any((player) => player.userId == currentUserId);
                 }
@@ -352,6 +421,8 @@ class _MatchesViewState extends State<MatchesView>
                         'match_id': match.id,
                         'is_creator': isCreator,
                         'match_data': match, // Pass the complete match object
+                        'from_my_matches':
+                            isMyMatches, // Add this to know the source
                       },
                     );
                   },

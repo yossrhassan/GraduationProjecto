@@ -139,15 +139,9 @@ class _LoginViewState extends State<LoginView> {
                             print('Warning: User ID is null in login response');
                           }
 
-                          // Load joined matches after successful login
-                          await AuthManager.loadJoinedMatches();
-                          print('Joined matches loaded after login');
-
                           print('Current AuthManager state:');
                           print('- Token: ${AuthManager.authToken}');
                           print('- User ID: ${AuthManager.userId}');
-                          print(
-                              '- Joined matches: ${AuthManager.joinedMatchIds}');
 
                           showSnackBar(context, 'Logged in successfully');
                           GoRouter.of(context).push(AppRouter.kHomeView);

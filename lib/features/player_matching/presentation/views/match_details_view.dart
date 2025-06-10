@@ -7,18 +7,21 @@ import 'package:graduation_project/features/player_matching/presentation/views/w
 import 'package:graduation_project/features/player_matching/data/models/match_model.dart';
 import 'package:intl/intl.dart';
 import 'package:graduation_project/constants.dart';
+import 'package:graduation_project/core/utils/auth_manager.dart';
 
 // In match_details_view.dart
 class MatchDetailsView extends StatefulWidget {
   final String matchId;
   final bool isCreator;
   final MatchModel? matchData;
+  final bool fromMyMatches;
 
   const MatchDetailsView({
     Key? key,
     required this.matchId,
     required this.isCreator,
     this.matchData,
+    this.fromMyMatches = false,
   }) : super(key: key);
 
   @override
@@ -29,7 +32,27 @@ class _MatchDetailsViewState extends State<MatchDetailsView>
     with SingleTickerProviderStateMixin {
   late TabController tabController;
 
-// Update in the initState method
+  // Helper method to check if current user has joined the match
+  bool _hasUserJoinedMatch(MatchModel? match) {
+    if (match == null || match.players == null) return false;
+
+    final currentUserId = AuthManager.userId;
+    if (currentUserId == null) return false;
+
+    // Check if user is creator
+    if (match.creatorUserId == currentUserId) return true;
+
+    // Check if user is in players list
+    return match.players!.any((player) => player.userId == currentUserId);
+  }
+
+  // Helper method to determine if tabs should be shown
+  bool _shouldShowTabs(MatchModel? match) {
+    // Only show tabs if coming from "My Matches"
+    return widget.fromMyMatches;
+  }
+
+  // Update in the initState method
   @override
   void initState() {
     super.initState();
@@ -56,205 +79,259 @@ class _MatchDetailsViewState extends State<MatchDetailsView>
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: kBackGroundColor,
-      appBar: AppBar(
-        leading: IconButton(
-          icon: const Icon(Icons.arrow_back, color: Colors.white),
-          onPressed: () {
-            Navigator.of(context).pop();
-          },
-        ),
-        title: BlocBuilder<MatchesCubit, MatchesState>(
-          builder: (context, state) {
-            if (state is MatchDetailsLoaded && state.match.date.isNotEmpty) {
-              final match = state.match;
-              final DateTime date = DateTime.parse(match.date);
-              final formattedDate = DateFormat('EEEE, MMMM d, y').format(date);
+    return BlocBuilder<MatchesCubit, MatchesState>(
+      builder: (context, state) {
+        // Determine current match data
+        MatchModel? currentMatch;
+        if (state is MatchDetailsLoaded) {
+          currentMatch = state.match;
+        } else if (widget.matchData != null) {
+          currentMatch = widget.matchData!;
+        }
 
-              // Create time range from start and end times
-              String formattedTime = '';
-              if (match.startTime.isNotEmpty && match.endTime.isNotEmpty) {
-                final startTime = _convertTo12Hour(match.startTime);
-                final endTime = _convertTo12Hour(match.endTime);
-                formattedTime = '$startTime - $endTime';
-              } else if (match.startTime.isNotEmpty) {
-                formattedTime = _convertTo12Hour(match.startTime);
-              } else if (match.endTime.isNotEmpty) {
-                formattedTime = _convertTo12Hour(match.endTime);
-              }
+        final shouldShowTabs = _shouldShowTabs(currentMatch);
 
-              return Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    formattedDate,
-                    style: const TextStyle(
-                      color: Colors.white,
-                      fontSize: 20,
-                      fontWeight: FontWeight.w500,
-                    ),
-                  ),
-                  Text(
-                    formattedTime,
-                    style: const TextStyle(
-                      color: Colors.white70,
-                      fontSize: 16,
-                      fontWeight: FontWeight.w400,
-                    ),
-                  ),
-                ],
-              );
-            } else if (widget.matchData != null) {
-              // Use initial match data while loading fresh data
-              final match = widget.matchData!;
-              final DateTime date = DateTime.parse(match.date);
-              final formattedDate = DateFormat('EEEE, MMMM d, y').format(date);
+        return Scaffold(
+          backgroundColor: kBackGroundColor,
+          appBar: AppBar(
+            leading: IconButton(
+              icon: const Icon(Icons.arrow_back, color: Colors.white),
+              onPressed: () {
+                Navigator.of(context).pop();
+              },
+            ),
+            title: BlocBuilder<MatchesCubit, MatchesState>(
+              builder: (context, state) {
+                if (state is MatchDetailsLoaded &&
+                    state.match.date.isNotEmpty) {
+                  final match = state.match;
+                  final DateTime date = DateTime.parse(match.date);
+                  final formattedDate =
+                      DateFormat('EEEE, MMMM d, y').format(date);
 
-              // Create time range from start and end times
-              String formattedTime = '';
-              if (match.startTime.isNotEmpty && match.endTime.isNotEmpty) {
-                final startTime = _convertTo12Hour(match.startTime);
-                final endTime = _convertTo12Hour(match.endTime);
-                formattedTime = '$startTime - $endTime';
-              } else if (match.startTime.isNotEmpty) {
-                formattedTime = _convertTo12Hour(match.startTime);
-              } else if (match.endTime.isNotEmpty) {
-                formattedTime = _convertTo12Hour(match.endTime);
-              }
+                  // Create time range from start and end times
+                  String formattedTime = '';
+                  if (match.startTime.isNotEmpty && match.endTime.isNotEmpty) {
+                    final startTime = _convertTo12Hour(match.startTime);
+                    final endTime = _convertTo12Hour(match.endTime);
+                    formattedTime = '$startTime - $endTime';
+                  } else if (match.startTime.isNotEmpty) {
+                    formattedTime = _convertTo12Hour(match.startTime);
+                  } else if (match.endTime.isNotEmpty) {
+                    formattedTime = _convertTo12Hour(match.endTime);
+                  }
 
-              return Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    formattedDate,
-                    style: const TextStyle(
-                      color: Colors.white,
-                      fontSize: 20,
-                      fontWeight: FontWeight.w500,
-                    ),
-                  ),
-                  Text(
-                    formattedTime,
-                    style: const TextStyle(
-                      color: Colors.white70,
-                      fontSize: 16,
-                      fontWeight: FontWeight.w400,
-                    ),
-                  ),
-                ],
-              );
-            } else if (state is MatchesLoading) {
-              return const Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    'Loading...',
-                    style: TextStyle(
-                      color: Colors.white,
-                      fontSize: 20,
-                      fontWeight: FontWeight.w500,
-                    ),
-                  ),
-                ],
-              );
-            } else if (state is MatchesError) {
-              return const Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    'Error loading match',
-                    style: TextStyle(
-                      color: Colors.white,
-                      fontSize: 20,
-                      fontWeight: FontWeight.w500,
-                    ),
-                  ),
-                ],
-              );
-            } else {
-              return const Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    'Date not set',
-                    style: TextStyle(
-                      color: Colors.white,
-                      fontSize: 20,
-                      fontWeight: FontWeight.w500,
-                    ),
-                  ),
-                  Text(
-                    'Time not set',
-                    style: TextStyle(
-                      color: Colors.white70,
-                      fontSize: 16,
-                      fontWeight: FontWeight.w400,
-                    ),
-                  ),
-                ],
-              );
-            }
-          },
-        ),
-        bottom: TabBar(
-          controller: tabController,
-          indicatorColor: Colors.white,
-          indicatorWeight: 3.0,
-          tabs: const [
-            Tab(text: 'UPDATES'),
-            Tab(text: 'DETAILS'),
-            Tab(text: 'MANAGE'),
-          ],
-          labelColor: Colors.white,
-        ),
-        elevation: 0,
-      ),
-      body: BlocBuilder<MatchesCubit, MatchesState>(
-        builder: (context, state) {
-          // Always prefer current state data, but fallback to initial data if loading
-          MatchModel? currentMatch;
+                  return Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        formattedDate,
+                        style: const TextStyle(
+                          color: Colors.white,
+                          fontSize: 20,
+                          fontWeight: FontWeight.w500,
+                        ),
+                      ),
+                      Text(
+                        formattedTime,
+                        style: const TextStyle(
+                          color: Colors.white70,
+                          fontSize: 16,
+                          fontWeight: FontWeight.w400,
+                        ),
+                      ),
+                    ],
+                  );
+                } else if (widget.matchData != null) {
+                  // Use initial match data while loading fresh data
+                  final match = widget.matchData!;
+                  final DateTime date = DateTime.parse(match.date);
+                  final formattedDate =
+                      DateFormat('EEEE, MMMM d, y').format(date);
 
-          if (state is MatchDetailsLoaded) {
-            currentMatch = state.match;
-          } else if (widget.matchData != null) {
-            // Use initial match data when state is loading or not loaded yet
-            currentMatch = widget.matchData!;
-          }
+                  // Create time range from start and end times
+                  String formattedTime = '';
+                  if (match.startTime.isNotEmpty && match.endTime.isNotEmpty) {
+                    final startTime = _convertTo12Hour(match.startTime);
+                    final endTime = _convertTo12Hour(match.endTime);
+                    formattedTime = '$startTime - $endTime';
+                  } else if (match.startTime.isNotEmpty) {
+                    formattedTime = _convertTo12Hour(match.startTime);
+                  } else if (match.endTime.isNotEmpty) {
+                    formattedTime = _convertTo12Hour(match.endTime);
+                  }
 
-          if (currentMatch != null) {
-            return TabBarView(
-              controller: tabController,
-              children: [
-                // Updates Tab
-                const Center(
-                    child: Text('Updates content here',
-                        style: TextStyle(color: Colors.white))),
+                  return Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        formattedDate,
+                        style: const TextStyle(
+                          color: Colors.white,
+                          fontSize: 20,
+                          fontWeight: FontWeight.w500,
+                        ),
+                      ),
+                      Text(
+                        formattedTime,
+                        style: const TextStyle(
+                          color: Colors.white70,
+                          fontSize: 16,
+                          fontWeight: FontWeight.w400,
+                        ),
+                      ),
+                    ],
+                  );
+                } else if (state is MatchesLoading) {
+                  return const Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        'Loading...',
+                        style: TextStyle(
+                          color: Colors.white,
+                          fontSize: 20,
+                          fontWeight: FontWeight.w500,
+                        ),
+                      ),
+                    ],
+                  );
+                } else if (state is MatchesError) {
+                  return const Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        'Error loading match',
+                        style: TextStyle(
+                          color: Colors.white,
+                          fontSize: 20,
+                          fontWeight: FontWeight.w500,
+                        ),
+                      ),
+                    ],
+                  );
+                } else {
+                  return const Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        'Date not set',
+                        style: TextStyle(
+                          color: Colors.white,
+                          fontSize: 20,
+                          fontWeight: FontWeight.w500,
+                        ),
+                      ),
+                      Text(
+                        'Time not set',
+                        style: TextStyle(
+                          color: Colors.white70,
+                          fontSize: 16,
+                          fontWeight: FontWeight.w400,
+                        ),
+                      ),
+                    ],
+                  );
+                }
+              },
+            ),
+            // Conditionally show TabBar
+            bottom: shouldShowTabs
+                ? TabBar(
+                    controller: tabController,
+                    indicatorColor: Colors.white,
+                    indicatorWeight: 3.0,
+                    tabs: const [
+                      Tab(text: 'UPDATES'),
+                      Tab(text: 'DETAILS'),
+                      Tab(text: 'MANAGE'),
+                    ],
+                    labelColor: Colors.white,
+                  )
+                : null,
+            elevation: 0,
+          ),
+          body: shouldShowTabs
+              ?
+              // Show TabBarView when tabs are visible
+              BlocBuilder<MatchesCubit, MatchesState>(
+                  builder: (context, state) {
+                    // Always prefer current state data, but fallback to initial data if loading
+                    MatchModel? currentMatch;
 
-                // Details Tab (Teams) - Always pass the current match data
-                DetailsTab(
-                  isCreator: widget.isCreator,
-                  matchData: currentMatch,
+                    if (state is MatchDetailsLoaded) {
+                      currentMatch = state.match;
+                    } else if (widget.matchData != null) {
+                      // Use initial match data when state is loading or not loaded yet
+                      currentMatch = widget.matchData!;
+                    }
+
+                    if (currentMatch != null) {
+                      return TabBarView(
+                        controller: tabController,
+                        children: [
+                          // Updates Tab
+                          const Center(
+                              child: Text('Updates content here',
+                                  style: TextStyle(color: Colors.white))),
+
+                          // Details Tab (Teams) - Always pass the current match data
+                          DetailsTab(
+                            isCreator: widget.isCreator,
+                            matchData: currentMatch,
+                          ),
+
+                          // Manage Tab
+                          const ManageTab(),
+                        ],
+                      );
+                    } else if (state is MatchesLoading) {
+                      return const Center(child: CircularProgressIndicator());
+                    } else if (state is MatchesError) {
+                      return Center(
+                        child: Text(
+                          'Error: ${state.message}',
+                          style: const TextStyle(color: Colors.white),
+                        ),
+                      );
+                    } else {
+                      return const Center(child: CircularProgressIndicator());
+                    }
+                  },
+                )
+              :
+              // Show only Details tab content when tabs are hidden
+              BlocBuilder<MatchesCubit, MatchesState>(
+                  builder: (context, state) {
+                    MatchModel? currentMatch;
+
+                    if (state is MatchDetailsLoaded) {
+                      currentMatch = state.match;
+                    } else if (widget.matchData != null) {
+                      currentMatch = widget.matchData!;
+                    }
+
+                    if (currentMatch != null) {
+                      return DetailsTab(
+                        isCreator: widget.isCreator,
+                        matchData: currentMatch,
+                      );
+                    } else if (state is MatchesLoading) {
+                      return const Center(child: CircularProgressIndicator());
+                    } else if (state is MatchesError) {
+                      return Center(
+                        child: Text(
+                          'Error: ${state.message}',
+                          style: const TextStyle(color: Colors.white),
+                        ),
+                      );
+                    } else {
+                      return const Center(child: CircularProgressIndicator());
+                    }
+                  },
                 ),
-
-                // Manage Tab
-                const ManageTab(),
-              ],
-            );
-          } else if (state is MatchesLoading) {
-            return const Center(child: CircularProgressIndicator());
-          } else if (state is MatchesError) {
-            return Center(
-              child: Text(
-                'Error: ${state.message}',
-                style: const TextStyle(color: Colors.white),
-              ),
-            );
-          } else {
-            return const Center(child: CircularProgressIndicator());
-          }
-        },
-      ),
+        );
+      },
     );
   }
 

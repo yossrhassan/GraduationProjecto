@@ -6,13 +6,12 @@ class MatchModel {
   final int id;
   final int creatorUserId;
   final int bookingId;
-  final String sportType;
+  final String sportName;
   final int teamSize;
   final String title;
   final String description;
   final int minSkillLevel;
   final int maxSkillLevel;
-  final bool isPrivate;
   final String status;
   final DateTime createdAt;
   final DateTime? completedAt;
@@ -25,13 +24,12 @@ class MatchModel {
     required this.id,
     required this.creatorUserId,
     required this.bookingId,
-    required this.sportType,
+    required this.sportName,
     required this.teamSize,
     required this.title,
     required this.description,
     required this.minSkillLevel,
     required this.maxSkillLevel,
-    required this.isPrivate,
     required this.status,
     required this.createdAt,
     this.completedAt,
@@ -70,13 +68,12 @@ class MatchModel {
       id: json['id'],
       creatorUserId: json['creatorUserId'],
       bookingId: json['bookingId'],
-      sportType: json['sportType'],
+      sportName: json['sportName'],
       teamSize: json['teamSize'],
       title: json['title'],
       description: json['description'],
       minSkillLevel: json['minSkillLevel'],
       maxSkillLevel: json['maxSkillLevel'],
-      isPrivate: json['isPrivate'],
       status: json['status'],
       createdAt: DateTime.parse(json['createdAt']),
       completedAt: json['completedAt'] != null
@@ -94,13 +91,12 @@ class MatchModel {
       'id': id,
       'creatorUserId': creatorUserId,
       'bookingId': bookingId,
-      'sportType': sportType,
+      'sportType': sportName,
       'teamSize': teamSize,
       'title': title,
       'description': description,
       'minSkillLevel': minSkillLevel,
       'maxSkillLevel': maxSkillLevel,
-      'isPrivate': isPrivate,
       'status': status,
       'createdAt': createdAt.toIso8601String(),
       'completedAt': completedAt?.toIso8601String(),

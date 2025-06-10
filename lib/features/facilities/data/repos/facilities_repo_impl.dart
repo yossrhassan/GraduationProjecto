@@ -13,13 +13,21 @@ class FacilitiesRepoImpl implements FacilitiesRepo {
   @override
   Future<Either<Failure, List<FacilitiesModel>>> fetchFacilities() async {
     try {
-      var data = await apiService.get(endPoint: 'Facilities/GetAll');
-      List<FacilitiesModel> facilities = (data as List)
-          .map((facilityJson) => FacilitiesModel.fromJson(facilityJson))
-          .toList();
+      var body = await apiService.get(endPoint: 'Facilities/GetAll');
 
-      return right(facilities);
-      
+      // Check if the response indicates success
+      if (body['success'] == true) {
+        var data = body['data'];
+        List<FacilitiesModel> facilities = (data as List)
+            .map((facilityJson) => FacilitiesModel.fromJson(facilityJson))
+            .toList();
+
+        return right(facilities);
+      } else {
+        // Handle case where success is false
+        String errorMessage = body['message'] ?? 'Failed to fetch facilities';
+        return left(ServerFailure(errorMessage));
+      }
     } catch (e) {
       if (e is DioError) {
         return left(ServerFailure.fromDioError(e));

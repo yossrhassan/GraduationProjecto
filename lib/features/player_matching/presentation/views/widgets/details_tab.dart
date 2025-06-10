@@ -51,15 +51,7 @@ class _DetailsTabState extends State<DetailsTab> {
     }
 
     // Check if user has already joined this match and retrieve team info
-    if (widget.matchData != null) {
-      final matchId = widget.matchData!.id.toString();
-      final joinedTeam = AuthManager.getJoinedTeam(matchId);
-      if (joinedTeam != null) {
-        userJoinedTeam = joinedTeam;
-        print(
-            '🔄 Retrieved joined team from local storage: $joinedTeam for match $matchId');
-      }
-    }
+    // TODO: Implement joined team tracking when AuthManager methods are available
   }
 
   @override
@@ -67,23 +59,17 @@ class _DetailsTabState extends State<DetailsTab> {
     super.didChangeDependencies();
 
     // Reset joining state when dependencies change (e.g., navigating to a different match)
-    if (widget.matchData != null) {
-      final hasJoinedLocally =
-          AuthManager.hasJoinedMatch(widget.matchData!.id.toString());
-      if (hasJoinedLocally && isJoining) {
-        setState(() {
-          isJoining = false;
-        });
-      }
+    if (isJoining) {
+      setState(() {
+        isJoining = false;
+      });
     }
   }
 
   void _handleJoinTeam(String team) {
     if (widget.matchData != null && !isJoining) {
-      // Check if user has already joined locally before attempting
-      final hasJoinedLocally =
-          AuthManager.hasJoinedMatch(widget.matchData!.id.toString());
-      if (hasJoinedLocally || userJoinedTeam != null) {
+      // Check if user has already joined before attempting
+      if (userJoinedTeam != null) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(content: Text('You have already joined this match!')),
         );
@@ -139,13 +125,12 @@ class _DetailsTabState extends State<DetailsTab> {
               id: widget.matchData!.id,
               creatorUserId: widget.matchData!.creatorUserId,
               bookingId: widget.matchData!.bookingId,
-              sportType: widget.matchData!.sportType,
+              sportName: widget.matchData!.sportName,
               teamSize: widget.matchData!.teamSize,
               title: widget.matchData!.title,
               description: widget.matchData!.description,
               minSkillLevel: widget.matchData!.minSkillLevel,
               maxSkillLevel: widget.matchData!.maxSkillLevel,
-              isPrivate: widget.matchData!.isPrivate,
               status: widget.matchData!.status,
               createdAt: widget.matchData!.createdAt,
               completedAt: widget.matchData!.completedAt,
@@ -256,24 +241,37 @@ class _DetailsTabState extends State<DetailsTab> {
             print('🔄 Updated userJoinedTeam to: $userJoinedTeam');
           }
 
-          // Also check local joined tracking
-          final hasJoinedLocally =
-              AuthManager.hasJoinedMatch(currentMatch.id.toString());
-
           // More comprehensive check for hiding join buttons
           final shouldHideJoinButtons = widget.isCreator ||
               userJoinedTeam != null ||
-              hasJoinedLocally ||
               currentUserTeam != null ||
               isJoining; // Also hide during joining process
+
+          // Check if user has joined the match (for management interface)
+          // Exclude creators as they have manage tab for management options
+          final userHasJoinedTeam =
+              currentUserTeam != null || userJoinedTeam != null;
+          final hasUserJoined = !widget.isCreator && userHasJoinedTeam;
 
           print('🔍 DEBUGGING JOIN BUTTONS:');
           print('  - isCreator: ${widget.isCreator}');
           print('  - userJoinedTeam: $userJoinedTeam');
-          print('  - hasJoinedLocally: $hasJoinedLocally');
           print('  - currentUserTeam: $currentUserTeam');
           print('  - isJoining: $isJoining');
           print('  - shouldHideJoinButtons: $shouldHideJoinButtons');
+
+          print('🔍 DEBUGGING MANAGEMENT INTERFACE:');
+          print('  - widget.isCreator: ${widget.isCreator}');
+          print('  - userJoinedTeam: $userJoinedTeam');
+          print('  - currentUserTeam: $currentUserTeam');
+          print('  - userHasJoinedTeam: $userHasJoinedTeam');
+          print('  - hasUserJoined: $hasUserJoined');
+          print('  - Should show management interface: $hasUserJoined');
+
+          if (hasUserJoined) {
+            print(
+                '🎨 RENDERING MANAGEMENT INTERFACE - This should be visible!');
+          }
 
           return CustomScrollView(
             slivers: [
@@ -283,6 +281,168 @@ class _DetailsTabState extends State<DetailsTab> {
                   child: MatchBoxDetails(match: currentMatch),
                 ),
               ),
+              // Management Interface - Only show if user has joined
+              if (hasUserJoined)
+                SliverToBoxAdapter(
+                  child: Padding(
+                    padding: const EdgeInsets.all(16.0),
+                    child: Container(
+                      padding: const EdgeInsets.all(16.0),
+                      child: Column(
+                        children: [
+                          Row(
+                            children: [
+                              // Invite Friends
+                              Expanded(
+                                child: Container(
+                                  height: 70,
+                                  decoration: BoxDecoration(
+                                    color: Colors.white,
+                                    borderRadius: BorderRadius.circular(8),
+                                  ),
+                                  child: Material(
+                                    color: Colors.transparent,
+                                    child: InkWell(
+                                      borderRadius: BorderRadius.circular(8),
+                                      onTap: () {
+                                        ScaffoldMessenger.of(context)
+                                            .showSnackBar(
+                                          const SnackBar(
+                                              content: Text(
+                                                  'Invite Friends feature coming soon!')),
+                                        );
+                                      },
+                                      child: const Column(
+                                        mainAxisAlignment:
+                                            MainAxisAlignment.center,
+                                        children: [
+                                          Icon(Icons.people_outline,
+                                              size: 32, color: Colors.black54),
+                                          SizedBox(height: 8),
+                                          Text(
+                                            'INVITE FRIENDS',
+                                            style: TextStyle(
+                                              color: Colors.black87,
+                                              fontSize: 12,
+                                              fontWeight: FontWeight.bold,
+                                            ),
+                                          ),
+                                        ],
+                                      ),
+                                    ),
+                                  ),
+                                ),
+                              ),
+                              const SizedBox(width: 8),
+                              // Share Match
+                              Expanded(
+                                child: Container(
+                                  height: 70,
+                                  decoration: BoxDecoration(
+                                    color: Colors.white,
+                                    borderRadius: BorderRadius.circular(8),
+                                  ),
+                                  child: Material(
+                                    color: Colors.transparent,
+                                    child: InkWell(
+                                      borderRadius: BorderRadius.circular(8),
+                                      onTap: () {
+                                        ScaffoldMessenger.of(context)
+                                            .showSnackBar(
+                                          const SnackBar(
+                                              content: Text(
+                                                  'Share Match feature coming soon!')),
+                                        );
+                                      },
+                                      child: const Column(
+                                        mainAxisAlignment:
+                                            MainAxisAlignment.center,
+                                        children: [
+                                          Icon(Icons.share_outlined,
+                                              size: 32, color: Colors.black54),
+                                          SizedBox(height: 8),
+                                          Text(
+                                            'SHARE MATCH',
+                                            style: TextStyle(
+                                              color: Colors.black87,
+                                              fontSize: 12,
+                                              fontWeight: FontWeight.bold,
+                                            ),
+                                          ),
+                                        ],
+                                      ),
+                                    ),
+                                  ),
+                                ),
+                              ),
+                            ],
+                          ),
+                          const SizedBox(height: 8),
+                          // Leave Match
+                          Container(
+                            width: double.infinity,
+                            height: 70,
+                            decoration: BoxDecoration(
+                              color: Colors.white,
+                              borderRadius: BorderRadius.circular(8),
+                            ),
+                            child: Material(
+                              color: Colors.transparent,
+                              child: InkWell(
+                                borderRadius: BorderRadius.circular(8),
+                                onTap: () {
+                                  showDialog(
+                                    context: context,
+                                    builder: (context) => AlertDialog(
+                                      title: const Text('Leave Match'),
+                                      content: const Text(
+                                          'Are you sure you want to leave this match?'),
+                                      actions: [
+                                        TextButton(
+                                          onPressed: () =>
+                                              Navigator.pop(context),
+                                          child: const Text('Cancel'),
+                                        ),
+                                        TextButton(
+                                          onPressed: () {
+                                            Navigator.pop(context);
+                                            ScaffoldMessenger.of(context)
+                                                .showSnackBar(
+                                              const SnackBar(
+                                                  content: Text(
+                                                      'Leave Match feature coming soon!')),
+                                            );
+                                          },
+                                          child: const Text('Leave'),
+                                        ),
+                                      ],
+                                    ),
+                                  );
+                                },
+                                child: const Column(
+                                  mainAxisAlignment: MainAxisAlignment.center,
+                                  children: [
+                                    Icon(Icons.exit_to_app,
+                                        size: 32, color: Colors.black54),
+                                    SizedBox(height: 8),
+                                    Text(
+                                      'LEAVE MATCH',
+                                      style: TextStyle(
+                                        color: Colors.black87,
+                                        fontSize: 12,
+                                        fontWeight: FontWeight.bold,
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                ),
               SliverToBoxAdapter(
                 child: Padding(
                   padding: const EdgeInsets.symmetric(horizontal: 8.0),
@@ -455,12 +615,9 @@ class _DetailsTabState extends State<DetailsTab> {
                 : (player.userName.isNotEmpty ? player.userName : 'Player');
           } else {
             // Check if the current user should be in this position (just joined but not in players list yet)
-            final hasJoinedLocally = AuthManager.hasJoinedMatch(
-                widget.matchData?.id.toString() ?? '');
             final userJoinedThisTeam = userJoinedTeam == team;
 
-            if (hasJoinedLocally &&
-                userJoinedThisTeam &&
+            if (userJoinedThisTeam &&
                 adjustedIndex == nonCaptainPlayers.length) {
               // This is likely the current user who just joined
               isCurrentUser = true;

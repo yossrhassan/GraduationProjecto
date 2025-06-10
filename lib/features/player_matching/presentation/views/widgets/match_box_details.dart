@@ -136,7 +136,7 @@ class MatchBoxDetails extends StatelessWidget {
               ),
               const SizedBox(width: 8),
               Text(
-                match.sportType,
+                match.sportName,
                 style: const TextStyle(
                   color: Colors.white,
                   fontSize: 14,

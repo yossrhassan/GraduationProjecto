@@ -8,13 +8,27 @@ class MatchesCubit extends Cubit<MatchesState> {
 
   MatchesCubit(this.matchesRepository) : super(MatchesInitial());
 
-  Future<void> getAvailableMatches() async {
+  Future<void> getAvailableMatches({int? sportTypeId}) async {
     emit(MatchesLoading());
     try {
-      final result = await matchesRepository.getAvailableMatches();
+      final result =
+          await matchesRepository.getAvailableMatches(sportTypeId: sportTypeId);
 
       result.fold((failure) => emit(MatchesError(failure.errMessage)),
           (matches) => emit(AvailableMatchesLoaded(matches)));
+    } catch (e) {
+      emit(MatchesError(e.toString()));
+    }
+  }
+
+  Future<void> getSports() async {
+    try {
+      final result = await matchesRepository.getSports();
+
+      result.fold(
+        (failure) => emit(MatchesError(failure.errMessage)),
+        (sports) => emit(SportsLoaded(sports)),
+      );
     } catch (e) {
       emit(MatchesError(e.toString()));
     }

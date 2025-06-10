@@ -4,8 +4,8 @@ import 'package:dio/dio.dart';
 import 'package:graduation_project/core/errors/failures.dart';
 import 'package:graduation_project/core/utils/api_service.dart';
 import 'package:graduation_project/features/player_matching/data/models/match_model.dart';
+import 'package:graduation_project/features/player_matching/data/models/sport_model.dart';
 import 'package:graduation_project/features/player_matching/data/repos/matches_repo.dart';
-import 'package:graduation_project/core/utils/auth_manager.dart';
 
 class MatchesRepositoryImpl implements MatchesRepository {
   final ApiService apiService;
@@ -13,22 +13,28 @@ class MatchesRepositoryImpl implements MatchesRepository {
   MatchesRepositoryImpl(this.apiService);
 
   @override
-  Future<Either<Failure, List<MatchModel>>> getAvailableMatches() async {
+  Future<Either<Failure, List<MatchModel>>> getAvailableMatches(
+      {int? sportTypeId}) async {
     try {
-      print('Getting available matches...');
+      print('Getting available matches with sport filter: $sportTypeId');
 
-      // Since Match/available returns 0 results, let's use Match/my-matches
-      // and filter on frontend to show matches NOT created by current user
-      final response = await apiService.get(endPoint: 'Match/my-matches');
+      // Build endpoint with optional sport type filter
+      String endpoint = 'Match/available';
+      if (sportTypeId != null) {
+        endpoint = '$endpoint?sportId=$sportTypeId';
+      }
+
+      final response = await apiService.get(endPoint: endpoint);
 
       if (response is List) {
-        print('Got ${response.length} total matches');
+        print('Got ${response.length} available matches from backend');
 
         print('🔍 DEBUGGING BACKEND RESPONSE - Available Matches:');
         for (int i = 0; i < response.length; i++) {
           final match = response[i];
           print('  Match ${match['id']}:');
           print('    Creator: ${match['creatorUserId']}');
+          print('    Sport Type: ${match['sportType']}');
           print('    Players field exists: ${match.containsKey('players')}');
           print('    Players: ${match['players']}');
           if (match['players'] is List) {
@@ -40,7 +46,6 @@ class MatchesRepositoryImpl implements MatchesRepository {
           }
         }
 
-        // Return all matches - let frontend filter for "available" ones
         final matches =
             response.map((match) => MatchModel.fromJson(match)).toList();
         return right(matches);
@@ -57,9 +62,39 @@ class MatchesRepositoryImpl implements MatchesRepository {
   }
 
   @override
+  Future<Either<Failure, List<SportModel>>> getSports() async {
+    try {
+      print('Getting sports list...');
+      final response = await apiService.get(endPoint: 'Sport/getAll');
+
+      if (response is List) {
+        print('Got ${response.length} sports from backend');
+
+        print('🔍 DEBUGGING SPORTS RESPONSE:');
+        for (int i = 0; i < response.length; i++) {
+          final sport = response[i];
+          print('  Sport ${sport['id']}: ${sport['name']}');
+        }
+
+        final sports =
+            response.map((sport) => SportModel.fromJson(sport)).toList();
+        return right(sports);
+      } else {
+        return left(ServerFailure('Unexpected response format'));
+      }
+    } catch (e) {
+      print('Error in getSports: $e');
+      if (e is DioException) {
+        return left(ServerFailure.fromDioError(e));
+      }
+      return left(ServerFailure(e.toString()));
+    }
+  }
+
+  @override
   Future<Either<Failure, List<MatchModel>>> getMyMatches() async {
     try {
-      print('Getting my matches...');
+      print('Getting my matches from backend...');
       final response = await apiService.get(endPoint: 'Match/my-matches');
 
       if (response is List) {
@@ -81,7 +116,6 @@ class MatchesRepositoryImpl implements MatchesRepository {
           }
         }
 
-        // Return all matches - let frontend filter for "my" ones
         final matches =
             response.map((match) => MatchModel.fromJson(match)).toList();
         return right(matches);
@@ -147,7 +181,7 @@ class MatchesRepositoryImpl implements MatchesRepository {
       Map<String, dynamic> matchData) async {
     try {
       final response =
-          await apiService.post(endPoint: 'Match/create', data: matchData);
+          await apiService.post(endPoint: 'Match', data: matchData);
 
       return right(true);
     } catch (e) {
@@ -166,7 +200,6 @@ class MatchesRepositoryImpl implements MatchesRepository {
   Future<Either<Failure, bool>> joinTeam(String matchId, String team) async {
     try {
       print('🔍 DEBUGGING: Attempting to join match $matchId, team $team');
-      print('🔍 DEBUGGING: Current user ID: ${AuthManager.userId}');
 
       final response = await apiService.post(
         endPoint: 'Match/$matchId/join',
@@ -176,15 +209,6 @@ class MatchesRepositoryImpl implements MatchesRepository {
       print('🔍 DEBUGGING: Join team successful!');
       print('  Response type: ${response.runtimeType}');
       print('  Response data: $response');
-
-      // If join was successful, track it locally
-      print('Successfully joined match $matchId');
-      await AuthManager.addJoinedMatch(matchId, team);
-
-      print('🔍 DEBUGGING: Local tracking updated');
-      print('  Joined matches: ${AuthManager.joinedMatchIds}');
-      print(
-          '  Joined team for $matchId: ${AuthManager.getJoinedTeam(matchId)}');
 
       return right(true);
     } catch (e) {
@@ -218,31 +242,16 @@ class MatchesRepositoryImpl implements MatchesRepository {
               responseText.toLowerCase().contains('already') &&
                   responseText.toLowerCase().contains('match')) {
             print('✅ DETECTED: User is already part of match $matchId');
-            print('📱 Adding to local tracking...');
-
-            // Add to local tracking so it appears in "My Matches"
-            await AuthManager.addJoinedMatch(matchId, team);
-
-            print(
-                '🔍 DEBUGGING: Local tracking updated for already joined match');
-            print('  Joined matches: ${AuthManager.joinedMatchIds}');
-            print(
-                '  Joined team for $matchId: ${AuthManager.getJoinedTeam(matchId)}');
-
-            print('✅ SUCCESS: Match $matchId added to local tracking');
             return right(
                 true); // Return success since user is already in the match
           }
 
-          print('❌ Error not recognized as "already joined"');
           return left(ServerFailure('Team is full or invalid team selection'));
         }
 
-        print('❌ Status code not 400: ${e.response?.statusCode}');
         return left(ServerFailure.fromDioError(e));
       }
 
-      print('❌ Not a DioException: $e');
       return left(ServerFailure(e.toString()));
     }
   }
