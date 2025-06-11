@@ -127,7 +127,9 @@ class _LoginViewState extends State<LoginView> {
                         LoginModel user = result['user'];
                         print('Login successful. User data: ${user.toJson()}');
 
-                        if (user.token != null && user.token!.isNotEmpty) {
+                        if (user.token != null &&
+                            user.token!.isNotEmpty &&
+                            user.id != null) {
                           await AuthManager.setAuthToken(user.token!);
                           print('Token set successfully: ${user.token}');
 

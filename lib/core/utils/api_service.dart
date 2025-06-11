@@ -78,6 +78,32 @@ class ApiService {
     }
   }
 
+  Future<dynamic> put({
+    required String endPoint,
+    required Map<String, dynamic> data,
+  }) async {
+    try {
+      print('Making PUT request to: $_baseUrl$endPoint');
+      print('With data: $data');
+      var response = await _dio.put('$_baseUrl$endPoint', data: data);
+      print('Response status: ${response.statusCode}');
+      print('Response data: ${response.data}');
+      return response.data;
+    } catch (e) {
+      if (e is DioError) {
+        print('Error during PUT request: $e');
+        print('Response status: ${e.response?.statusCode}');
+        print('Response body: ${e.response?.data}');
+        _handleAuthError(e);
+        throw Exception(
+            'Request failed with status: ${e.response?.statusCode}, body: ${e.response?.data}');
+      } else {
+        print('Unexpected error during PUT request: $e');
+        throw Exception('Unexpected error: $e');
+      }
+    }
+  }
+
   void _handleAuthError(dynamic error) {
     if (error is DioError && error.response?.statusCode == 401) {
       // Clear token on auth failures to force re-login

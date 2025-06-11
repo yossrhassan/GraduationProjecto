@@ -17,8 +17,15 @@ import 'package:graduation_project/features/player_matching/presentation/views/m
 import 'package:graduation_project/features/player_matching/presentation/views/matche_creation_view.dart';
 import 'package:graduation_project/features/player_matching/presentation/views/matches_view.dart';
 import 'package:graduation_project/features/register/presentation/views/register_view.dart';
+import 'package:graduation_project/features/settings/data/repos/settings_repo.dart';
+import 'package:graduation_project/features/settings/presentation/manager/settings_cubit.dart';
+import 'package:graduation_project/features/settings/presentation/views/change_password_view.dart';
+import 'package:graduation_project/features/settings/presentation/views/delete_account_view.dart';
+import 'package:graduation_project/features/settings/presentation/views/edit_profile_view.dart';
 import 'package:graduation_project/features/splash/presentation/views/splash_view.dart';
 import 'package:get_it/get_it.dart';
+import 'package:graduation_project/features/settings/presentation/views/settings_view.dart';
+import 'package:graduation_project/core/utils/service_locator.dart';
 
 abstract class AppRouter {
   static const kFacilitiesView = '/facilitiesView';
@@ -86,6 +93,7 @@ abstract class AppRouter {
       ),
       GoRoute(
         path: kLoginView,
+        name: 'login',
         builder: (context, state) => const LoginView(),
       ),
       GoRoute(

@@ -18,23 +18,22 @@ final getIt = GetIt.instance;
 void setup() {
   // Register API service
   getIt.registerSingleton<ApiService>(ApiService(Dio()));
-  
+
   // Register repositories
   getIt.registerSingleton<MatchesRepository>(
       MatchesRepositoryImpl(getIt.get<ApiService>()));
-      
+
   getIt.registerSingleton<FacilitiesRepoImpl>(
       FacilitiesRepoImpl(getIt.get<ApiService>()));
-      
-  getIt.registerSingleton<BookingRepo>(
-      BookingRepoImpl(getIt.get<ApiService>()));
-      
+
+  getIt
+      .registerSingleton<BookingRepo>(BookingRepoImpl(getIt.get<ApiService>()));
+
   getIt.registerSingleton<BookingHistoryRepo>(
       BookingHistoryRepoImpl(getIt.get<ApiService>()));
 
-  getIt.registerSingleton<CourtsRepo>(
-      CourtsRepoImpl(getIt.get<ApiService>()));
-      
+  getIt.registerSingleton<CourtsRepo>(CourtsRepoImpl(getIt.get<ApiService>()));
+
   // Register cubits that need to be globally accessible
   getIt.registerSingleton<MatchesCubit>(
       MatchesCubit(getIt.get<MatchesRepository>()));
