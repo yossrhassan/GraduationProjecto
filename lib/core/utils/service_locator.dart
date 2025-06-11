@@ -9,6 +9,9 @@ import 'package:graduation_project/features/booking/data/repos/courts_repo_impl.
 import 'package:graduation_project/features/booking_history/data/repos/booking_history_repo.dart';
 import 'package:graduation_project/features/booking_history/data/repos/booking_history_repo_impl.dart';
 import 'package:graduation_project/features/facilities/data/repos/facilities_repo_impl.dart';
+import 'package:graduation_project/features/settings/data/repos/settings_repo.dart';
+import 'package:graduation_project/features/settings/data/repos/user_service.dart';
+import 'package:graduation_project/features/settings/data/repos/delete_account_service.dart';
 
 final getIt = GetIt.instance;
 
@@ -24,5 +27,12 @@ void setup() {
   getIt.registerSingleton<BookingHistoryRepo>(
       BookingHistoryRepoImpl(getIt.get<ApiService>()));
 
-      getIt.registerSingleton<CourtsRepo>(CourtsRepoImpl(getIt.get<ApiService>()));
+  getIt.registerSingleton<CourtsRepo>(CourtsRepoImpl(getIt.get<ApiService>()));
+  // Register Settings dependencies
+  getIt.registerSingleton<UserService>(UserService(getIt.get<ApiService>()));
+
+  getIt.registerSingleton<SettingsRepo>(SettingsRepo(getIt.get<UserService>()));
+  getIt.registerSingleton<DeleteAccountService>(
+    DeleteAccountService(getIt.get<ApiService>()),
+  );
 }

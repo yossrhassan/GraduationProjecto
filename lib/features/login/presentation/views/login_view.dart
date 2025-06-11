@@ -126,12 +126,14 @@ class _LoginViewState extends State<LoginView> {
                       if (result != null && result['user'] != null) {
                         LoginModel user = result['user'];
 
-                        if (user.token != null && user.token!.isNotEmpty) {
+                        if (user.token != null &&
+                            user.token!.isNotEmpty &&
+                            user.id != null) {
                           await AuthManager.setAuthToken(user.token!);
+                          await AuthManager.setUserId(user.id!);
+
                           print(
-                              'Token set successfully in LoginView: ${user.token}');
-                          print(
-                              'AuthManager token after login: ${AuthManager.authToken}');
+                              '✅ Token and user ID set: token=${user.token}, id=${user.id}');
                           showSnackBar(context, 'Logged in successfully');
                           GoRouter.of(context).push(AppRouter.kHomeView);
                         } else {

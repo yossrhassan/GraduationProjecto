@@ -14,11 +14,22 @@ class HomeView extends StatelessWidget {
       backgroundColor: kBackGroundColor,
       appBar: AppBar(
         elevation: 0,
-        title: const Text("Home",
-            style: TextStyle(
-                fontSize: 26,
-                fontWeight: FontWeight.bold,
-                color: kPrimaryColor)),
+        title: const Text(
+          "Home",
+          style: TextStyle(
+            fontSize: 26,
+            fontWeight: FontWeight.bold,
+            color: kPrimaryColor,
+          ),
+        ),
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.settings, color: kPrimaryColor),
+            onPressed: () {
+              context.pushNamed('settings');
+            },
+          ),
+        ],
       ),
       body: SafeArea(
         child: Padding(
@@ -48,7 +59,9 @@ class HomeView extends StatelessWidget {
                   GoRouter.of(context).push(AppRouter.kBookingHistoryView);
                 },
               ),
-             const SizedBox(height: 30,)
+              const SizedBox(
+                height: 30,
+              )
             ],
           ),
         ),

@@ -12,8 +12,15 @@ import 'package:graduation_project/features/facilities/presentation/views/facili
 import 'package:graduation_project/features/home/presentation/views/home_view.dart';
 import 'package:graduation_project/features/login/presentation/views/login_view.dart';
 import 'package:graduation_project/features/register/presentation/views/register_view.dart';
+import 'package:graduation_project/features/settings/data/repos/settings_repo.dart';
+import 'package:graduation_project/features/settings/presentation/manager/settings_cubit.dart';
+import 'package:graduation_project/features/settings/presentation/views/change_password_view.dart';
+import 'package:graduation_project/features/settings/presentation/views/delete_account_view.dart';
+import 'package:graduation_project/features/settings/presentation/views/edit_profile_view.dart';
 import 'package:graduation_project/features/splash/presentation/views/splash_view.dart';
 import 'package:get_it/get_it.dart';
+import 'package:graduation_project/features/settings/presentation/views/settings_view.dart';
+import 'package:graduation_project/core/utils/service_locator.dart';
 
 abstract class AppRouter {
   static const kFacilitiesView = '/facilitiesView';
@@ -22,6 +29,10 @@ abstract class AppRouter {
   static const kRegisterView = '/registerView';
   static const kHomeView = '/homeView';
   static const kBookingHistoryView = '/bookingHistoryView';
+  static const kSettingsView = '/settingsView';
+  static const kEditProfileView = '/editProfileView';
+  static const kChangePasswordView = '/changePasswordView';
+  static const kDeleteAccountView = '/deleteAccountView';
 
   static final router = GoRouter(
     routes: [
@@ -38,6 +49,7 @@ abstract class AppRouter {
       ),
       GoRoute(
         path: kLoginView,
+        name: 'login',
         builder: (context, state) => const LoginView(),
       ),
       GoRoute(
@@ -70,6 +82,29 @@ abstract class AppRouter {
       GoRoute(
         path: kHomeView,
         builder: (context, state) => const HomeView(),
+      ),
+      GoRoute(
+        path: kSettingsView,
+        name: 'settings',
+        builder: (context, state) => BlocProvider(
+          create: (context) => SettingsCubit(getIt.get<SettingsRepo>()),
+          child: const SettingsView(),
+        ),
+      ),
+      GoRoute(
+        path: kEditProfileView,
+        name: 'editProfile',
+        builder: (context, state) => const EditProfileView(),
+      ),
+      GoRoute(
+        path: kChangePasswordView,
+        name: 'changePassword',
+        builder: (context, state) => const ChangePasswordView(),
+      ),
+      GoRoute(
+        path: kDeleteAccountView,
+        name: 'delete-account',
+        builder: (context, state) => const DeleteAccountView(),
       ),
     ],
   );

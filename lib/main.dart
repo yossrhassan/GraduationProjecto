@@ -15,6 +15,7 @@ void main() async {
   setup();
   WidgetsFlutterBinding.ensureInitialized();
   await AuthManager.loadAuthToken();
+  await AuthManager.loadUserId();
 
   runApp(const GraduationProject());
 }
@@ -32,13 +33,14 @@ class GraduationProject extends StatelessWidget {
         ),
       ],
       child: MaterialApp.router(
-        routerConfig: AppRouter.router,
-        debugShowCheckedModeBanner: false,
-        theme: ThemeData.dark().copyWith(
+          routerConfig: AppRouter.router,
+          debugShowCheckedModeBanner: false,
+          theme: ThemeData.dark().copyWith(
             scaffoldBackgroundColor: Colors.black,
-            textTheme:
-                GoogleFonts.montserratTextTheme(ThemeData.dark().textTheme)),
-      ),
+            textTheme: GoogleFonts.montserratTextTheme(
+              ThemeData.dark().textTheme ?? const TextTheme(),
+            ),
+          )),
     );
   }
 }
