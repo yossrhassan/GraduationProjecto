@@ -12,6 +12,10 @@ import 'package:graduation_project/features/facilities/data/repos/facilities_rep
 import 'package:graduation_project/features/player_matching/data/repos/matches_repo.dart';
 import 'package:graduation_project/features/player_matching/data/repos/matches_repo_impl.dart';
 import 'package:graduation_project/features/player_matching/presentation/manager/match_cubit/match_cubit.dart';
+import 'package:graduation_project/features/settings/data/repos/settings_repo.dart';
+import 'package:graduation_project/features/settings/data/repos/user_service.dart';
+import 'package:graduation_project/features/settings/data/repos/delete_account_service.dart';
+import 'package:graduation_project/services/friend_request_service.dart';
 
 final getIt = GetIt.instance;
 
@@ -33,6 +37,14 @@ void setup() {
       BookingHistoryRepoImpl(getIt.get<ApiService>()));
 
   getIt.registerSingleton<CourtsRepo>(CourtsRepoImpl(getIt.get<ApiService>()));
+
+  // Register settings services
+  getIt.registerSingleton<UserService>(UserService(getIt.get<ApiService>()));
+  getIt.registerSingleton<SettingsRepo>(SettingsRepo(getIt.get<UserService>()));
+  getIt.registerSingleton<DeleteAccountService>(
+      DeleteAccountService(getIt.get<ApiService>()));
+  getIt.registerSingleton<FriendRequestService>(
+      FriendRequestService(getIt.get<ApiService>()));
 
   // Register cubits that need to be globally accessible
   getIt.registerSingleton<MatchesCubit>(

@@ -107,7 +107,8 @@ class _SettingsViewState extends State<SettingsView> {
                   trailing:
                       const Icon(Icons.chevron_right, color: Colors.white54),
                   onTap: () {
-                    context.pushNamed('editProfile', extra: user);
+                    GoRouter.of(context)
+                        .push(AppRouter.kEditProfileView, extra: user);
                   },
                 ),
               ),
@@ -122,7 +123,7 @@ class _SettingsViewState extends State<SettingsView> {
                   trailing:
                       const Icon(Icons.chevron_right, color: Colors.white54),
                   onTap: () {
-                    context.pushNamed('changePassword');
+                    GoRouter.of(context).push(AppRouter.kChangePasswordView);
                   },
                 ),
               ),
@@ -138,29 +139,8 @@ class _SettingsViewState extends State<SettingsView> {
                       style: TextStyle(color: Colors.red)),
                   trailing:
                       const Icon(Icons.chevron_right, color: Colors.white54),
-                  onTap: () async {
-                    final confirmed = await showDialog<bool>(
-                      context: context,
-                      builder: (context) => AlertDialog(
-                        title: const Text('Delete Account'),
-                        content: const Text(
-                            'Are you sure you want to delete your account? This action cannot be undone.'),
-                        actions: [
-                          TextButton(
-                            onPressed: () => Navigator.pop(context, false),
-                            child: const Text('Cancel'),
-                          ),
-                          TextButton(
-                            onPressed: () => Navigator.pop(context, true),
-                            child: const Text('Delete',
-                                style: TextStyle(color: Colors.red)),
-                          ),
-                        ],
-                      ),
-                    );
-                    if (confirmed == true) {
-                      // TODO: Implement account deletion
-                    }
+                  onTap: () {
+                    GoRouter.of(context).push(AppRouter.kDeleteAccountView);
                   },
                 ),
               ),

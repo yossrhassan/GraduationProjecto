@@ -108,6 +108,26 @@ class _LoginViewState extends State<LoginView> {
                 hintText: 'Password',
               ),
               const SizedBox(
+                height: 10,
+              ),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.end,
+                children: [
+                  GestureDetector(
+                    onTap: () {
+                      GoRouter.of(context).push(AppRouter.kForgotPasswordView);
+                    },
+                    child: const Text(
+                      'Forgot Password?',
+                      style: TextStyle(
+                        color: kPrimaryColor,
+                        fontSize: 14,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(
                 height: 20,
               ),
               CustomButton(

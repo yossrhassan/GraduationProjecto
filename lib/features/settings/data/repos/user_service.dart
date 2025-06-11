@@ -11,13 +11,30 @@ class UserService {
 
   Future<UserModel> getUserProfile(int userId) async {
     try {
+      print('🌐 UserService: Making API call for userId: $userId');
       final response = await apiService.get(
         endPoint: 'AdminAuth/GetUserById?id=$userId',
       );
-      print('✅ User profile response: $response');
-      return UserModel.fromJson(response);
+      print('✅ UserService: Raw API response: $response');
+      print('✅ UserService: Response type: ${response.runtimeType}');
+
+      // Extract the 'data' field from the response
+      Map<String, dynamic> userData;
+      if (response is Map<String, dynamic> && response.containsKey('data')) {
+        userData = response['data'] as Map<String, dynamic>;
+        print('✅ UserService: Extracted data field: $userData');
+      } else {
+        // Fallback if response doesn't have nested structure
+        userData = response as Map<String, dynamic>;
+        print('✅ UserService: Using response directly: $userData');
+      }
+
+      final userModel = UserModel.fromJson(userData);
+      print(
+          '✅ UserService: Parsed UserModel - firstName: ${userModel.firstName}, lastName: ${userModel.lastName}, email: ${userModel.email}');
+      return userModel;
     } catch (e) {
-      print('❌ Failed to load user profile: $e');
+      print('❌ UserService: Failed to load user profile: $e');
       rethrow;
     }
   }
@@ -69,9 +86,15 @@ class UserService {
     required String phoneNumber,
   }) async {
     try {
-      await apiService.put(
+      print('🔄 UserService: Updating user profile...');
+      print('🔄 UserService: Current userId: ${AuthManager.userId}');
+      print(
+          '🔄 UserService: Data to send: {firstName: $firstName, lastName: $lastName, userName: $userName, email: $email, phoneNumber: $phoneNumber}');
+
+      final response = await apiService.put(
         endPoint: 'Auth/UserProfile',
         data: {
+          "id": AuthManager.userId,
           "firstName": firstName,
           "lastName": lastName,
           "userName": userName,
@@ -79,8 +102,10 @@ class UserService {
           "phoneNumber": phoneNumber,
         },
       );
+
+      print('✅ UserService: Profile update response: $response');
     } catch (e) {
-      print('❌ Failed to update profile: $e');
+      print('❌ UserService: Failed to update profile: $e');
       rethrow;
     }
   }

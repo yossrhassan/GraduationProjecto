@@ -15,7 +15,7 @@ class FacilitiesRepoImpl implements FacilitiesRepo {
     try {
       print('🔍 FACILITIES: Fetching facilities...');
       var body = await apiService.get(endPoint: 'Facilities?isOwner=false');
-      
+
       print('🔍 FACILITIES: Response type: ${body.runtimeType}');
       print('🔍 FACILITIES: Response: $body');
 

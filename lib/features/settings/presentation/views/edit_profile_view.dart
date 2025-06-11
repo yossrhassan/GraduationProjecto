@@ -38,6 +38,7 @@ import 'package:graduation_project/core/utils/api_service.dart';
 import 'package:graduation_project/features/settings/data/repos/user_service.dart';
 import 'package:graduation_project/core/utils/auth_manager.dart';
 import 'package:graduation_project/features/settings/data/models/user_model.dart';
+import 'package:graduation_project/core/utils/service_locator.dart';
 
 class EditProfileView extends StatefulWidget {
   final UserModel? user;
@@ -101,7 +102,7 @@ class _EditProfileViewState extends State<EditProfileView> {
     print('Current token: ${AuthManager.authToken}');
 
     try {
-      await UserService(ApiService(Dio())).updateUserProfile(
+      await getIt<UserService>().updateUserProfile(
         firstName: firstName,
         lastName: lastName,
         userName: userName,

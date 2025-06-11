@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:graduation_project/constants.dart';
 
 class NavigationCard extends StatelessWidget {
   const NavigationCard(
@@ -9,6 +10,7 @@ class NavigationCard extends StatelessWidget {
   final String title;
   final String imageUrl;
   final VoidCallback onTap;
+
   @override
   Widget build(BuildContext context) {
     return Container(
@@ -28,39 +30,30 @@ class NavigationCard extends StatelessWidget {
         clipBehavior: Clip.antiAlias,
         child: InkWell(
           onTap: onTap,
-          child: Stack(
-            alignment: Alignment.centerLeft,
-            children: [
-              Image.asset(
-                imageUrl,
-                height: 120,
-                width: double.infinity,
-                fit: BoxFit.cover,
-              ),
-              Container(
-                height: 120,
-                width: double.infinity,
-                color: Colors.black.withOpacity(0.3),
-                padding: const EdgeInsets.symmetric(horizontal: 16),
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    Expanded(
-                      child: Text(
-                        title,
-                        style: const TextStyle(
-                          fontSize: 18,
-                          fontWeight: FontWeight.bold,
-                          color: Colors.white,
-                        ),
-                      ),
+          child: Container(
+            height: 120,
+            width: double.infinity,
+            decoration: BoxDecoration(
+              color: Colors.grey[800], // Simple dark background
+            ),
+            padding: const EdgeInsets.symmetric(horizontal: 16),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Expanded(
+                  child: Text(
+                    title,
+                    style: const TextStyle(
+                      fontSize: 18,
+                      fontWeight: FontWeight.bold,
+                      color: Colors.white,
                     ),
-                    const Icon(Icons.arrow_forward_ios,
-                        color: Colors.white, size: 18),
-                  ],
+                  ),
                 ),
-              ),
-            ],
+                const Icon(Icons.arrow_forward_ios,
+                    color: Colors.white, size: 18),
+              ],
+            ),
           ),
         ),
       ),

@@ -6,6 +6,7 @@ import 'package:graduation_project/features/player_matching/presentation/manager
 import 'package:graduation_project/features/player_matching/presentation/manager/match_cubit/match_state.dart';
 import 'package:graduation_project/features/player_matching/presentation/views/widgets/match_box_details.dart';
 import 'package:graduation_project/features/player_matching/presentation/views/widgets/player_avatar.dart';
+import 'package:graduation_project/features/player_matching/presentation/views/widgets/player_profile_dialog.dart';
 import 'package:graduation_project/core/utils/auth_manager.dart';
 
 class DetailsTab extends StatefulWidget {
@@ -704,6 +705,11 @@ class _DetailsTabState extends State<DetailsTab> {
             isUser: isCurrentUser,
             isCaptain: isCaptain,
             playerName: playerName,
+            onTap: player != null
+                ? () {
+                    PlayerProfileDialog.show(context, player!, isCaptain);
+                  }
+                : null,
           ),
         );
       },

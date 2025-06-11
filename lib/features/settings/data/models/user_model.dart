@@ -14,12 +14,15 @@ class UserModel {
   });
 
   factory UserModel.fromJson(Map<String, dynamic> json) {
+    print('🧪 UserModel.fromJson - Raw JSON: $json');
+    print('🧪 UserModel.fromJson - Available keys: ${json.keys.toList()}');
+
     return UserModel(
       id: json['id'] ?? 0,
-      firstName: json['firstName'] ?? '',
-      lastName: json['lastName'] ?? '',
-      email: json['email'] ?? '',
-      phoneNumber: json['phoneNumber'] ?? '',
+      firstName: json['firstName']?.toString() ?? '',
+      lastName: json['lastName']?.toString() ?? '',
+      email: json['email']?.toString() ?? '',
+      phoneNumber: json['phoneNumber']?.toString() ?? '',
     );
   }
 }

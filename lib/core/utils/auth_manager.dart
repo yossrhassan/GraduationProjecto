@@ -65,7 +65,6 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'dart:convert';
 
 class AuthManager {
-  static int? userId; // In-memory cache
   static String? _authToken;
   static int? _userId;
   static final ValueNotifier<bool> authStateChanges =
