@@ -172,22 +172,57 @@ class _MatchCreationViewState extends State<MatchCreationView> {
                           'Select a booking',
                           style: TextStyle(color: Colors.white54),
                         ),
+                        selectedItemBuilder: (context) {
+                          return upcomingBookings.map((booking) {
+                            return Container(
+                              width: double.infinity,
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                mainAxisAlignment: MainAxisAlignment.center,
+                                children: [
+                                  Text(
+                                    '${booking.facilityName} - ${booking.courtName}',
+                                    style: const TextStyle(color: Colors.white),
+                                    overflow: TextOverflow.ellipsis,
+                                    maxLines: 1,
+                                  ),
+                                  Text(
+                                    '${booking.date} | ${booking.startTime} - ${booking.endTime}',
+                                    style: const TextStyle(
+                                        color: Colors.white70, fontSize: 12),
+                                    overflow: TextOverflow.ellipsis,
+                                    maxLines: 1,
+                                  ),
+                                ],
+                              ),
+                            );
+                          }).toList();
+                        },
                         items: upcomingBookings.map((booking) {
                           return DropdownMenuItem<BookingHistoryModel>(
                             value: booking,
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                Text(
-                                  '${booking.facilityName} - ${booking.courtName}',
-                                  style: const TextStyle(color: Colors.white),
-                                ),
-                                Text(
-                                  '${booking.date} | ${booking.startTime} - ${booking.endTime}',
-                                  style: const TextStyle(
-                                      color: Colors.white70, fontSize: 14),
-                                ),
-                              ],
+                            child: Container(
+                              width: double.infinity,
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  Text(
+                                    '${booking.facilityName} - ${booking.courtName}',
+                                    style: const TextStyle(color: Colors.white),
+                                    overflow: TextOverflow.ellipsis,
+                                    maxLines: 1,
+                                  ),
+                                  const SizedBox(height: 4),
+                                  Text(
+                                    '${booking.date} | ${booking.startTime} - ${booking.endTime}',
+                                    style: const TextStyle(
+                                        color: Colors.white70, fontSize: 12),
+                                    overflow: TextOverflow.ellipsis,
+                                    maxLines: 1,
+                                  ),
+                                ],
+                              ),
                             ),
                           );
                         }).toList(),

@@ -35,13 +35,21 @@ class MatchesCubit extends Cubit<MatchesState> {
   }
 
   Future<void> getMyMatches() async {
+    print('🔍 CUBIT: Starting getMyMatches()');
     emit(MatchesLoading());
     try {
       final result = await matchesRepository.getMyMatches();
 
-      result.fold((failure) => emit(MatchesError(failure.errMessage)),
-          (matches) => emit(MyMatchesLoaded(matches)));
+      result.fold((failure) {
+        print('🔍 CUBIT: getMyMatches failed: ${failure.errMessage}');
+        emit(MatchesError(failure.errMessage));
+      }, (matches) {
+        print(
+            '🔍 CUBIT: getMyMatches succeeded with ${matches.length} matches');
+        emit(MyMatchesLoaded(matches));
+      });
     } catch (e) {
+      print('🔍 CUBIT: getMyMatches exception: $e');
       emit(MatchesError(e.toString()));
     }
   }
@@ -83,13 +91,18 @@ class MatchesCubit extends Cubit<MatchesState> {
 
   Future<void> joinTeam(String matchId, String team) async {
     try {
+      print('🔍 CUBIT: Attempting to join match $matchId, team $team');
       final result = await matchesRepository.joinTeam(matchId, team);
 
       result.fold(
-        (failure) => emit(MatchesError(failure.errMessage)),
+        (failure) {
+          print('🔍 CUBIT: Join team failed: ${failure.errMessage}');
+          emit(MatchesError(failure.errMessage));
+        },
         (success) {
           // After successful join (or already joined), refresh match details and lists
-          print('Join successful, refreshing match details and lists');
+          print(
+              '🔍 CUBIT: Join successful, refreshing match details and lists');
           getMatchDetails(matchId);
           // Also refresh the matches lists since filtering will change
           getAvailableMatches();
@@ -97,6 +110,7 @@ class MatchesCubit extends Cubit<MatchesState> {
         },
       );
     } catch (e) {
+      print('🔍 CUBIT: Join team exception: $e');
       emit(MatchesError(e.toString()));
     }
   }

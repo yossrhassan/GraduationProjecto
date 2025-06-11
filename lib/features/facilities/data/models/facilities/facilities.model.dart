@@ -22,12 +22,12 @@ class FacilitiesModel extends Equatable {
 	});
 
 	factory FacilitiesModel.fromJson(Map<String, dynamic> json) => FacilitiesModel(
-				id: json['id'] as int?,
+				id: json['id'] != null ? int.tryParse(json['id'].toString()) : null,
 				name: json['name'] as String?,
 				openingTime: json['openingTime'] as String?,
 				closingTime: json['closingTime'] as String?,
 				imageUrl: json['imageUrl'] as String?,
-				ownerId: json['ownerId'] as int?,
+				ownerId: json['ownerId'] != null ? int.tryParse(json['ownerId'].toString()) : null,
 				address: json['address'] == null
 						? null
 						: Address.fromJson(json['address'] as Map<String, dynamic>),

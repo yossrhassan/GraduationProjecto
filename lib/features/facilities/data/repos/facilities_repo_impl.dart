@@ -13,23 +13,50 @@ class FacilitiesRepoImpl implements FacilitiesRepo {
   @override
   Future<Either<Failure, List<FacilitiesModel>>> fetchFacilities() async {
     try {
-      var body = await apiService.get(endPoint: 'Facilities/GetAll');
+      print('🔍 FACILITIES: Fetching facilities...');
+      var body = await apiService.get(endPoint: 'Facilities?isOwner=false');
+      
+      print('🔍 FACILITIES: Response type: ${body.runtimeType}');
+      print('🔍 FACILITIES: Response: $body');
 
-      // Check if the response indicates success
-      if (body['success'] == true) {
-        var data = body['data'];
-        List<FacilitiesModel> facilities = (data as List)
-            .map((facilityJson) => FacilitiesModel.fromJson(facilityJson))
-            .toList();
-
-        return right(facilities);
+      // Handle different response formats
+      List<dynamic> facilitiesData;
+      
+      if (body is List) {
+        // Direct array response
+        facilitiesData = body;
+        print('🔍 FACILITIES: Direct array response with ${facilitiesData.length} items');
+      } else if (body is Map && body['success'] == true) {
+        // Wrapped response with success flag
+        facilitiesData = body['data'] as List;
+        print('🔍 FACILITIES: Wrapped response with ${facilitiesData.length} items');
+      } else if (body is Map && body['data'] != null) {
+        // Response with data field but no success flag
+        facilitiesData = body['data'] as List;
+        print('🔍 FACILITIES: Data field response with ${facilitiesData.length} items');
       } else {
-        // Handle case where success is false
-        String errorMessage = body['message'] ?? 'Failed to fetch facilities';
+        // Unexpected format
+        print('🔍 FACILITIES: Unexpected response format');
+        String errorMessage = 'Unexpected response format';
+        if (body is Map && body['message'] != null) {
+          errorMessage = body['message'];
+        }
         return left(ServerFailure(errorMessage));
       }
+
+      List<FacilitiesModel> facilities = facilitiesData
+          .map((facilityJson) {
+            print('🔍 FACILITIES: Processing facility: $facilityJson');
+            return FacilitiesModel.fromJson(facilityJson);
+          })
+          .toList();
+
+      print('🔍 FACILITIES: Successfully parsed ${facilities.length} facilities');
+      return right(facilities);
+      
     } catch (e) {
-      if (e is DioError) {
+      print('🔍 FACILITIES: Error occurred: $e');
+      if (e is DioException) {
         return left(ServerFailure.fromDioError(e));
       } else {
         return left(ServerFailure(e.toString()));

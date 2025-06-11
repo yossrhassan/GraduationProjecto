@@ -5,6 +5,7 @@ import 'package:graduation_project/features/player_matching/data/models/player_m
 class MatchModel {
   final int id;
   final int creatorUserId;
+  final String? creatorUserName;
   final int bookingId;
   final String sportName;
   final int teamSize;
@@ -23,6 +24,7 @@ class MatchModel {
   MatchModel({
     required this.id,
     required this.creatorUserId,
+    this.creatorUserName,
     required this.bookingId,
     required this.sportName,
     required this.teamSize,
@@ -48,25 +50,65 @@ class MatchModel {
           .toList();
     }
 
+    // Get creator's name from JSON or try to find it in players list
+    String creatorName = json['creatorUserName']?.toString() ?? '';
+
+    // If creatorUserName is not provided, try to find creator in players list
+    if (creatorName.isEmpty &&
+        json['players'] is List &&
+        json['creatorUserId'] != null) {
+      final playersList = json['players'] as List;
+      for (final playerJson in playersList) {
+        if (playerJson['userId'] == json['creatorUserId']) {
+          creatorName = playerJson['userName']?.toString() ?? '';
+          break;
+        }
+      }
+    }
+
+    // Final fallback to 'Creator' if still empty
+    if (creatorName.isEmpty) {
+      creatorName = 'Creator';
+    }
+
     // If players list is empty but we have a creator, add the creator as a player
     if (playersList.isEmpty && json['creatorUserId'] != null) {
       print(
-          'Adding creator ${json['creatorUserId']} to players list for match ${json['id']}');
+          'Adding creator ${json['creatorUserId']} ($creatorName) to players list for match ${json['id']}');
       playersList.add(PlayerModel(
         id: json['creatorUserId'],
         userId: json['creatorUserId'],
-        userName: 'Creator',
+        userName: creatorName,
         status: 'CheckedIn',
         team: 'A',
         invitedAt: DateTime.now(),
-        responseAt: DateTime.now(),
-        checkedInAt: DateTime.now(),
+        // responseAt: DateTime.now(),
+        // checkedInAt: DateTime.now(),
       ));
+    } else if (playersList.isNotEmpty && json['creatorUserId'] != null) {
+      // Check if creator is already in the players list, if not add them
+      bool creatorExists =
+          playersList.any((player) => player.userId == json['creatorUserId']);
+      if (!creatorExists) {
+        print(
+            'Creator ${json['creatorUserId']} ($creatorName) not found in players list, adding to Team A');
+        playersList.insert(
+            0,
+            PlayerModel(
+              id: json['creatorUserId'],
+              userId: json['creatorUserId'],
+              userName: creatorName,
+              status: 'CheckedIn',
+              team: 'A',
+              invitedAt: DateTime.now(),
+            ));
+      }
     }
 
     return MatchModel(
       id: json['id'],
       creatorUserId: json['creatorUserId'],
+      creatorUserName: json['creatorUserName']?.toString(),
       bookingId: json['bookingId'],
       sportName: json['sportName'],
       teamSize: json['teamSize'],
@@ -90,6 +132,7 @@ class MatchModel {
     return {
       'id': id,
       'creatorUserId': creatorUserId,
+      'creatorUserName': creatorUserName,
       'bookingId': bookingId,
       'sportType': sportName,
       'teamSize': teamSize,

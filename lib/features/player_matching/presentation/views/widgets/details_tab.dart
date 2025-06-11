@@ -112,8 +112,8 @@ class _DetailsTabState extends State<DetailsTab> {
               status: 'CheckedIn',
               team: team,
               invitedAt: DateTime.now(),
-              responseAt: DateTime.now(),
-              checkedInAt: DateTime.now(),
+              // responseAt: DateTime.now(),
+              // checkedInAt: DateTime.now(),
             );
 
             // Update the match data with the new player
@@ -124,6 +124,7 @@ class _DetailsTabState extends State<DetailsTab> {
             final updatedMatch = MatchModel(
               id: widget.matchData!.id,
               creatorUserId: widget.matchData!.creatorUserId,
+              creatorUserName: widget.matchData!.creatorUserName,
               bookingId: widget.matchData!.bookingId,
               sportName: widget.matchData!.sportName,
               teamSize: widget.matchData!.teamSize,
@@ -148,8 +149,12 @@ class _DetailsTabState extends State<DetailsTab> {
             );
 
             // Refresh the matches lists in background to update filtering
+            print(
+                '🔍 DETAILS_TAB: Refreshing match lists after successful join');
             cubit.getAvailableMatches();
             cubit.getMyMatches();
+
+            // Just stay on the current page - the match lists will refresh automatically
 
             print(
                 'User ${AuthManager.userId} joined team $team in match ${widget.matchData!.id}');
@@ -210,17 +215,49 @@ class _DetailsTabState extends State<DetailsTab> {
       builder: (context, state) {
         print('🔄 DetailsTab build - State: ${state.runtimeType}');
 
-        // Always prioritize widget.matchData if available, then fall back to state
+        // Prioritize state data (more up-to-date) over widget.matchData
         MatchModel? currentMatch;
 
-        if (widget.matchData != null) {
+        // Check for updated match data in various state types
+        if (state is MatchDetailsLoaded) {
+          currentMatch = state.match;
+          print(
+              '🎯 Using MatchDetailsLoaded state data: ID=${currentMatch.id}, Players count: ${currentMatch.players?.length ?? 0}');
+        } else if (state is MyMatchesLoaded && widget.matchData != null) {
+          // Find the updated match in MyMatches state
+          try {
+            final updatedMatch = state.matches.firstWhere(
+              (match) => match.id == widget.matchData!.id,
+            );
+            currentMatch = updatedMatch;
+            print(
+                '🎯 Using MyMatchesLoaded state data: ID=${currentMatch.id}, Players count: ${currentMatch.players?.length ?? 0}');
+          } catch (e) {
+            // Match not found in state, use widget data
+            currentMatch = widget.matchData!;
+            print(
+                '🎯 Match not found in MyMatchesLoaded, using widget data: ID=${currentMatch.id}, Players count: ${currentMatch.players?.length ?? 0}');
+          }
+        } else if (state is AvailableMatchesLoaded &&
+            widget.matchData != null) {
+          // Find the updated match in AvailableMatches state
+          try {
+            final updatedMatch = state.matches.firstWhere(
+              (match) => match.id == widget.matchData!.id,
+            );
+            currentMatch = updatedMatch;
+            print(
+                '🎯 Using AvailableMatchesLoaded state data: ID=${currentMatch.id}, Players count: ${currentMatch.players?.length ?? 0}');
+          } catch (e) {
+            // Match not found in state, use widget data
+            currentMatch = widget.matchData!;
+            print(
+                '🎯 Match not found in AvailableMatchesLoaded, using widget data: ID=${currentMatch.id}, Players count: ${currentMatch.players?.length ?? 0}');
+          }
+        } else if (widget.matchData != null) {
           currentMatch = widget.matchData!;
           print(
               '🎯 Using widget match data: ID=${currentMatch.id}, Players count: ${currentMatch.players?.length ?? 0}');
-        } else if (state is MatchDetailsLoaded) {
-          currentMatch = state.match;
-          print(
-              '🎯 Using state match data: ID=${currentMatch.id}, Players count: ${currentMatch.players?.length ?? 0}');
         }
 
         if (currentMatch != null) {
@@ -570,38 +607,52 @@ class _DetailsTabState extends State<DetailsTab> {
         bool isCurrentUser = false;
         String? playerName;
 
-        // Get all players for this team
+        // Get all players for this team and remove duplicates based on userId
         final teamPlayers = players.where((p) => p.team == team).toList();
+
+        // Remove duplicate players based on userId
+        final uniqueTeamPlayers = <PlayerModel>[];
+        final seenUserIds = <int>{};
+
+        for (final p in teamPlayers) {
+          if (!seenUserIds.contains(p.userId)) {
+            seenUserIds.add(p.userId);
+            uniqueTeamPlayers.add(p);
+          }
+        }
 
         // Special handling for Team A position 0 (Captain)
         if (team == 'A' && index == 0) {
           isCaptain = true;
 
-          // Find the match creator (captain) - they should always be at position 0 in Team A
-          final captainPlayer = teamPlayers.firstWhere(
+          // Find the match creator (captain) in the unique players list
+          final captainIndex = uniqueTeamPlayers.indexWhere(
             (p) => p.userId == widget.matchData?.creatorUserId,
-            orElse: () => PlayerModel(
+          );
+
+          if (captainIndex != -1) {
+            player = uniqueTeamPlayers[captainIndex];
+            isCurrentUser = player.userId == currentUserId;
+            playerName = isCurrentUser
+                ? 'You'
+                : (player.userName.isNotEmpty ? player.userName : 'Captain');
+          } else {
+            // Creator not found in players list, create a placeholder
+            final creatorName = widget.matchData?.creatorUserName ?? 'Captain';
+            player = PlayerModel(
               id: 0,
               userId: widget.matchData?.creatorUserId ?? 0,
-              userName: widget.isCreator ? 'You' : 'Captain',
+              userName: widget.isCreator ? 'You' : creatorName,
               status: 'CheckedIn',
               team: 'A',
               invitedAt: DateTime.now(),
-              responseAt: DateTime.now(),
-              checkedInAt: DateTime.now(),
-            ),
-          );
-
-          player = captainPlayer;
-          isCurrentUser = captainPlayer.userId == currentUserId;
-          playerName = isCurrentUser
-              ? 'You'
-              : (captainPlayer.userName.isNotEmpty
-                  ? captainPlayer.userName
-                  : 'Captain');
+            );
+            isCurrentUser = widget.matchData?.creatorUserId == currentUserId;
+            playerName = isCurrentUser ? 'You' : creatorName;
+          }
         } else {
           // For other positions, get non-captain players in order
-          final nonCaptainPlayers = teamPlayers
+          final nonCaptainPlayers = uniqueTeamPlayers
               .where((p) => p.userId != widget.matchData?.creatorUserId)
               .toList();
 
@@ -618,7 +669,8 @@ class _DetailsTabState extends State<DetailsTab> {
             final userJoinedThisTeam = userJoinedTeam == team;
 
             if (userJoinedThisTeam &&
-                adjustedIndex == nonCaptainPlayers.length) {
+                adjustedIndex == nonCaptainPlayers.length &&
+                !seenUserIds.contains(currentUserId)) {
               // This is likely the current user who just joined
               isCurrentUser = true;
               playerName = 'You';
@@ -630,8 +682,6 @@ class _DetailsTabState extends State<DetailsTab> {
                 status: 'CheckedIn',
                 team: team,
                 invitedAt: DateTime.now(),
-                responseAt: DateTime.now(),
-                checkedInAt: DateTime.now(),
               );
             }
           }

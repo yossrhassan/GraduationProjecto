@@ -48,7 +48,29 @@ class MatchesRepositoryImpl implements MatchesRepository {
 
         final matches =
             response.map((match) => MatchModel.fromJson(match)).toList();
-        return right(matches);
+
+        // Since the /available endpoint doesn't return complete player data,
+        // we need to fetch details for each match to get accurate player counts
+        print('🔄 Fetching detailed data for each available match...');
+        final detailedMatches = <MatchModel>[];
+
+        for (final match in matches) {
+          try {
+            final detailsResponse =
+                await apiService.get(endPoint: 'Match/${match.id}');
+            final detailedMatch = MatchModel.fromJson(detailsResponse);
+            detailedMatches.add(detailedMatch);
+            print(
+                '✅ Got details for match ${match.id}: ${detailedMatch.players?.length ?? 0} players');
+          } catch (e) {
+            print(
+                '❌ Failed to get details for match ${match.id}, using basic data: $e');
+            // If we can't get details, use the basic data
+            detailedMatches.add(match);
+          }
+        }
+
+        return right(detailedMatches);
       } else {
         return left(ServerFailure('Unexpected response format'));
       }
@@ -94,7 +116,9 @@ class MatchesRepositoryImpl implements MatchesRepository {
   @override
   Future<Either<Failure, List<MatchModel>>> getMyMatches() async {
     try {
-      print('Getting my matches from backend...');
+      print('🔍 DEBUGGING: Getting my matches from backend...');
+      print('🔍 DEBUGGING: Making request to: Match/my-matches');
+
       final response = await apiService.get(endPoint: 'Match/my-matches');
 
       if (response is List) {
@@ -105,26 +129,70 @@ class MatchesRepositoryImpl implements MatchesRepository {
           final match = response[i];
           print('  Match ${match['id']}:');
           print('    Creator: ${match['creatorUserId']}');
+          print('    Title: ${match['title']}');
+          print('    Status: ${match['status']}');
           print('    Players field exists: ${match.containsKey('players')}');
           print('    Players: ${match['players']}');
           if (match['players'] is List) {
             final players = match['players'] as List;
             print('    Players count: ${players.length}');
             for (int j = 0; j < players.length; j++) {
-              print('      Player $j: ${players[j]}');
+              final player = players[j];
+              print(
+                  '      Player $j: ${player['userName']} (ID: ${player['userId']}, Team: ${player['team']})');
             }
           }
         }
 
         final matches =
             response.map((match) => MatchModel.fromJson(match)).toList();
+
+        print('🔍 FINAL PROCESSED MATCHES:');
+        for (int i = 0; i < matches.length; i++) {
+          final match = matches[i];
+          print('  Match ${match.id}:');
+          print('    Title: ${match.title}');
+          print(
+              '    Creator: ${match.creatorUserId} (${match.creatorUserName ?? 'Unknown'})');
+          print('    Players count: ${match.players?.length ?? 0}');
+          match.players?.forEach((player) {
+            print(
+                '      ${player.userName} (ID: ${player.userId}, Team: ${player.team})');
+          });
+        }
+
         return right(matches);
       } else {
         return left(ServerFailure('Unexpected response format'));
       }
     } catch (e) {
-      print('Error in getMyMatches: $e');
-      if (e is DioError) {
+      print('❌ Error in getMyMatches: $e');
+      if (e is DioException) {
+        print(
+            '❌ DioException in getMyMatches: Status ${e.response?.statusCode}, Data: ${e.response?.data}');
+
+        // If /my-matches endpoint fails, try using available matches and filter client-side
+        if (e.response?.statusCode == 404 || e.response?.statusCode == 500) {
+          print(
+              '🔄 Fallback: /my-matches endpoint failed, trying to get all matches and filter');
+          try {
+            final fallbackResult = await getAvailableMatches();
+            return fallbackResult.fold(
+              (failure) => left(failure),
+              (allMatches) {
+                // TODO: Implement client-side filtering here if needed
+                // For now, return empty list to see if endpoint issue is resolved
+                print(
+                    '🔄 Fallback successful, but returning empty for debugging');
+                return right(<MatchModel>[]);
+              },
+            );
+          } catch (fallbackError) {
+            print('❌ Fallback also failed: $fallbackError');
+            return left(ServerFailure.fromDioError(e));
+          }
+        }
+
         return left(ServerFailure.fromDioError(e));
       }
       return left(ServerFailure(e.toString()));

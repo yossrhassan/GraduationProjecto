@@ -9,10 +9,12 @@ import 'package:graduation_project/features/facilities/presentation/views/widget
 // cached network image
 class FacilitiesTile extends StatelessWidget {
   const FacilitiesTile({
-    super.key, required this.facilitiesModel,
+    super.key,
+    required this.facilitiesModel,
   });
 
- final FacilitiesModel facilitiesModel;
+  final FacilitiesModel facilitiesModel;
+
 
   @override
   Widget build(BuildContext context) {
@@ -22,7 +24,8 @@ class FacilitiesTile extends StatelessWidget {
         //     MaterialPageRoute(builder: (BuildContext context) {
         //   return const BookingView();
         // }));
-        GoRouter.of(context).push(AppRouter.kBookingView,extra: facilitiesModel);
+        GoRouter.of(context)
+            .push(AppRouter.kBookingView, extra: facilitiesModel);
       },
       child: Container(
         decoration: BoxDecoration(
@@ -36,19 +39,53 @@ class FacilitiesTile extends StatelessWidget {
             ClipRRect(
               borderRadius: BorderRadius.circular(6),
               child: Image.network(
-                'http://10.0.2.2:5000/${facilitiesModel.imageUrl!}',
+                _buildImageUrl(facilitiesModel.imageUrl!),
                 height: 150,
                 width: double.infinity,
                 fit: BoxFit.cover,
+                errorBuilder: (context, error, stackTrace) {
+                  return Container(
+                    height: 150,
+                    width: double.infinity,
+                    color: Colors.grey[800],
+                    child: const Icon(
+                      Icons.image_not_supported,
+                      color: Colors.grey,
+                      size: 50,
+                    ),
+                  );
+                },
+                loadingBuilder: (context, child, loadingProgress) {
+                  if (loadingProgress == null) return child;
+                  return Container(
+                    height: 150,
+                    width: double.infinity,
+                    color: Colors.grey[800],
+                    child: const Center(
+                      child: CircularProgressIndicator(),
+                    ),
+                  );
+                },
               ),
             ),
             const SizedBox(
               height: 12,
             ),
-            DescriptionFacilitiesTile(facilitiesModel:facilitiesModel ,),
+            DescriptionFacilitiesTile(
+              facilitiesModel: facilitiesModel,
+            ),
           ],
         ),
       ),
     );
   }
+
+
+    String _buildImageUrl(String imageUrl) {
+    if (imageUrl.startsWith('http://') || imageUrl.startsWith('https://')) {
+      return imageUrl.replaceAll('localhost:5285', '10.0.2.2:5000');
+    }
+    return 'http://10.0.2.2:5000/$imageUrl';
+  }
+
 }

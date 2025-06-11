@@ -12,7 +12,10 @@ class AuthManager {
   static String? get authToken => _authToken;
 
   // Get the current user ID from memory
-  static int? get userId => _userId;
+  static int? get userId {
+    print('🔍 AuthManager.userId called, returning: $_userId');
+    return _userId;
+  }
 
   // Check if user is authenticated
   static bool get isAuthenticated =>

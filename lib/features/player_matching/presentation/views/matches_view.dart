@@ -3,8 +3,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
+import 'package:graduation_project/constants.dart';
 import 'package:graduation_project/core/utils/app_router.dart';
 import 'package:graduation_project/features/player_matching/data/models/match_model.dart';
+import 'package:graduation_project/features/player_matching/data/models/player_model.dart';
 import 'package:graduation_project/features/player_matching/data/models/sport_model.dart';
 import 'package:graduation_project/features/player_matching/presentation/manager/match_cubit/match_cubit.dart';
 import 'package:graduation_project/features/player_matching/presentation/manager/match_cubit/match_state.dart';
@@ -84,6 +86,10 @@ class _MatchesViewState extends State<MatchesView>
   }
 
   void _loadMyMatches() {
+    print('🔍 VIEW: _loadMyMatches called');
+    print('🔍 VIEW: Current user ID: ${AuthManager.userId}');
+    print(
+        '🔍 VIEW: Current auth token available: ${AuthManager.authToken != null}');
     context.read<MatchesCubit>().getMyMatches();
   }
 
@@ -143,19 +149,11 @@ class _MatchesViewState extends State<MatchesView>
         title: const Text(
           'Matches',
           style: TextStyle(
-            color: Colors.white,
-            fontSize: 22,
-            fontWeight: FontWeight.w500,
+            fontSize: 26,
+            fontWeight: FontWeight.bold,
+            color: kPrimaryColor,
           ),
         ),
-        actions: [
-          IconButton(
-            icon: const Icon(Icons.chat_bubble_outline, color: Colors.white),
-            onPressed: () {
-              // Open chat or messages
-            },
-          ),
-        ],
         bottom: TabBar(
           controller: _tabController,
           indicatorColor: Colors.white,
@@ -164,7 +162,7 @@ class _MatchesViewState extends State<MatchesView>
             Tab(text: 'AVAILABLE MATCHES'),
             Tab(text: 'MY MATCHES'),
           ],
-          labelColor: Colors.white,
+          labelColor: kPrimaryColor,
         ),
         elevation: 0,
       ),
@@ -279,13 +277,24 @@ class _MatchesViewState extends State<MatchesView>
 
       // Check if user is in the players list
       if (match.players != null) {
+        // Remove duplicates before checking
+        final uniquePlayers = <PlayerModel>[];
+        final seenUserIds = <int>{};
+
+        for (final player in match.players!) {
+          if (!seenUserIds.contains(player.userId)) {
+            seenUserIds.add(player.userId);
+            uniquePlayers.add(player);
+          }
+        }
+
         bool isInPlayers =
-            match.players!.any((player) => player.userId == currentUserId);
+            uniquePlayers.any((player) => player.userId == currentUserId);
         if (isInPlayers) {
           print('Match ${match.id}: User found in players list');
         } else {
           print(
-              'Match ${match.id}: User NOT in players list. Players: ${match.players!.map((p) => 'ID:${p.userId}').join(', ')}');
+              'Match ${match.id}: User NOT in players list. Players: ${uniquePlayers.map((p) => 'ID:${p.userId}').join(', ')}');
         }
         return isInPlayers;
       }
@@ -295,15 +304,39 @@ class _MatchesViewState extends State<MatchesView>
       return false;
     }
 
-    // Filter matches based on the tab
-    final filteredMatches = isMyMatches
-        ? matches.where((m) => isUserInMatch(m)).toList()
-        : matches.where((m) => !isUserInMatch(m)).toList();
-
+    print('🔍 FILTERING LOGIC:');
     print('Current User ID: $currentUserId');
     print('Tab: ${isMyMatches ? "My Matches" : "Available Matches"}');
-    print(
-        'Total matches: ${matches.length}, Filtered: ${filteredMatches.length}');
+    print('Total matches received: ${matches.length}');
+
+    // Debug each match before filtering
+    for (int i = 0; i < matches.length; i++) {
+      final match = matches[i];
+      print(
+          'Match ${match.id}: Creator=${match.creatorUserId}, Players=${match.players?.length ?? 0}');
+      if (match.players != null) {
+        for (final player in match.players!) {
+          print('  Player: ${player.userName} (ID: ${player.userId})');
+        }
+      }
+    }
+
+    // Filter matches based on the tab
+    List<MatchModel> filteredMatches;
+    if (isMyMatches) {
+      // For MY MATCHES, we should trust the backend endpoint and just display what it returns
+      // since the /my-matches endpoint should only return matches the user is involved in
+      filteredMatches = matches;
+      print(
+          '🔍 MY MATCHES: Trusting backend, showing all ${matches.length} matches returned by /my-matches endpoint');
+    } else {
+      // For AVAILABLE MATCHES, filter out matches the user is already in
+      filteredMatches = matches.where((m) => !isUserInMatch(m)).toList();
+      print(
+          '🔍 AVAILABLE MATCHES: Filtered out user matches, showing ${filteredMatches.length} of ${matches.length}');
+    }
+
+    print('Final filtered matches count: ${filteredMatches.length}');
 
     if (filteredMatches.isEmpty) {
       return Center(
@@ -410,7 +443,7 @@ class _MatchesViewState extends State<MatchesView>
                       : 'Time not set',
                   location: match.title,
                   players:
-                      '${(match.players?.length ?? 0) < 1 ? 1 : match.players!.length}/${match.teamSize * 2}',
+                      '${match.players?.length ?? 0}/${match.teamSize * 2}',
                   status: displayStatus,
                   isCreator: isCreator,
                   onTap: () {
@@ -482,3 +515,4 @@ class _MatchesViewState extends State<MatchesView>
     }
   }
 }
+

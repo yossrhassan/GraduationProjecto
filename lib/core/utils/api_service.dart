@@ -24,10 +24,11 @@ class ApiService {
           // Add auth token if available
           if (currentToken != null && currentToken.isNotEmpty) {
             options.headers['Authorization'] = 'Bearer $currentToken';
-            print('Adding token to request: $currentToken');
+            print(
+                '🔍 API: Adding token to request ${options.path}: ${currentToken.substring(0, 20)}...');
           } else {
             print(
-                'WARNING: No auth token available for request to ${options.path}');
+                '⚠️ API: No auth token available for request to ${options.path}');
           }
           return handler.next(options);
         },

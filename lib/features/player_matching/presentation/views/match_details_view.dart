@@ -48,8 +48,8 @@ class _MatchDetailsViewState extends State<MatchDetailsView>
 
   // Helper method to determine if tabs should be shown
   bool _shouldShowTabs(MatchModel? match) {
-    // Only show tabs if coming from "My Matches"
-    return widget.fromMyMatches;
+    // Only show tabs if user is the creator of the match
+    return widget.isCreator;
   }
 
   // Update in the initState method
@@ -61,13 +61,9 @@ class _MatchDetailsViewState extends State<MatchDetailsView>
       setState(() {});
     });
 
-    // If we have match data passed from the list, emit it directly
-    if (widget.matchData != null) {
-      context.read<MatchesCubit>().emit(MatchDetailsLoaded(widget.matchData!));
-    } else {
-      // Fallback to API call if no data passed
-      context.read<MatchesCubit>().getMatchDetails(widget.matchId);
-    }
+    // Always call API to get the most up-to-date match details
+    // This ensures we have complete player information regardless of the source
+    context.read<MatchesCubit>().getMatchDetails(widget.matchId);
   }
 
   // Rest of the class remains the same...
