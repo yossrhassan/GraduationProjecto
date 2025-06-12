@@ -30,6 +30,7 @@ class _MatchesViewState extends State<MatchesView>
   // Cache for storing previous data to show during loading
   List<MatchModel>? _cachedAvailableMatches;
   List<MatchModel>? _cachedMyMatches;
+  List<MatchModel>? _cachedCompletedMatches;
 
   // Sport filtering
   List<SportModel> _sports = [];
@@ -41,7 +42,7 @@ class _MatchesViewState extends State<MatchesView>
     super.initState();
     WidgetsBinding.instance.addObserver(this);
     _tabController = TabController(
-      length: 2,
+      length: 3,
       vsync: this,
       initialIndex: widget.initialTab ?? 0,
     );
@@ -52,6 +53,8 @@ class _MatchesViewState extends State<MatchesView>
     // Load matches based on initial tab
     if (widget.initialTab == 1) {
       _loadMyMatches();
+    } else if (widget.initialTab == 2) {
+      _loadCompletedMatches();
     } else {
       _loadAvailableMatches();
     }
@@ -60,11 +63,11 @@ class _MatchesViewState extends State<MatchesView>
     _tabController.addListener(() {
       if (!_tabController.indexIsChanging) {
         if (_tabController.index == 0) {
-          // Load available matches silently in background
           _loadAvailableMatches();
-        } else {
-          // Load my matches silently in background
+        } else if (_tabController.index == 1) {
           _loadMyMatches();
+        } else if (_tabController.index == 2) {
+          _loadCompletedMatches();
         }
       }
     });
@@ -93,11 +96,17 @@ class _MatchesViewState extends State<MatchesView>
     context.read<MatchesCubit>().getMyMatches();
   }
 
+  void _loadCompletedMatches() {
+    context.read<MatchesCubit>().getCompletedMatches();
+  }
+
   void _refreshCurrentTab() {
     if (_tabController.index == 0) {
       _loadAvailableMatches();
-    } else {
+    } else if (_tabController.index == 1) {
       _loadMyMatches();
+    } else if (_tabController.index == 2) {
+      _loadCompletedMatches();
     }
   }
 
@@ -161,6 +170,7 @@ class _MatchesViewState extends State<MatchesView>
           tabs: const [
             Tab(text: 'AVAILABLE MATCHES'),
             Tab(text: 'MY MATCHES'),
+            Tab(text: 'COMPLETED MATCHES'),
           ],
           labelColor: kPrimaryColor,
         ),
@@ -241,6 +251,22 @@ class _MatchesViewState extends State<MatchesView>
                                 style: TextStyle(color: Colors.white)));
                       } else {
                         // Only show loading spinner on initial load when no cache exists
+                        return const Center(child: CircularProgressIndicator());
+                      }
+                    },
+                  ),
+                  // Completed Matches Tab with BlocBuilder
+                  BlocBuilder<MatchesCubit, MatchesState>(
+                    builder: (context, state) {
+                      if (state is CompletedMatchesLoaded) {
+                        _cachedCompletedMatches = state.matches;
+                        return _buildMatchesList(state.matches, false);
+                      } else if (_cachedCompletedMatches != null) {
+                        return _buildMatchesList(
+                            _cachedCompletedMatches!, false);
+                      } else if (state is MatchesError) {
+                        return Center(child: Text('Error: ${state.message}'));
+                      } else {
                         return const Center(child: CircularProgressIndicator());
                       }
                     },
@@ -515,4 +541,3 @@ class _MatchesViewState extends State<MatchesView>
     }
   }
 }
-

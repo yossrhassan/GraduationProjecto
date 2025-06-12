@@ -114,4 +114,18 @@ class MatchesCubit extends Cubit<MatchesState> {
       emit(MatchesError(e.toString()));
     }
   }
+
+  Future<void> getCompletedMatches() async {
+    emit(MatchesLoading());
+    try {
+      final result = await matchesRepository.getCompletedMatches();
+      result.fold((failure) {
+        emit(MatchesError(failure.errMessage));
+      }, (matches) {
+        emit(CompletedMatchesLoaded(matches));
+      });
+    } catch (e) {
+      emit(MatchesError(e.toString()));
+    }
+  }
 }

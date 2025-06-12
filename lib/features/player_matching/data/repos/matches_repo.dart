@@ -12,4 +12,5 @@ abstract class MatchesRepository {
   Future<Either<Failure, bool>> createMatch(Map<String, dynamic> matchData);
   Future<Either<Failure, bool>> joinTeam(String matchId, String team);
   Future<Either<Failure, List<SportModel>>> getSports();
+  Future<Either<Failure, List<MatchModel>>> getCompletedMatches();
 }

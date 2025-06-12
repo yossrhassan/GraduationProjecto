@@ -25,11 +25,13 @@ class _PlayerProfileViewState extends State<PlayerProfileView> {
   UserModel? userDetails;
   bool isLoading = true;
   bool isSendingFriendRequest = false;
+  bool isAlreadyFriend = false;
 
   @override
   void initState() {
     super.initState();
     _loadUserDetails();
+    _checkFriendshipStatus();
   }
 
   Future<void> _loadUserDetails() async {
@@ -45,6 +47,24 @@ class _PlayerProfileViewState extends State<PlayerProfileView> {
       setState(() {
         isLoading = false;
       });
+    }
+  }
+
+  Future<void> _checkFriendshipStatus() async {
+    try {
+      final friendRequestService = getIt<FriendRequestService>();
+      final acceptedRequests =
+          await friendRequestService.getAcceptedFriendRequests();
+
+      if (mounted) {
+        setState(() {
+          isAlreadyFriend = acceptedRequests.any((request) =>
+              (request.senderId == widget.player.userId ||
+                  request.receiverId == widget.player.userId));
+        });
+      }
+    } catch (e) {
+      print('Error checking friendship status: $e');
     }
   }
 
@@ -66,11 +86,10 @@ class _PlayerProfileViewState extends State<PlayerProfileView> {
         Color snackBarColor;
         IconData snackBarIcon;
 
-        if (result.contains('already sent') ||
-            result.contains('already exists')) {
+        if (result.contains('A friend request already sent to this user')) {
           // Info message - friend request already exists
-          snackBarColor = Colors.orange;
-          snackBarIcon = Icons.info_outline;
+          snackBarColor = Colors.red;
+          snackBarIcon = Icons.error_outline;
         } else if (result.contains('sent successfully') ||
             result.contains('Friend request sent')) {
           // Success message
@@ -267,41 +286,68 @@ class _PlayerProfileViewState extends State<PlayerProfileView> {
                     padding: const EdgeInsets.symmetric(horizontal: 40),
                     child: SizedBox(
                       width: double.infinity,
-                      child: ElevatedButton.icon(
-                        onPressed:
-                            isSendingFriendRequest ? null : _sendFriendRequest,
-                        icon: isSendingFriendRequest
-                            ? const SizedBox(
-                                width: 16,
-                                height: 16,
-                                child: CircularProgressIndicator(
-                                  strokeWidth: 2,
-                                  valueColor: AlwaysStoppedAnimation<Color>(
-                                      Colors.black),
+                      child: isAlreadyFriend
+                          ? ElevatedButton.icon(
+                              onPressed: null,
+                              icon: const Icon(Icons.check_circle,
+                                  color: Colors.green),
+                              label: const Text(
+                                'Friends',
+                                style: TextStyle(
+                                  color: Colors.green,
+                                  fontSize: 16,
+                                  fontWeight: FontWeight.bold,
                                 ),
-                              )
-                            : const Icon(Icons.person_add, color: Colors.black),
-                        label: Text(
-                          isSendingFriendRequest
-                              ? 'Sending...'
-                              : 'Add as a Friend',
-                          style: TextStyle(
-                            color: isSendingFriendRequest
-                                ? Colors.grey
-                                : Colors.black,
-                            fontSize: 16,
-                            fontWeight: FontWeight.bold,
-                          ),
-                        ),
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: Colors.white,
-                          padding: const EdgeInsets.symmetric(vertical: 15),
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(25),
-                          ),
-                          elevation: 0,
-                        ),
-                      ),
+                              ),
+                              style: ElevatedButton.styleFrom(
+                                backgroundColor: Colors.white,
+                                padding:
+                                    const EdgeInsets.symmetric(vertical: 15),
+                                shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(25),
+                                ),
+                                elevation: 0,
+                              ),
+                            )
+                          : ElevatedButton.icon(
+                              onPressed: isSendingFriendRequest
+                                  ? null
+                                  : _sendFriendRequest,
+                              icon: isSendingFriendRequest
+                                  ? const SizedBox(
+                                      width: 16,
+                                      height: 16,
+                                      child: CircularProgressIndicator(
+                                        strokeWidth: 2,
+                                        valueColor:
+                                            AlwaysStoppedAnimation<Color>(
+                                                Colors.black),
+                                      ),
+                                    )
+                                  : const Icon(Icons.person_add,
+                                      color: Colors.black),
+                              label: Text(
+                                isSendingFriendRequest
+                                    ? 'Sending...'
+                                    : 'Add as a Friend',
+                                style: TextStyle(
+                                  color: isSendingFriendRequest
+                                      ? Colors.grey
+                                      : Colors.black,
+                                  fontSize: 16,
+                                  fontWeight: FontWeight.bold,
+                                ),
+                              ),
+                              style: ElevatedButton.styleFrom(
+                                backgroundColor: Colors.white,
+                                padding:
+                                    const EdgeInsets.symmetric(vertical: 15),
+                                shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(25),
+                                ),
+                                elevation: 0,
+                              ),
+                            ),
                     ),
                   ),
 

@@ -323,4 +323,25 @@ class MatchesRepositoryImpl implements MatchesRepository {
       return left(ServerFailure(e.toString()));
     }
   }
+
+  @override
+  Future<Either<Failure, List<MatchModel>>> getCompletedMatches() async {
+    try {
+      print('Getting completed matches from backend...');
+      final response = await apiService.get(endPoint: 'Match/completed');
+      if (response is List) {
+        final matches =
+            response.map((match) => MatchModel.fromJson(match)).toList();
+        return right(matches);
+      } else {
+        return left(ServerFailure('Unexpected response format'));
+      }
+    } catch (e) {
+      print('Error in getCompletedMatches: $e');
+      if (e is DioException) {
+        return left(ServerFailure.fromDioError(e));
+      }
+      return left(ServerFailure(e.toString()));
+    }
+  }
 }

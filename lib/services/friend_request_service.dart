@@ -35,18 +35,17 @@ class FriendRequestService {
       print('❌ FriendRequestService Error: $e');
 
       // Handle specific error cases
-      String errorMessage = e.toString();
+      String errorMessage =
+          e.toString().toLowerCase(); // Convert to lowercase once
 
-      // Check for specific error messages - multiple variations
-      if (errorMessage.contains(
-              'A friend request already exists between these users') ||
-          errorMessage.contains('friend request already exists') ||
+      // Check for specific error messages first
+      if (errorMessage.contains('friend request already exists') ||
           errorMessage.contains('already exists between') ||
-          errorMessage.toLowerCase().contains('already sent') ||
-          errorMessage.toLowerCase().contains('duplicate')) {
-        return 'A friend request already sent';
-      } else if (errorMessage.contains('400')) {
-        return 'Unable to send friend request at this time';
+          errorMessage.contains('already sent') ||
+          errorMessage.contains('duplicate request') ||
+          errorMessage.contains('400')) {
+        // Include 400 here since it's related to duplicate request
+        return 'A friend request already exists between you and this user';
       } else if (errorMessage.contains('404')) {
         return 'User not found';
       } else if (errorMessage.contains('401') || errorMessage.contains('403')) {

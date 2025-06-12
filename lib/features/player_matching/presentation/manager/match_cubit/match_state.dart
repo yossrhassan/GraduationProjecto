@@ -33,6 +33,11 @@ class SportsLoaded extends MatchesState {
   SportsLoaded(this.sports);
 }
 
+class CompletedMatchesLoaded extends MatchesState {
+  final List<MatchModel> matches;
+  CompletedMatchesLoaded(this.matches);
+}
+
 class MatchesError extends MatchesState {
   final String message;
 
