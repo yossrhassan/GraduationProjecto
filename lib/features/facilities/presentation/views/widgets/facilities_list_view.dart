@@ -6,7 +6,9 @@ import 'package:graduation_project/features/facilities/presentation/manager/faci
 import 'package:graduation_project/features/facilities/presentation/views/widgets/facilities_tile.dart';
 
 class FacilitiesListView extends StatelessWidget {
-  const FacilitiesListView({super.key});
+  const FacilitiesListView({super.key, this.sportId});
+
+  final int? sportId;
 
   @override
   Widget build(BuildContext context) {
@@ -16,12 +18,15 @@ class FacilitiesListView extends StatelessWidget {
           return Expanded(
             child: ListView.builder(
                 padding: EdgeInsets.zero,
-                physics:const   BouncingScrollPhysics(),
+                physics: const BouncingScrollPhysics(),
                 itemCount: state.facilities.length,
                 itemBuilder: (context, index) {
                   return Padding(
-                    padding:const EdgeInsets.only(bottom: 20),
-                    child: FacilitiesTile(facilitiesModel: state.facilities[index],),
+                    padding: const EdgeInsets.only(bottom: 20),
+                    child: FacilitiesTile(
+                      facilitiesModel: state.facilities[index],
+                      sportId: sportId,
+                    ),
                   );
                 }),
           );

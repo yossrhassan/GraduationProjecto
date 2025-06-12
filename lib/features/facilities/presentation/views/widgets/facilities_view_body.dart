@@ -1,19 +1,33 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:font_awesome_icon_class/font_awesome_icon_class.dart';
 import 'package:graduation_project/constants.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:graduation_project/core/widgets/custom_text_field.dart';
 import 'package:graduation_project/features/facilities/presentation/views/widgets/facilities_list_view.dart';
+import 'package:graduation_project/features/facilities/presentation/manager/facilities_cubit/facilities_cubit.dart';
 
 class FacilitiesViewBody extends StatelessWidget {
   FacilitiesViewBody({
     super.key,
+    this.sportId,
   });
+
+  final int? sportId;
 
   final Color lighterColor = Color.lerp(kPrimaryColor, Colors.black, 0.5)!;
 
   @override
   Widget build(BuildContext context) {
+    // Trigger facilities fetch with sport filter when widget builds
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (sportId != null) {
+        context.read<FacilitiesCubit>().fetchFacilities(sportId: sportId);
+      } else {
+        context.read<FacilitiesCubit>().fetchFacilities();
+      }
+    });
+
     return Scaffold(
       appBar: AppBar(
         title: const Text(
@@ -33,7 +47,11 @@ class FacilitiesViewBody extends StatelessWidget {
             ),
           ),
           IconButton(
-              onPressed: () {}, icon: const Icon(FontAwesomeIcons.circleUser,color: kPrimaryColor,))
+              onPressed: () {},
+              icon: const Icon(
+                FontAwesomeIcons.circleUser,
+                color: kPrimaryColor,
+              ))
         ],
         // backgroundColor: Colors.transparent,
         elevation: 0,
@@ -52,14 +70,14 @@ class FacilitiesViewBody extends StatelessWidget {
             //   ],
             // ),
             color: kBackGroundColor),
-        child: const Padding(
-          padding: EdgeInsets.only(top: 90, right: 20, left: 20),
+        child: Padding(
+          padding: const EdgeInsets.only(top: 90, right: 20, left: 20),
           child: Column(
             children: [
-              SizedBox(
+              const SizedBox(
                 height: 20,
               ),
-              CustomTextField.CustomformTextField(
+              const CustomTextField.CustomformTextField(
                 height: 40,
                 hintText: 'Search Court',
                 prefixicon: Icon(
@@ -67,10 +85,10 @@ class FacilitiesViewBody extends StatelessWidget {
                   color: kPrimaryColor,
                 ),
               ),
-              SizedBox(
+              const SizedBox(
                 height: 20,
               ),
-              FacilitiesListView()
+              FacilitiesListView(sportId: sportId)
             ],
           ),
         ),

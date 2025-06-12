@@ -20,7 +20,6 @@ class RegisterView extends StatefulWidget {
 class _RegisterViewState extends State<RegisterView> {
   String? firstName;
   String? lastName;
-  String? userName;
   String? email;
   String? password;
   String? confirmPassword;
@@ -103,15 +102,6 @@ class _RegisterViewState extends State<RegisterView> {
               ),
               CustomTextField.CustomformTextField(
                 onchanged: (data) {
-                  userName = data;
-                },
-                hintText: 'User Name',
-              ),
-              const SizedBox(
-                height: 10,
-              ),
-              CustomTextField.CustomformTextField(
-                onchanged: (data) {
                   phoneNumber = data;
                 },
                 hintText: 'Phone Number',
@@ -164,8 +154,7 @@ class _RegisterViewState extends State<RegisterView> {
                           phoneNumber: phoneNumber!,
                           email: email!,
                           password: password!,
-                          confirmPassword: confirmPassword!,
-                          userName: userName!);
+                          confirmPassword: confirmPassword!);
                       showSnackBar(context, 'Registered successfully');
                       GoRouter.of(context).push(AppRouter.kLoginView);
                     } catch (ex) {

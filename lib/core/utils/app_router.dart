@@ -11,6 +11,7 @@ import 'package:graduation_project/features/chat_bot/chat_bot_view.dart';
 import 'package:graduation_project/features/facilities/data/models/facilities/facilities.model.dart';
 import 'package:graduation_project/features/facilities/presentation/views/facilities_view.dart';
 import 'package:graduation_project/features/home/presentation/views/home_view.dart';
+import 'package:graduation_project/features/home/presentation/views/main_navigation_view.dart';
 import 'package:graduation_project/features/home/presentation/views/notifications_view.dart';
 import 'package:graduation_project/features/login/presentation/views/login_view.dart';
 import 'package:graduation_project/features/login/presentation/views/forgot_password_view.dart';
@@ -41,6 +42,7 @@ abstract class AppRouter {
   static const kForgotPasswordView = '/forgotPasswordView';
   static const kNotificationsView = '/notificationsView';
   static const kHomeView = '/homeView';
+  static const kMainNavigationView = '/mainNavigationView';
   static const kBookingHistoryView = '/bookingHistoryView';
   static const kMatchesView = '/matchesView';
   static const kMatchCreationView = '/matchCreationView';
@@ -101,7 +103,9 @@ abstract class AppRouter {
         path: kLoginView,
         builder: (context, state) {
           final isAuthenticated = AuthManager.isAuthenticated;
-          return isAuthenticated ? const HomeView() : const LoginView();
+          return isAuthenticated
+              ? MainNavigationView(extra: state.extra as Map<String, dynamic>?)
+              : const LoginView();
         },
       ),
       GoRoute(
@@ -122,18 +126,26 @@ abstract class AppRouter {
         builder: (context, state) => const NotificationsView(),
       ),
       GoRoute(
-        path: kFacilitiesView,
-        builder: (context, state) => const FacilitiesView(),
+        path: '$kFacilitiesView/:sportId',
+        builder: (context, state) {
+          final sportId = int.tryParse(state.pathParameters['sportId'] ?? '');
+          return FacilitiesView(sportId: sportId);
+        },
       ),
       GoRoute(
         path: kBookingView,
-        builder: (context, state) => BlocProvider(
-          // Get the BookingRepo from the service locator
-          create: (context) => BookingCubit(GetIt.instance<BookingRepo>()),
-          child: BookingView(
-            facilitiesModel: state.extra as FacilitiesModel,
-          ),
-        ),
+        builder: (context, state) {
+          final Map<String, dynamic> extra =
+              state.extra as Map<String, dynamic>;
+          return BlocProvider(
+            // Get the BookingRepo from the service locator
+            create: (context) => BookingCubit(GetIt.instance<BookingRepo>()),
+            child: BookingView(
+              facilitiesModel: extra['facility'] as FacilitiesModel,
+              sportId: extra['sportId'] as int?,
+            ),
+          );
+        },
       ),
       GoRoute(
         path: kBookingHistoryView,
@@ -146,7 +158,15 @@ abstract class AppRouter {
       ),
       GoRoute(
         path: kHomeView,
-        builder: (context, state) => const HomeView(),
+        builder: (context, state) => MainNavigationView(
+          extra: state.extra as Map<String, dynamic>?,
+        ),
+      ),
+      GoRoute(
+        path: kMainNavigationView,
+        builder: (context, state) => MainNavigationView(
+          extra: state.extra as Map<String, dynamic>?,
+        ),
       ),
       GoRoute(
         path: kChatBotView,

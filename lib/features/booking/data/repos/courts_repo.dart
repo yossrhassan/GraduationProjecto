@@ -5,5 +5,6 @@ import 'package:graduation_project/features/booking/data/models/courts/courts.mo
 
 abstract class CourtsRepo {
   Future<Either<Failure, List<CourtsModel>>> fetchCourtsByFacilityId(
-      int facilityId);
+      int facilityId,
+      {int? sportId});
 }

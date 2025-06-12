@@ -11,10 +11,11 @@ class FacilitiesTile extends StatelessWidget {
   const FacilitiesTile({
     super.key,
     required this.facilitiesModel,
+    this.sportId,
   });
 
   final FacilitiesModel facilitiesModel;
-
+  final int? sportId;
 
   @override
   Widget build(BuildContext context) {
@@ -24,8 +25,10 @@ class FacilitiesTile extends StatelessWidget {
         //     MaterialPageRoute(builder: (BuildContext context) {
         //   return const BookingView();
         // }));
-        GoRouter.of(context)
-            .push(AppRouter.kBookingView, extra: facilitiesModel);
+        GoRouter.of(context).push(AppRouter.kBookingView, extra: {
+          'facility': facilitiesModel,
+          'sportId': sportId,
+        });
       },
       child: Container(
         decoration: BoxDecoration(
@@ -80,12 +83,10 @@ class FacilitiesTile extends StatelessWidget {
     );
   }
 
-
-    String _buildImageUrl(String imageUrl) {
+  String _buildImageUrl(String imageUrl) {
     if (imageUrl.startsWith('http://') || imageUrl.startsWith('https://')) {
       return imageUrl.replaceAll('localhost:5285', '10.0.2.2:5000');
     }
     return 'http://10.0.2.2:5000/$imageUrl';
   }
-
 }

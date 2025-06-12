@@ -11,13 +11,18 @@ class BookingHistoryCubit extends Cubit<BookingHistoryState> {
   BookingHistoryCubit(this.bookinghistoryRepo) : super(BookingHistoryLoading());
 
   Future<void> loadBookings() async {
+    if (isClosed) return;
     emit(BookingHistoryLoading());
 
     final result = await bookinghistoryRepo.getUserBookings();
 
+    if (isClosed) return;
     result.fold(
-      (failure) => emit(BookingHistoryError(failure.errMessage)),
+      (failure) {
+        if (!isClosed) emit(BookingHistoryError(failure.errMessage));
+      },
       (bookings) {
+        if (isClosed) return;
         final now = DateTime.now();
         final upcoming = bookings
             .where(
@@ -28,8 +33,10 @@ class BookingHistoryCubit extends Cubit<BookingHistoryState> {
                 (b) => DateTime.parse("${b.date}T${b.endTime}").isBefore(now))
             .toList();
 
-        emit(BookingHistoryLoaded(
-            upcomingBookings: upcoming, pastBookings: past));
+        if (!isClosed) {
+          emit(BookingHistoryLoaded(
+              upcomingBookings: upcoming, pastBookings: past));
+        }
       },
     );
   }

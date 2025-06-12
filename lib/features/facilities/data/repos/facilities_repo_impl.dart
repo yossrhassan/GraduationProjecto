@@ -11,10 +11,14 @@ class FacilitiesRepoImpl implements FacilitiesRepo {
   FacilitiesRepoImpl(this.apiService);
 
   @override
-  Future<Either<Failure, List<FacilitiesModel>>> fetchFacilities() async {
+  Future<Either<Failure, List<FacilitiesModel>>> fetchFacilities({int? sportId}) async {
     try {
-      print('🔍 FACILITIES: Fetching facilities...');
-      var body = await apiService.get(endPoint: 'Facilities?isOwner=false');
+      String endpoint = 'Facilities?isOwner=false';
+      if (sportId != null) {
+        endpoint = '$endpoint&sportId=$sportId';
+      }
+      print('🔍 FACILITIES: Fetching facilities with endpoint: $endpoint');
+      var body = await apiService.get(endPoint: endpoint);
 
       print('🔍 FACILITIES: Response type: ${body.runtimeType}');
       print('🔍 FACILITIES: Response: $body');

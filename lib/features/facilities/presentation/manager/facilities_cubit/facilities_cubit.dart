@@ -10,10 +10,10 @@ class FacilitiesCubit extends Cubit<FacilitiesState> {
 
   final FacilitiesRepo facilitiesRepo;
 
-  Future<void> fetchFacilities() async {
+  Future<void> fetchFacilities({int? sportId}) async {
     emit(FacilitiesLoading());
 
-    var result = await facilitiesRepo.fetchFacilities();
+    var result = await facilitiesRepo.fetchFacilities(sportId: sportId);
 
     result.fold((faliure) {
       emit(FacilitiesFailure(faliure.errMessage));

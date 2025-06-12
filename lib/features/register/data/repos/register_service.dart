@@ -4,8 +4,7 @@ import 'package:graduation_project/core/utils/api.dart';
 class RegisterService {
   Future<dynamic> registerUser(
       {required String firstName,
-      required String lastName ,
-      required String userName ,
+      required String lastName,
       required String email,
       required String password,
       required String confirmPassword,
@@ -17,7 +16,6 @@ class RegisterService {
           
       'firstName': firstName,
       'lastName': lastName,
-      'username' : userName,
       'email': email,
       'password': password,
       "confirmedPassword": confirmPassword,

@@ -30,8 +30,7 @@ class GraduationProject extends StatelessWidget {
     return MultiBlocProvider(
       providers: [
         BlocProvider(
-          create: (context) => FacilitiesCubit(getIt.get<FacilitiesRepoImpl>())
-            ..fetchFacilities(),
+          create: (context) => FacilitiesCubit(getIt.get<FacilitiesRepoImpl>()),
         ),
         BlocProvider(
           create: (context) => MatchesCubit(getIt<MatchesRepository>()),

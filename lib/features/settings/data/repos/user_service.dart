@@ -81,7 +81,6 @@ class UserService {
   Future<void> updateUserProfile({
     required String firstName,
     required String lastName,
-    required String userName,
     required String email,
     required String phoneNumber,
   }) async {
@@ -89,7 +88,7 @@ class UserService {
       print('🔄 UserService: Updating user profile...');
       print('🔄 UserService: Current userId: ${AuthManager.userId}');
       print(
-          '🔄 UserService: Data to send: {firstName: $firstName, lastName: $lastName, userName: $userName, email: $email, phoneNumber: $phoneNumber}');
+          '🔄 UserService: Data to send: {firstName: $firstName, lastName: $lastName, email: $email, phoneNumber: $phoneNumber}');
 
       final response = await apiService.put(
         endPoint: 'Auth/UserProfile',
@@ -97,7 +96,6 @@ class UserService {
           "id": AuthManager.userId,
           "firstName": firstName,
           "lastName": lastName,
-          "userName": userName,
           "email": email,
           "phoneNumber": phoneNumber,
         },

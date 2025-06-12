@@ -11,10 +11,11 @@ class CourtsCubit extends Cubit<CourtsState> {
 
   final CourtsRepo courtsRepo;
 
-  Future<void> fetchCourtsByFacilityId(int facilityId) async {
+  Future<void> fetchCourtsByFacilityId(int facilityId, {int? sportId}) async {
     emit(CourtsLoading());
 
-    var result = await courtsRepo.fetchCourtsByFacilityId(facilityId);
+    var result =
+        await courtsRepo.fetchCourtsByFacilityId(facilityId, sportId: sportId);
 
     result.fold((failure) {
       emit(CourtsFailure(failure.errMessage));

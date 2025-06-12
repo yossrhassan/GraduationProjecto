@@ -113,10 +113,10 @@ class _MatchCreationViewState extends State<MatchCreationView> {
                         content: Text('Match created successfully!')),
                   );
 
-                  // Navigate to matches view and switch to "My Matches" tab
+                  // Navigate to main navigation with Player Matching tab selected
                   GoRouter.of(context).pushReplacement(
-                    AppRouter.kMatchesView,
-                    extra: {'initial_tab': 1}, // 1 for "My Matches" tab
+                    AppRouter.kMainNavigationView,
+                    extra: {'initial_index': 2}, // 2 for Player Matching tab
                   );
                 }).catchError((error) {
                   ScaffoldMessenger.of(context).showSnackBar(

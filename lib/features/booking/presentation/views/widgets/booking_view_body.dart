@@ -12,8 +12,10 @@ import 'package:graduation_project/features/booking/presentation/views/widgets/d
 import 'package:graduation_project/features/facilities/data/models/facilities/facilities.model.dart';
 
 class BookingViewBody extends StatefulWidget {
-  const BookingViewBody({super.key, required this.facilitiesModel});
+  const BookingViewBody(
+      {super.key, required this.facilitiesModel, this.sportId});
   final FacilitiesModel facilitiesModel;
+  final int? sportId;
   @override
   State<BookingViewBody> createState() => _BookingViewBodyState();
 }
@@ -48,7 +50,8 @@ class _BookingViewBodyState extends State<BookingViewBody> {
       // This ensures the widget is fully built before fetching data
       context
           .read<CourtsCubit>()
-          .fetchCourtsByFacilityId(widget.facilitiesModel.id!)
+          .fetchCourtsByFacilityId(widget.facilitiesModel.id!,
+              sportId: widget.sportId)
           .then((_) {
         // Once courts are loaded, set the first court ID if available
         final courtsState = context.read<CourtsCubit>().state;
@@ -189,9 +192,9 @@ class _BookingViewBodyState extends State<BookingViewBody> {
             backgroundColor: kBackGroundColor,
             title: Text(widget.facilitiesModel.name!,
                 style: const TextStyle(
-                    fontSize: 28,
-                    fontWeight: FontWeight.w500,
-                    )),
+                  fontSize: 28,
+                  fontWeight: FontWeight.w500,
+                )),
             centerTitle: true,
           ),
           body: BlocBuilder<BookingCubit, BookingState>(

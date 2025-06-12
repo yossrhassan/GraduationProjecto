@@ -53,10 +53,14 @@ class _HomeViewState extends State<HomeView> {
     }
   }
 
-  String _getSportImagePath(String sportName) {
-    // Use the available football image for all sports as fallback
-    // since other sport images are not available in assets
-    return 'assets/images/football.jpg';
+  String? _buildImageUrl(String? imageUrl) {
+    if (imageUrl == null || imageUrl.isEmpty) {
+      // Return null if no imageUrl provided - will show blank placeholder
+      return null;
+    }
+
+    // Build full URL with base server URL for API images
+    return 'http://10.0.2.2:5000/$imageUrl';
   }
 
   @override
@@ -88,101 +92,58 @@ class _HomeViewState extends State<HomeView> {
         ],
       ),
       body: SafeArea(
-        child: SingleChildScrollView(
-          child: Padding(
-            padding: const EdgeInsets.all(16.0),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                const SizedBox(height: 20),
-                // Sports Section
-                const Text(
-                  'Browse Sports',
-                  style: TextStyle(
-                    fontSize: 20,
-                    fontWeight: FontWeight.bold,
-                    color: kPrimaryColor,
-                  ),
+        child: Padding(
+          padding: const EdgeInsets.all(16.0),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              const SizedBox(height: 20),
+              // Sports Section Header
+              const Text(
+                'Browse Sports',
+                style: TextStyle(
+                  fontSize: 20,
+                  fontWeight: FontWeight.bold,
+                  color: kPrimaryColor,
                 ),
-                const SizedBox(height: 16),
-                // Sports List with fixed height
-                SizedBox(
-                  height: MediaQuery.of(context).size.height *
-                      0.45, // 45% of screen height
-                  child: isLoadingSports
-                      ? const Center(
-                          child: CircularProgressIndicator(
-                            valueColor:
-                                AlwaysStoppedAnimation<Color>(kPrimaryColor),
-                          ),
-                        )
-                      : sports.isEmpty
-                          ? const Center(
-                              child: Text(
-                                'No sports available',
-                                style: TextStyle(
-                                  fontSize: 16,
-                                  color: Colors.grey,
-                                ),
+              ),
+              const SizedBox(height: 16),
+              // Sports List - Expanded to fill remaining space
+              Expanded(
+                child: isLoadingSports
+                    ? const Center(
+                        child: CircularProgressIndicator(
+                          valueColor:
+                              AlwaysStoppedAnimation<Color>(kPrimaryColor),
+                        ),
+                      )
+                    : sports.isEmpty
+                        ? const Center(
+                            child: Text(
+                              'No sports available',
+                              style: TextStyle(
+                                fontSize: 16,
+                                color: Colors.grey,
                               ),
-                            )
-                          : ListView.builder(
-                              itemCount: sports.length,
-                              itemBuilder: (context, index) {
-                                final sport = sports[index];
-                                return Padding(
-                                  padding: const EdgeInsets.only(bottom: 12.0),
-                                  child: NavigationCard(
-                                    title: "Browse ${sport.name} Courts",
-                                    imageUrl: _getSportImagePath(sport.name),
-                                    onTap: () => GoRouter.of(context)
-                                        .push(AppRouter.kFacilitiesView),
-                                  ),
-                                );
-                              },
                             ),
-                ),
-                const SizedBox(height: 20),
-                // Quick Actions Section
-                const Text(
-                  'Quick Actions',
-                  style: TextStyle(
-                    fontSize: 20,
-                    fontWeight: FontWeight.bold,
-                    color: kPrimaryColor,
-                  ),
-                ),
-                const SizedBox(height: 16),
-                // Quick Actions Buttons
-                CustomHomeButton(
-                  icon: Icons.calendar_month,
-                  label: "My Bookings",
-                  filled: false,
-                  onPressed: () {
-                    GoRouter.of(context).push(AppRouter.kBookingHistoryView);
-                  },
-                ),
-                const SizedBox(height: 16),
-                CustomHomeButton(
-                  icon: Icons.people,
-                  label: "Player Matching",
-                  filled: false,
-                  onPressed: () {
-                    GoRouter.of(context).push(AppRouter.kMatchesView);
-                  },
-                ),
-                const SizedBox(height: 16),
-                CustomHomeButton(
-                  icon: Icons.chat_bubble_outline,
-                  label: "Chat Bot",
-                  filled: false,
-                  onPressed: () {
-                    GoRouter.of(context).push(AppRouter.kChatBotView);
-                  },
-                ),
-                const SizedBox(height: 30),
-              ],
-            ),
+                          )
+                        : ListView.builder(
+                            itemCount: sports.length,
+                            itemBuilder: (context, index) {
+                              final sport = sports[index];
+                              return Padding(
+                                padding: const EdgeInsets.only(bottom: 12.0),
+                                child: NavigationCard(
+                                  title: "Browse ${sport.name} Courts",
+                                  imageUrl: _buildImageUrl(sport.imageUrl),
+                                  onTap: () => GoRouter.of(context).push(
+                                      '${AppRouter.kFacilitiesView}/${sport.id}'),
+                                ),
+                              );
+                            },
+                          ),
+              ),
+            ],
           ),
         ),
       ),

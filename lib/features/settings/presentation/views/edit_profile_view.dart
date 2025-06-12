@@ -51,7 +51,6 @@ class EditProfileView extends StatefulWidget {
 class _EditProfileViewState extends State<EditProfileView> {
   final TextEditingController firstNameController = TextEditingController();
   final TextEditingController lastNameController = TextEditingController();
-  final TextEditingController userNameController = TextEditingController();
   final TextEditingController emailController = TextEditingController();
   final TextEditingController phoneNumberController = TextEditingController();
   bool _isLoading = false;
@@ -62,7 +61,6 @@ class _EditProfileViewState extends State<EditProfileView> {
     if (widget.user != null) {
       firstNameController.text = widget.user!.firstName;
       lastNameController.text = widget.user!.lastName;
-      userNameController.text = '';
       emailController.text = widget.user!.email;
       phoneNumberController.text = widget.user!.phoneNumber;
     }
@@ -72,7 +70,6 @@ class _EditProfileViewState extends State<EditProfileView> {
   void dispose() {
     firstNameController.dispose();
     lastNameController.dispose();
-    userNameController.dispose();
     emailController.dispose();
     phoneNumberController.dispose();
     super.dispose();
@@ -81,13 +78,11 @@ class _EditProfileViewState extends State<EditProfileView> {
   void _saveChanges() async {
     final firstName = firstNameController.text.trim();
     final lastName = lastNameController.text.trim();
-    final userName = userNameController.text.trim();
     final email = emailController.text.trim();
     final phoneNumber = phoneNumberController.text.trim();
 
     if (firstName.isEmpty ||
         lastName.isEmpty ||
-        userName.isEmpty ||
         email.isEmpty ||
         phoneNumber.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
@@ -105,7 +100,6 @@ class _EditProfileViewState extends State<EditProfileView> {
       await getIt<UserService>().updateUserProfile(
         firstName: firstName,
         lastName: lastName,
-        userName: userName,
         email: email,
         phoneNumber: phoneNumber,
       );
@@ -182,15 +176,6 @@ class _EditProfileViewState extends State<EditProfileView> {
               Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  const Text('Username',
-                      style: TextStyle(color: Colors.white70)),
-                  const SizedBox(height: 8),
-                  TextField(
-                    controller: userNameController,
-                    style: const TextStyle(color: Colors.white),
-                    decoration: _inputDecoration(),
-                  ),
-                  const SizedBox(height: 24),
                   const Text('Email', style: TextStyle(color: Colors.white70)),
                   const SizedBox(height: 8),
                   TextField(
