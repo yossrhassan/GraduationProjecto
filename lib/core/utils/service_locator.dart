@@ -16,6 +16,7 @@ import 'package:graduation_project/features/settings/data/repos/settings_repo.da
 import 'package:graduation_project/features/settings/data/repos/user_service.dart';
 import 'package:graduation_project/features/settings/data/repos/delete_account_service.dart';
 import 'package:graduation_project/services/friend_request_service.dart';
+import 'package:graduation_project/features/chat_bot/data/repos/chat_repo.dart';
 
 final getIt = GetIt.instance;
 
@@ -37,6 +38,9 @@ void setup() {
       BookingHistoryRepoImpl(getIt.get<ApiService>()));
 
   getIt.registerSingleton<CourtsRepo>(CourtsRepoImpl(getIt.get<ApiService>()));
+
+  // Register chat repository
+  getIt.registerSingleton<ChatRepo>(ChatRepoImpl());
 
   // Register settings services
   getIt.registerSingleton<UserService>(UserService(getIt.get<ApiService>()));
