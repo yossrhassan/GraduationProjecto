@@ -15,8 +15,9 @@ import 'package:graduation_project/features/player_matching/presentation/manager
 import 'package:graduation_project/features/settings/data/repos/settings_repo.dart';
 import 'package:graduation_project/features/settings/data/repos/user_service.dart';
 import 'package:graduation_project/features/settings/data/repos/delete_account_service.dart';
-import 'package:graduation_project/services/friend_request_service.dart';
+import 'package:graduation_project/features/home/data/repos/friend_request_service.dart';
 import 'package:graduation_project/features/chat_bot/data/repos/chat_repo.dart';
+import 'package:graduation_project/features/home/presentation/manager/friend_requests_cubit.dart';
 
 final getIt = GetIt.instance;
 
@@ -53,4 +54,6 @@ void setup() {
   // Register cubits that need to be globally accessible
   getIt.registerSingleton<MatchesCubit>(
       MatchesCubit(getIt.get<MatchesRepository>()));
+  getIt.registerSingleton<FriendRequestsCubit>(
+      FriendRequestsCubit(getIt.get<FriendRequestService>()));
 }

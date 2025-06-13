@@ -5,6 +5,7 @@ import 'package:get/get.dart';
 import 'package:get/get_core/src/get_main.dart';
 import 'package:go_router/go_router.dart';
 import 'package:graduation_project/constants.dart';
+import 'package:graduation_project/core/utils/api.dart';
 import 'package:graduation_project/core/utils/api_service.dart';
 import 'package:graduation_project/core/utils/app_router.dart';
 import 'package:graduation_project/core/utils/auth_manager.dart';
@@ -176,7 +177,13 @@ class _LoginViewState extends State<LoginView> {
                             'Login failed: Invalid response from server');
                       }
                     } catch (ex) {
-                      showSnackBar(context, 'Login failed: ${ex.toString()}');
+                      String errorMessage = 'Login failed';
+                      if (ex is ApiException) {
+                        errorMessage = ex.userFriendlyMessage;
+                      } else {
+                        errorMessage = 'Login failed: ${ex.toString()}';
+                      }
+                      showSnackBar(context, errorMessage);
                     } finally {
                       setState(() {
                         isloading = false;

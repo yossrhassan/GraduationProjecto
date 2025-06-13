@@ -3,9 +3,12 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:graduation_project/constants.dart';
 import 'package:graduation_project/core/utils/auth_manager.dart';
 import 'package:graduation_project/core/utils/service_locator.dart';
+import 'package:graduation_project/core/utils/show_snack_bar.dart';
+import 'package:graduation_project/features/home/data/models/friend_request_model.dart';
+import 'package:graduation_project/features/home/data/repos/friend_request_service.dart';
+import 'package:graduation_project/features/player_matching/data/models/match_model.dart';
+import 'package:graduation_project/features/player_matching/data/repos/matches_repo.dart';
 import 'package:graduation_project/features/player_matching/presentation/manager/match_cubit/match_cubit.dart';
-import 'package:graduation_project/models/friend_request_model.dart';
-import 'package:graduation_project/services/friend_request_service.dart';
 
 class InviteFriendsDialog extends StatefulWidget {
   final String matchId;

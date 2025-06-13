@@ -18,7 +18,7 @@ class ChatCubit extends Cubit<ChatState> {
   void _addWelcomeMessage() {
     final welcomeMessage = ChatMessage(
       text:
-          "Hello! I'm your sports facilities assistant. Ask me about sports facilities in any area!",
+          "Hello! I'm your sports booking app assistant. Ask me about sports facilities in any area!",
       isUser: false,
       timestamp: DateTime.now(),
     );

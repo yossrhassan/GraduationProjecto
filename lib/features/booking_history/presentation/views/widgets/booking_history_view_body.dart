@@ -3,6 +3,8 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:graduation_project/constants.dart';
 import 'package:graduation_project/features/booking_history/data/models/booking/booking_history_model.dart';
 import 'package:graduation_project/features/booking_history/presentation/manager/booking_history_cubit/booking_history_cubit.dart';
+import 'package:graduation_project/features/booking_history/data/repos/facility_coordinates_service.dart';
+import 'package:graduation_project/core/utils/maps_launcher.dart';
 import 'package:intl/intl.dart';
 import 'package:url_launcher/url_launcher.dart';
 
@@ -16,6 +18,11 @@ class BookingHistoryViewBody extends StatefulWidget {
 class _BookingHistoryViewBodyState extends State<BookingHistoryViewBody>
     with SingleTickerProviderStateMixin {
   late TabController _tabController;
+  final FacilityCoordinatesService _coordinatesService =
+      FacilityCoordinatesService();
+
+  // Track loading state for each booking's Get Directions button
+  final Set<int> _loadingDirections = <int>{};
 
   @override
   void initState() {
@@ -100,7 +107,9 @@ class _BookingHistoryViewBodyState extends State<BookingHistoryViewBody>
                 // Display facility name at the top
                 Text(booking.facilityName ?? "Unknown Facility",
                     style: const TextStyle(
-                        fontWeight: FontWeight.bold, fontSize: 20, color: kPrimaryColor)),
+                        fontWeight: FontWeight.bold,
+                        fontSize: 20,
+                        color: kPrimaryColor)),
                 const SizedBox(height: 8),
                 Text("${booking.courtName}",
                     style: const TextStyle(
@@ -133,23 +142,29 @@ class _BookingHistoryViewBodyState extends State<BookingHistoryViewBody>
                     ),
                     const SizedBox(width: 10),
                     ElevatedButton.icon(
-                      onPressed: () async {
-                        Uri uri = Uri.parse(
-                            'https://maps.app.goo.gl/qfYRLHfXK6tRzzU59');
-                        if (await canLaunchUrl(uri)) {
-                          await launchUrl(uri);
-                        } else {
-                          print('Could not launch the URL');
-                        }
-                      },
-                      icon: const Icon(
-                        Icons.map,
-                        color: Colors.white,
+                      onPressed: _loadingDirections.contains(booking.id ?? 0)
+                          ? null
+                          : () => _handleGetDirections(booking),
+                      icon: _loadingDirections.contains(booking.id ?? 0)
+                          ? const SizedBox(
+                              width: 16,
+                              height: 16,
+                              child: CircularProgressIndicator(
+                                strokeWidth: 2,
+                                valueColor:
+                                    AlwaysStoppedAnimation<Color>(Colors.white),
+                              ),
+                            )
+                          : const Icon(
+                              Icons.map,
+                              color: Colors.white,
+                            ),
+                      label: Text(
+                        _loadingDirections.contains(booking.id ?? 0)
+                            ? "Loading..."
+                            : "Get Directions",
+                        style: const TextStyle(color: Colors.white),
                       ),
-                      label: const Text("Get Directions",
-                          style: TextStyle(
-                            color: Colors.white,
-                          )),
                     ),
                   ],
                 )
@@ -159,5 +174,82 @@ class _BookingHistoryViewBodyState extends State<BookingHistoryViewBody>
         );
       },
     );
+  }
+
+  Future<void> _handleGetDirections(BookingHistoryModel booking) async {
+    final bookingId = booking.id ?? 0;
+
+    setState(() {
+      _loadingDirections.add(bookingId);
+    });
+
+    try {
+      if (booking.facilityName != null) {
+        print('🗺️ Getting directions for ${booking.facilityName}');
+
+        // Try to get exact coordinates first
+        final coordinates = await _coordinatesService
+            .getFacilityCoordinates(booking.facilityName!);
+
+        if (coordinates != null) {
+          // Use real coordinates for precise navigation
+          await MapsLauncher.launchMapsWithCoordinates(
+            latitude: coordinates['latitude']!,
+            longitude: coordinates['longitude']!,
+            destinationName: '${booking.facilityName} - ${booking.courtName}',
+          );
+
+          // Show success message
+          if (mounted) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(
+                content: Text('Opening directions to ${booking.facilityName}'),
+                backgroundColor: Colors.green,
+                duration: const Duration(seconds: 2),
+              ),
+            );
+          }
+        } else {
+          // Fallback to search-based navigation
+          print('🔍 Using search-based navigation for ${booking.facilityName}');
+          await MapsLauncher.launchMapsWithSearch(
+            facilityName: booking.facilityName!,
+            city: booking.city,
+          );
+
+          // Show fallback message
+          if (mounted) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(
+                content: Text('Searching for ${booking.facilityName} in maps'),
+                backgroundColor: Colors.orange,
+                duration: const Duration(seconds: 2),
+              ),
+            );
+          }
+        }
+      } else {
+        throw Exception('Facility name not available');
+      }
+    } catch (e) {
+      print('❌ Error getting directions: $e');
+
+      // Show error message
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Unable to open directions: ${e.toString()}'),
+            backgroundColor: Colors.red,
+            duration: const Duration(seconds: 3),
+          ),
+        );
+      }
+    } finally {
+      if (mounted) {
+        setState(() {
+          _loadingDirections.remove(bookingId);
+        });
+      }
+    }
   }
 }

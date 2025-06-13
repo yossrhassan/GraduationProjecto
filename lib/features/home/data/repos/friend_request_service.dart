@@ -1,6 +1,6 @@
 import 'package:graduation_project/core/utils/api_service.dart';
 import 'package:graduation_project/core/utils/auth_manager.dart';
-import 'package:graduation_project/models/friend_request_model.dart';
+import 'package:graduation_project/features/home/data/models/friend_request_model.dart';
 
 class FriendRequestService {
   final ApiService apiService;

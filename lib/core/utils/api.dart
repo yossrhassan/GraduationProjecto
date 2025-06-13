@@ -3,6 +3,40 @@ import 'package:graduation_project/core/utils/auth_manager.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
 
+// Custom exception class to handle API errors
+class ApiException implements Exception {
+  final int statusCode;
+  final Map<String, dynamic>? errorData;
+  final String message;
+
+  ApiException({
+    required this.statusCode,
+    this.errorData,
+    required this.message,
+  });
+
+  List<String> get errorMessages {
+    if (errorData != null && errorData!['errors'] != null) {
+      if (errorData!['errors'] is List) {
+        return List<String>.from(errorData!['errors']);
+      }
+    }
+    return [message];
+  }
+
+  String get userFriendlyMessage {
+    if (errorData != null && errorData!['errors'] != null) {
+      if (errorData!['errors'] is List) {
+        List<String> errors = List<String>.from(errorData!['errors']);
+        if (errors.isNotEmpty) {
+          return errors.join('\n• ');
+        }
+      }
+    }
+    return errorData?['message'] ?? message;
+  }
+}
+
 class Api {
   Future<dynamic> get({required String url, required String? token}) async {
     Map<String, String> headers = {};
@@ -16,8 +50,18 @@ class Api {
     if (response.statusCode == 200) {
       return jsonDecode(response.body);
     } else {
-      throw Exception(
-          'there is a proplem with statues code ${response.statusCode}');
+      Map<String, dynamic>? errorData;
+      try {
+        errorData = jsonDecode(response.body);
+      } catch (e) {
+        // If response body is not JSON, use null
+      }
+
+      throw ApiException(
+        statusCode: response.statusCode,
+        errorData: errorData,
+        message: 'There is a problem with status code ${response.statusCode}',
+      );
     }
   }
 
@@ -57,8 +101,18 @@ class Api {
             'Decoded response is not a JSON object: $decodedResponse');
       }
     } else {
-      throw Exception(
-          'There is a problem with status code ${response.statusCode} with body ${response.body}');
+      Map<String, dynamic>? errorData;
+      try {
+        errorData = jsonDecode(response.body);
+      } catch (e) {
+        // If response body is not JSON, use null
+      }
+
+      throw ApiException(
+        statusCode: response.statusCode,
+        errorData: errorData,
+        message: 'There is a problem with status code ${response.statusCode}',
+      );
     }
   }
 
@@ -87,8 +141,19 @@ class Api {
       Map<String, dynamic> data = jsonDecode(response.body);
       print(data);
       return data;
-    } else
-      throw Exception(
-          'there is a proplem with statues code ${response.statusCode} with body ${jsonDecode(response.body)}');
+    } else {
+      Map<String, dynamic>? errorData;
+      try {
+        errorData = jsonDecode(response.body);
+      } catch (e) {
+        // If response body is not JSON, use null
+      }
+
+      throw ApiException(
+        statusCode: response.statusCode,
+        errorData: errorData,
+        message: 'There is a problem with status code ${response.statusCode}',
+      );
+    }
   }
 }

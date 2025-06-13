@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:graduation_project/constants.dart';
+import 'package:graduation_project/core/utils/api.dart';
 import 'package:graduation_project/core/utils/app_router.dart';
 import 'package:graduation_project/core/utils/show_snack_bar.dart';
 import 'package:graduation_project/core/widgets/custom_button.dart';
@@ -158,7 +159,13 @@ class _RegisterViewState extends State<RegisterView> {
                       showSnackBar(context, 'Registered successfully');
                       GoRouter.of(context).push(AppRouter.kLoginView);
                     } catch (ex) {
-                      showSnackBar(context, 'Error: $ex');
+                      String errorMessage = 'Registration failed';
+                      if (ex is ApiException) {
+                        errorMessage = ex.userFriendlyMessage;
+                      } else {
+                        errorMessage = 'Error: ${ex.toString()}';
+                      }
+                      showSnackBar(context, errorMessage);
                     }
 
                     isloading = false;

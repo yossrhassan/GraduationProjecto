@@ -171,7 +171,7 @@ class _ChatViewBodyState extends State<ChatViewBody> {
                 controller: _messageController,
                 style: const TextStyle(color: Colors.white),
                 decoration: InputDecoration(
-                  hintText: 'Ask about sports facilities...',
+                  hintText: 'Ask about our sports booking app...',
                   hintStyle: TextStyle(color: Colors.grey[400]),
                   border: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(25),

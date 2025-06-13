@@ -5,5 +5,6 @@ import 'package:graduation_project/features/facilities/data/models/facilities/fa
 abstract class FacilitiesRepo {
 
 Future<Either<Failure,List<FacilitiesModel>>> fetchFacilities({int? sportId});
+Future<Either<Failure,List<String>>> fetchCities();
   
 }

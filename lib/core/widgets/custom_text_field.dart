@@ -20,7 +20,7 @@ class CustomTextField extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return SizedBox(
-      height: height ?? 50,
+      height: (height ?? 50) + 20, // Reserve extra space for error text
       child: TextFormField(
         style: const TextStyle(color: kPrimaryColor),
         obscureText: obsecureText!,
@@ -28,17 +28,25 @@ class CustomTextField extends StatelessWidget {
           if (data!.isEmpty) return 'field is required';
         },
         onChanged: onchanged,
-        textAlignVertical: TextAlignVertical.bottom,
+        textAlignVertical: TextAlignVertical.center,
         decoration: InputDecoration(
-            // filled: true,
-            // fillColor: Color(0xff48444E),
-            hintText: hintText,
-            hintStyle: const TextStyle(color: Color(0xff7E807B)),
-            suffixIcon: suffexicon,
-            prefixIcon: prefixicon,
-            border: buildBorder(),
-            enabledBorder: buildBorder(),
-            focusedBorder: buildBorder(kPrimaryColor)),
+          // filled: true,
+          // fillColor: Color(0xff48444E),
+          hintText: hintText,
+          hintStyle: const TextStyle(color: Color(0xff7E807B)),
+          suffixIcon: suffexicon,
+          prefixIcon: prefixicon,
+          border: buildBorder(),
+          enabledBorder: buildBorder(),
+          focusedBorder: buildBorder(kPrimaryColor),
+          errorStyle: const TextStyle(
+            color: Colors.red,
+            fontSize: 12,
+            height: 1,
+          ),
+          contentPadding:
+              const EdgeInsets.symmetric(horizontal: 12, vertical: 16),
+        ),
       ),
     );
   }

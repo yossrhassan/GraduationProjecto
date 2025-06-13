@@ -54,11 +54,13 @@ class _MatchCreationViewState extends State<MatchCreationView> {
             onPressed: () {
               if (selectedBooking != null) {
                 // Extract match type from the selected option
-                final String matchType = numberOfPlayers.contains('5v5')
-                    ? '5v5'
-                    : numberOfPlayers.contains('7v7')
-                        ? '7v7'
-                        : '11v11';
+                final String matchType = numberOfPlayers.contains('2v2')
+                    ? '2v2'
+                    : numberOfPlayers.contains('5v5')
+                        ? '5v5'
+                        : numberOfPlayers.contains('7v7')
+                            ? '7v7'
+                            : '11v11';
 
                 // Calculate total players based on match type
                 final int totalPlayers =
@@ -368,6 +370,7 @@ class _MatchCreationViewState extends State<MatchCreationView> {
                         builder: (context) => SimpleDialog(
                           title: const Text('Select Number of Players'),
                           children: [
+                            '4 Players (2v2)',
                             '10 Players (5v5)',
                             '14 Players (7v7)',
                             '22 Players (11v11)',

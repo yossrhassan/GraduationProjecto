@@ -19,12 +19,14 @@ class FacilitiesViewBody extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    // Trigger facilities fetch with sport filter when widget builds
+    // Trigger facilities and cities fetch when widget builds
     WidgetsBinding.instance.addPostFrameCallback((_) {
+      final cubit = context.read<FacilitiesCubit>();
+      cubit.fetchCities(); // Fetch cities first
       if (sportId != null) {
-        context.read<FacilitiesCubit>().fetchFacilities(sportId: sportId);
+        cubit.fetchFacilities(sportId: sportId);
       } else {
-        context.read<FacilitiesCubit>().fetchFacilities();
+        cubit.fetchFacilities();
       }
     });
 
@@ -38,38 +40,11 @@ class FacilitiesViewBody extends StatelessWidget {
             fontWeight: FontWeight.bold,
           ),
         ),
-        actions: [
-          IconButton(
-            onPressed: () {},
-            icon: const Icon(
-              Icons.notifications,
-              color: kPrimaryColor,
-            ),
-          ),
-          IconButton(
-              onPressed: () {},
-              icon: const Icon(
-                FontAwesomeIcons.circleUser,
-                color: kPrimaryColor,
-              ))
-        ],
-        // backgroundColor: Colors.transparent,
         elevation: 0,
       ),
       extendBodyBehindAppBar: true,
       body: Container(
-        decoration: BoxDecoration(
-            // gradient: RadialGradient(
-            //   center: Alignment.topLeft,
-            //   radius: 0.7,
-            //   colors: [
-            //     lighterColor,
-            //     lighterColor,
-            //     lighterColor,
-            //     Colors.black, // Darker outer area
-            //   ],
-            // ),
-            color: kBackGroundColor),
+        decoration: BoxDecoration(color: kBackGroundColor),
         child: Padding(
           padding: const EdgeInsets.only(top: 90, right: 20, left: 20),
           child: Column(
@@ -77,12 +52,46 @@ class FacilitiesViewBody extends StatelessWidget {
               const SizedBox(
                 height: 20,
               ),
-              const CustomTextField.CustomformTextField(
+              Container(
                 height: 40,
-                hintText: 'Search Court',
-                prefixicon: Icon(
-                  Icons.search,
-                  color: kPrimaryColor,
+                padding: const EdgeInsets.symmetric(horizontal: 12),
+                decoration: BoxDecoration(
+                  border: Border.all(color: Colors.white),
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                child: BlocBuilder<FacilitiesCubit, FacilitiesState>(
+                  builder: (context, state) {
+                    final cubit = context.read<FacilitiesCubit>();
+
+                    return DropdownButtonHideUnderline(
+                      child: DropdownButton<String>(
+                        value: cubit.selectedCity,
+                        hint: const Text(
+                          'Select City',
+                          style: TextStyle(color: Color(0xff7E807B)),
+                        ),
+                        icon: const Icon(
+                          Icons.keyboard_arrow_down,
+                          color: kPrimaryColor,
+                        ),
+                        isExpanded: true,
+                        dropdownColor: kBackGroundColor,
+                        style: const TextStyle(color: kPrimaryColor),
+                        items: cubit.cities.map((String city) {
+                          return DropdownMenuItem<String>(
+                            value: city,
+                            child: Text(
+                              city,
+                              style: const TextStyle(color: kPrimaryColor),
+                            ),
+                          );
+                        }).toList(),
+                        onChanged: (String? newValue) {
+                          cubit.selectCity(newValue);
+                        },
+                      ),
+                    );
+                  },
                 ),
               ),
               const SizedBox(

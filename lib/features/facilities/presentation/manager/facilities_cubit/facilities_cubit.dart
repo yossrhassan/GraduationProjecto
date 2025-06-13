@@ -9,16 +9,59 @@ class FacilitiesCubit extends Cubit<FacilitiesState> {
   FacilitiesCubit(this.facilitiesRepo) : super(FacilitiesInitial());
 
   final FacilitiesRepo facilitiesRepo;
+  List<String> _cities = [];
+  String? _selectedCity;
+  List<FacilitiesModel> _allFacilities = [];
+
+  List<String> get cities => _cities;
+  String? get selectedCity => _selectedCity;
+
+  Future<void> fetchCities() async {
+    try {
+      var result = await facilitiesRepo.fetchCities();
+      result.fold(
+        (failure) {
+          print('Failed to fetch cities: ${failure.errMessage}');
+        },
+        (cities) {
+          _cities = ['All Cities', ...cities]; // Add "All Cities" option
+          print('Fetched cities: $_cities');
+        },
+      );
+    } catch (e) {
+      print('Error fetching cities: $e');
+    }
+  }
+
+  void selectCity(String? city) {
+    _selectedCity = city;
+    _filterFacilitiesByCity();
+  }
 
   Future<void> fetchFacilities({int? sportId}) async {
     emit(FacilitiesLoading());
 
     var result = await facilitiesRepo.fetchFacilities(sportId: sportId);
 
-    result.fold((faliure) {
-      emit(FacilitiesFailure(faliure.errMessage));
+    result.fold((failure) {
+      emit(FacilitiesFailure(failure.errMessage));
     }, (facilities) {
-      emit(FacilitiesSuccess(facilities));
+      _allFacilities = facilities;
+      _filterFacilitiesByCity();
     });
+  }
+
+  void _filterFacilitiesByCity() {
+    List<FacilitiesModel> filteredFacilities = _allFacilities;
+
+    if (_selectedCity != null && _selectedCity != 'All Cities') {
+      filteredFacilities = _allFacilities
+          .where((facility) =>
+              facility.address?.city?.toLowerCase() ==
+              _selectedCity?.toLowerCase())
+          .toList();
+    }
+
+    emit(FacilitiesSuccess(filteredFacilities));
   }
 }

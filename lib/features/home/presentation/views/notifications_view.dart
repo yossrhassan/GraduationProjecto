@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:graduation_project/constants.dart';
-import 'package:graduation_project/models/friend_request_model.dart';
-import 'package:graduation_project/services/friend_request_service.dart';
+import 'package:graduation_project/features/home/data/models/friend_request_model.dart';
+import 'package:graduation_project/features/home/data/repos/friend_request_service.dart';
 import 'package:graduation_project/core/utils/service_locator.dart';
 import 'package:graduation_project/core/utils/auth_manager.dart';
 
@@ -138,7 +138,7 @@ class _NotificationsViewState extends State<NotificationsView>
         backgroundColor: kBackGroundColor,
         elevation: 0,
         title: const Text(
-          'Notifications',
+          'Friends',
           style: TextStyle(
             fontSize: 26,
             fontWeight: FontWeight.bold,

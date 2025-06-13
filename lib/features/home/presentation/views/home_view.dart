@@ -12,6 +12,7 @@ import 'package:graduation_project/features/player_matching/data/repos/matches_r
 import 'package:graduation_project/features/player_matching/presentation/manager/match_cubit/match_cubit.dart';
 import 'package:graduation_project/features/player_matching/presentation/manager/match_cubit/match_state.dart';
 import 'package:graduation_project/features/player_matching/presentation/views/widgets/match_invitations_dialog.dart';
+import 'package:graduation_project/features/home/presentation/manager/friend_requests_cubit.dart';
 
 class HomeView extends StatefulWidget {
   const HomeView({super.key});
@@ -20,24 +21,52 @@ class HomeView extends StatefulWidget {
   State<HomeView> createState() => _HomeViewState();
 }
 
-class _HomeViewState extends State<HomeView> {
+class _HomeViewState extends State<HomeView> with RouteAware {
   List<SportModel> sports = [];
   bool isLoadingSports = true;
   late MatchesRepository matchesRepository;
   late MatchesCubit matchesCubit;
+  late FriendRequestsCubit friendRequestsCubit;
 
   @override
   void initState() {
     super.initState();
     matchesRepository = getIt<MatchesRepository>();
     matchesCubit = getIt<MatchesCubit>();
+    friendRequestsCubit = getIt<FriendRequestsCubit>();
     _loadSports();
+    _loadInvitations();
+    _loadFriendRequests();
+  }
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    final modalRoute = ModalRoute.of(context);
+    if (modalRoute is PageRoute) {
+      // You can register for route changes here if needed
+    }
+  }
+
+  @override
+  void dispose() {
+    super.dispose();
+  }
+
+  // This method will be called when returning from friends screen
+  void _refreshWhenReturning() {
+    _loadFriendRequests();
     _loadInvitations();
   }
 
   Future<void> _loadInvitations() async {
     // Load invitations when home view opens
     matchesCubit.getMatchInvitations();
+  }
+
+  Future<void> _loadFriendRequests() async {
+    // Load friend requests when home view opens
+    friendRequestsCubit.loadReceivedFriendRequests();
   }
 
   Future<void> _loadSports() async {
@@ -79,8 +108,11 @@ class _HomeViewState extends State<HomeView> {
   Widget build(BuildContext context) {
     final int? currentUserId = AuthManager.userId;
     print('Current user ID: ${AuthManager.userId}');
-    return BlocProvider.value(
-      value: matchesCubit,
+    return MultiBlocProvider(
+      providers: [
+        BlocProvider.value(value: matchesCubit),
+        BlocProvider.value(value: friendRequestsCubit),
+      ],
       child: Scaffold(
         backgroundColor: kBackGroundColor,
         appBar: AppBar(
@@ -142,10 +174,52 @@ class _HomeViewState extends State<HomeView> {
                 );
               },
             ),
-            IconButton(
-              icon: const Icon(Icons.notifications, color: kPrimaryColor),
-              onPressed: () {
-                GoRouter.of(context).push(AppRouter.kNotificationsView);
+            // Friends Icon with Badge
+            BlocBuilder<FriendRequestsCubit, FriendRequestsState>(
+              builder: (context, state) {
+                int requestCount = 0;
+                if (state is FriendRequestsLoaded) {
+                  requestCount = state.receivedRequests.length;
+                }
+
+                return Stack(
+                  children: [
+                    IconButton(
+                      icon: const Icon(Icons.people, color: kPrimaryColor),
+                      onPressed: () async {
+                        await GoRouter.of(context)
+                            .push(AppRouter.kNotificationsView);
+                        // Refresh friend requests when returning from friends screen
+                        _refreshWhenReturning();
+                      },
+                    ),
+                    if (requestCount > 0)
+                      Positioned(
+                        right: 8,
+                        top: 8,
+                        child: Container(
+                          padding: const EdgeInsets.all(2),
+                          decoration: BoxDecoration(
+                            color: Colors.red,
+                            borderRadius: BorderRadius.circular(10),
+                          ),
+                          constraints: const BoxConstraints(
+                            minWidth: 16,
+                            minHeight: 16,
+                          ),
+                          child: Text(
+                            '$requestCount',
+                            style: const TextStyle(
+                              color: Colors.white,
+                              fontSize: 12,
+                              fontWeight: FontWeight.bold,
+                            ),
+                            textAlign: TextAlign.center,
+                          ),
+                        ),
+                      ),
+                  ],
+                );
               },
             ),
             IconButton(

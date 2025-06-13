@@ -67,4 +67,32 @@ class FacilitiesRepoImpl implements FacilitiesRepo {
       }
     }
   }
+
+  @override
+  Future<Either<Failure, List<String>>> fetchCities() async {
+    try {
+      print('🔍 CITIES: Fetching cities from Facilities/cities');
+      var body = await apiService.get(endPoint: 'Facilities/cities');
+
+      print('🔍 CITIES: Response type: ${body.runtimeType}');
+      print('🔍 CITIES: Response: $body');
+
+      if (body is Map && body['success'] == true && body['data'] is List) {
+        List<String> cities = List<String>.from(body['data']);
+        print('🔍 CITIES: Successfully parsed ${cities.length} cities: $cities');
+        return right(cities);
+      } else {
+        print('🔍 CITIES: Unexpected response format');
+        return left(ServerFailure('Failed to fetch cities'));
+      }
+      
+    } catch (e) {
+      print('🔍 CITIES: Error occurred: $e');
+      if (e is DioException) {
+        return left(ServerFailure.fromDioError(e));
+      } else {
+        return left(ServerFailure(e.toString()));
+      }
+    }
+  }
 }

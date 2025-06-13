@@ -5,7 +5,10 @@ import 'package:graduation_project/features/player_matching/data/models/player_m
 import 'package:graduation_project/features/settings/data/models/user_model.dart';
 import 'package:graduation_project/features/settings/data/repos/user_service.dart';
 import 'package:graduation_project/core/utils/service_locator.dart';
-import 'package:graduation_project/services/friend_request_service.dart';
+import 'package:graduation_project/core/utils/auth_manager.dart';
+import 'package:graduation_project/core/utils/show_snack_bar.dart';
+import 'package:graduation_project/features/home/data/repos/friend_request_service.dart';
+import 'package:graduation_project/features/home/data/models/friend_request_model.dart';
 
 class PlayerProfileView extends StatefulWidget {
   final PlayerModel player;
