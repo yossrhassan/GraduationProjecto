@@ -290,31 +290,36 @@ class MatchesRepositoryImpl implements MatchesRepository {
         print('  Response data type: ${e.response?.data.runtimeType}');
 
         if (e.response?.statusCode == 400) {
-          // Check different possible response formats
+          // Extract the actual error message from the API response
           dynamic responseData = e.response?.data;
-          String responseText = '';
+          String errorMessage = 'Team is full or invalid team selection';
 
           if (responseData is String) {
-            responseText = responseData;
-          } else if (responseData is Map) {
-            responseText = responseData.toString();
+            errorMessage = responseData;
+          } else if (responseData is Map<String, dynamic>) {
+            // Try different possible error message fields
+            errorMessage = responseData['message'] ??
+                responseData['error'] ??
+                responseData['title'] ??
+                responseData.toString();
           } else {
-            responseText = responseData?.toString() ?? '';
+            errorMessage = responseData?.toString() ?? errorMessage;
           }
 
-          print('🔍 Response text for analysis: "$responseText"');
+          print('🔍 Response text for analysis: "$errorMessage"');
 
           // Check for "already joined" or "already part of" patterns
-          if (responseText.toLowerCase().contains('already part of') ||
-              responseText.toLowerCase().contains('already joined') ||
-              responseText.toLowerCase().contains('already') &&
-                  responseText.toLowerCase().contains('match')) {
+          if (errorMessage.toLowerCase().contains('already part of') ||
+              errorMessage.toLowerCase().contains('already joined') ||
+              errorMessage.toLowerCase().contains('already') &&
+                  errorMessage.toLowerCase().contains('match')) {
             print('✅ DETECTED: User is already part of match $matchId');
             return right(
                 true); // Return success since user is already in the match
           }
 
-          return left(ServerFailure('Team is full or invalid team selection'));
+          // Return the actual API error message
+          return left(ServerFailure(errorMessage));
         }
 
         return left(ServerFailure.fromDioError(e));
@@ -340,6 +345,267 @@ class MatchesRepositoryImpl implements MatchesRepository {
       print('Error in getCompletedMatches: $e');
       if (e is DioException) {
         return left(ServerFailure.fromDioError(e));
+      }
+      return left(ServerFailure(e.toString()));
+    }
+  }
+
+  @override
+  Future<Either<Failure, String>> leaveMatch(String matchId) async {
+    try {
+      print('🚪 Leaving match $matchId...');
+      final response = await apiService.post(
+        endPoint: 'Match/$matchId/leave',
+        data: {}, // Empty body since matchId is in the URL
+      );
+
+      print('✅ Leave match response: $response');
+
+      // Handle different response types
+      if (response is String) {
+        return right(response);
+      } else if (response is Map<String, dynamic>) {
+        if (response['success'] == true) {
+          return right(response['message'] ?? 'Successfully left the match');
+        } else {
+          return right(response['message'] ?? 'Successfully left the match');
+        }
+      }
+
+      return right('Successfully left the match');
+    } catch (e) {
+      print('❌ Error leaving match: $e');
+      if (e is DioException) {
+        return left(ServerFailure.fromDioError(e));
+      }
+      return left(ServerFailure(e.toString()));
+    }
+  }
+
+  @override
+  Future<Either<Failure, String>> cancelMatch(String matchId) async {
+    try {
+      print('🚫 Canceling match $matchId...');
+      final response = await apiService.post(
+        endPoint: 'Match/$matchId/cancel',
+        data: {}, // Empty body since matchId is in the URL
+      );
+
+      print('✅ Cancel match response: $response');
+
+      // Handle different response types
+      if (response is String) {
+        return right(response);
+      } else if (response is Map<String, dynamic>) {
+        if (response['success'] == true) {
+          return right('Match canceled successfully');
+        } else {
+          return right(response['message'] ?? 'Match canceled successfully');
+        }
+      }
+
+      return right('Match canceled successfully');
+    } catch (e) {
+      print('❌ Error canceling match: $e');
+      if (e is DioException) {
+        return left(ServerFailure.fromDioError(e));
+      }
+      return left(ServerFailure(e.toString()));
+    }
+  }
+
+  @override
+  Future<Either<Failure, String>> inviteFriend(
+      String matchId, int invitedUserId) async {
+    try {
+      print('👥 Inviting friend $invitedUserId to match $matchId...');
+      final response = await apiService.post(
+        endPoint: 'Match/$matchId/invite',
+        data: {
+          'invitedUserId': invitedUserId,
+        },
+      );
+
+      print('✅ Invite friend response: $response');
+
+      // Handle different response types
+      if (response is String) {
+        return right(response);
+      } else if (response is Map<String, dynamic>) {
+        if (response['success'] == true) {
+          return right('Friend invited successfully');
+        } else {
+          return right(response['message'] ?? 'Friend invited successfully');
+        }
+      }
+
+      return right('Friend invited successfully');
+    } catch (e) {
+      print('❌ Error inviting friend: $e');
+      if (e is DioException) {
+        // Extract error message from response
+        String errorMessage = 'Failed to invite friend';
+
+        if (e.response?.data != null) {
+          final responseData = e.response!.data;
+          print('❌ Error response data: $responseData');
+          print('❌ Error response type: ${responseData.runtimeType}');
+
+          if (responseData is String) {
+            errorMessage = responseData;
+          } else if (responseData is Map<String, dynamic>) {
+            // Try different possible error message fields
+            errorMessage = responseData['message'] ??
+                responseData['error'] ??
+                responseData['title'] ??
+                'Failed to invite friend';
+          }
+        }
+
+        return left(ServerFailure(errorMessage));
+      }
+      return left(ServerFailure(e.toString()));
+    }
+  }
+
+  @override
+  Future<Either<Failure, List<MatchModel>>> getMatchInvitations() async {
+    try {
+      print('📨 Getting match invitations...');
+      final response = await apiService.get(endPoint: 'Match/invitations');
+
+      print('✅ Match invitations response: $response');
+
+      if (response is List) {
+        final invitations =
+            response.map((match) => MatchModel.fromJson(match)).toList();
+        return right(invitations);
+      } else if (response is Map<String, dynamic>) {
+        if (response['success'] == true && response['data'] is List) {
+          final invitations = (response['data'] as List)
+              .map((match) => MatchModel.fromJson(match))
+              .toList();
+          return right(invitations);
+        }
+      }
+
+      return right([]);
+    } catch (e) {
+      print('❌ Error getting match invitations: $e');
+      if (e is DioException) {
+        return left(ServerFailure.fromDioError(e));
+      }
+      return left(ServerFailure(e.toString()));
+    }
+  }
+
+  @override
+  Future<Either<Failure, String>> respondToInvitation(
+      String matchId, bool accept) async {
+    try {
+      print(
+          '📨 Responding to invitation for match $matchId with accept: $accept');
+      final response = await apiService.post(
+        endPoint: 'Match/$matchId/respond-invitation',
+        data: {
+          'accept': accept,
+        },
+      );
+
+      print('✅ Respond to invitation response: $response');
+
+      // Handle different response types
+      if (response is String) {
+        return right(response);
+      } else if (response is Map<String, dynamic>) {
+        if (response['success'] == true) {
+          return right(accept
+              ? 'Invitation accepted successfully'
+              : 'Invitation declined successfully');
+        } else {
+          return right(response['message'] ??
+              (accept ? 'Invitation accepted' : 'Invitation declined'));
+        }
+      }
+
+      return right(accept
+          ? 'Invitation accepted successfully'
+          : 'Invitation declined successfully');
+    } catch (e) {
+      print('❌ Error responding to invitation: $e');
+      if (e is DioException) {
+        // Extract error message from response
+        String errorMessage = 'Failed to respond to invitation';
+
+        if (e.response?.data != null) {
+          final responseData = e.response!.data;
+          print('❌ Error response data: $responseData');
+          print('❌ Error response type: ${responseData.runtimeType}');
+
+          if (responseData is String) {
+            errorMessage = responseData;
+          } else if (responseData is Map<String, dynamic>) {
+            // Try different possible error message fields
+            errorMessage = responseData['message'] ??
+                responseData['error'] ??
+                responseData['title'] ??
+                'Failed to respond to invitation';
+          }
+        }
+
+        return left(ServerFailure(errorMessage));
+      }
+      return left(ServerFailure(e.toString()));
+    }
+  }
+
+  @override
+  Future<Either<Failure, String>> kickPlayer(
+      String matchId, int playerId) async {
+    try {
+      print('👢 Kicking player $playerId from match $matchId...');
+      final response = await apiService.post(
+        endPoint: 'Match/$matchId/kick/$playerId',
+        data: {}, // Empty body since both IDs are in the URL
+      );
+
+      print('✅ Kick player response: $response');
+
+      // Handle different response types
+      if (response is String) {
+        return right(response);
+      } else if (response is Map<String, dynamic>) {
+        if (response['success'] == true) {
+          return right('Player kicked successfully');
+        } else {
+          return right(response['message'] ?? 'Player kicked successfully');
+        }
+      }
+
+      return right('Player kicked successfully');
+    } catch (e) {
+      print('❌ Error kicking player: $e');
+      if (e is DioException) {
+        // Extract error message from response
+        String errorMessage = 'Failed to kick player';
+
+        if (e.response?.data != null) {
+          final responseData = e.response!.data;
+          print('❌ Error response data: $responseData');
+          print('❌ Error response type: ${responseData.runtimeType}');
+
+          if (responseData is String) {
+            errorMessage = responseData;
+          } else if (responseData is Map<String, dynamic>) {
+            // Try different possible error message fields
+            errorMessage = responseData['message'] ??
+                responseData['error'] ??
+                responseData['title'] ??
+                'Failed to kick player';
+          }
+        }
+
+        return left(ServerFailure(errorMessage));
       }
       return left(ServerFailure(e.toString()));
     }

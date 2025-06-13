@@ -30,9 +30,16 @@ class MatchCard extends StatelessWidget {
     // Status display and color logic
     String displayStatus;
     Color statusColor;
+    Color cardBackgroundColor = Colors.white; // Default card background
     bool hasBorder = false;
 
-    if (isCreator) {
+    // Check if match is cancelled first (highest priority)
+    if (status.toLowerCase() == 'cancelled') {
+      displayStatus = 'CANCELLED';
+      statusColor = Colors.white; // White text on red background
+      cardBackgroundColor =
+          const Color(0xFFFFEBEE); // Light red background for card
+    } else if (isCreator) {
       displayStatus = 'CREATED';
       statusColor = const Color(0xFF00A36C); // Green for created
     } else if (status.toLowerCase() == 'joined') {
@@ -48,7 +55,7 @@ class MatchCard extends StatelessWidget {
       onTap: onTap,
       child: Container(
         decoration: BoxDecoration(
-          color: Colors.white,
+          color: cardBackgroundColor,
           borderRadius: BorderRadius.circular(12),
         ),
         padding: const EdgeInsets.symmetric(vertical: 16.0, horizontal: 20.0),
@@ -98,7 +105,10 @@ class MatchCard extends StatelessWidget {
                   padding:
                       const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
                   decoration: BoxDecoration(
-                    color: statusColor,
+                    color: status.toLowerCase() == 'cancelled'
+                        ? const Color(
+                            0xFFD32F2F) // Red background for cancelled
+                        : statusColor,
                     borderRadius: BorderRadius.circular(4),
                     border:
                         hasBorder ? Border.all(color: Colors.black38) : null,

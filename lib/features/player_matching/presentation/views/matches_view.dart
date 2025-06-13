@@ -32,6 +32,9 @@ class _MatchesViewState extends State<MatchesView>
   List<MatchModel>? _cachedMyMatches;
   List<MatchModel>? _cachedCompletedMatches;
 
+  // Track current user to clear cache when user changes
+  int? _currentUserId;
+
   // Sport filtering
   List<SportModel> _sports = [];
   SportModel? _selectedSport;
@@ -41,6 +44,10 @@ class _MatchesViewState extends State<MatchesView>
   void initState() {
     super.initState();
     WidgetsBinding.instance.addObserver(this);
+
+    // Initialize current user ID
+    _currentUserId = AuthManager.userId;
+
     _tabController = TabController(
       length: 3,
       vsync: this,
@@ -73,7 +80,24 @@ class _MatchesViewState extends State<MatchesView>
     });
   }
 
+  // Check if user has changed and clear cache if needed
+  void _checkUserChange() {
+    final currentUserId = AuthManager.userId;
+    if (_currentUserId != currentUserId) {
+      print(
+          '🔄 User changed from $_currentUserId to $currentUserId - clearing cache');
+      // Clear all cached data when user changes
+      setState(() {
+        _cachedAvailableMatches = null;
+        _cachedMyMatches = null;
+        _cachedCompletedMatches = null;
+        _currentUserId = currentUserId;
+      });
+    }
+  }
+
   void _loadSports() {
+    _checkUserChange(); // Check for user change before loading
     setState(() {
       _sportsLoading = true;
     });
@@ -81,6 +105,7 @@ class _MatchesViewState extends State<MatchesView>
   }
 
   void _loadAvailableMatches() {
+    _checkUserChange(); // Check for user change before loading
     print(
         '🔍 Loading available matches with sport filter: ${_selectedSport?.name ?? "All Sports"} (ID: ${_selectedSport?.id})');
     context.read<MatchesCubit>().getAvailableMatches(
@@ -89,6 +114,7 @@ class _MatchesViewState extends State<MatchesView>
   }
 
   void _loadMyMatches() {
+    _checkUserChange(); // Check for user change before loading
     print('🔍 VIEW: _loadMyMatches called');
     print('🔍 VIEW: Current user ID: ${AuthManager.userId}');
     print(
@@ -97,10 +123,12 @@ class _MatchesViewState extends State<MatchesView>
   }
 
   void _loadCompletedMatches() {
+    _checkUserChange(); // Check for user change before loading
     context.read<MatchesCubit>().getCompletedMatches();
   }
 
   void _refreshCurrentTab() {
+    _checkUserChange(); // Check for user change before refreshing
     if (_tabController.index == 0) {
       _loadAvailableMatches();
     } else if (_tabController.index == 1) {
@@ -111,6 +139,7 @@ class _MatchesViewState extends State<MatchesView>
   }
 
   void _onSportFilterChanged(SportModel? sport) {
+    _checkUserChange(); // Check for user change before filtering
     setState(() {
       _selectedSport = sport;
     });
@@ -357,9 +386,13 @@ class _MatchesViewState extends State<MatchesView>
           '🔍 MY MATCHES: Trusting backend, showing all ${matches.length} matches returned by /my-matches endpoint');
     } else {
       // For AVAILABLE MATCHES, filter out matches the user is already in
-      filteredMatches = matches.where((m) => !isUserInMatch(m)).toList();
+      // BUT keep canceled matches visible to all users
+      filteredMatches = matches
+          .where(
+              (m) => !isUserInMatch(m) || m.status.toLowerCase() == 'cancelled')
+          .toList();
       print(
-          '🔍 AVAILABLE MATCHES: Filtered out user matches, showing ${filteredMatches.length} of ${matches.length}');
+          '🔍 AVAILABLE MATCHES: Filtered out user matches (except cancelled), showing ${filteredMatches.length} of ${matches.length}');
     }
 
     print('Final filtered matches count: ${filteredMatches.length}');
@@ -453,7 +486,10 @@ class _MatchesViewState extends State<MatchesView>
               }
 
               String displayStatus;
-              if (isCreator) {
+              // Check if match is cancelled first (highest priority)
+              if (match.status.toLowerCase() == 'cancelled') {
+                displayStatus = 'Cancelled';
+              } else if (isCreator) {
                 displayStatus = 'Created';
               } else if (hasJoined) {
                 displayStatus = 'Joined';

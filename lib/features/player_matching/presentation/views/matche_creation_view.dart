@@ -17,17 +17,9 @@ class MatchCreationView extends StatefulWidget {
 
 class _MatchCreationViewState extends State<MatchCreationView> {
   final GlobalKey<FormState> formKey = GlobalKey<FormState>();
-  final TextEditingController notesController = TextEditingController();
-  final TextEditingController titleController = TextEditingController();
-  final TextEditingController descriptionController = TextEditingController();
 
   BookingHistoryModel? selectedBooking;
   String numberOfPlayers = '10 Players (5v5)';
-  bool paymentAtLocation = true;
-  String sportType = 'Football'; // Default sport type
-  int minSkillLevel = 1;
-  int maxSkillLevel = 5;
-  bool isPrivate = false;
 
   @override
   void initState() {
@@ -38,9 +30,6 @@ class _MatchCreationViewState extends State<MatchCreationView> {
 
   @override
   void dispose() {
-    notesController.dispose();
-    titleController.dispose();
-    descriptionController.dispose();
     super.dispose();
   }
 
@@ -63,7 +52,7 @@ class _MatchCreationViewState extends State<MatchCreationView> {
           IconButton(
             icon: const Icon(Icons.check, color: Colors.white),
             onPressed: () {
-              if (formKey.currentState!.validate() && selectedBooking != null) {
+              if (selectedBooking != null) {
                 // Extract match type from the selected option
                 final String matchType = numberOfPlayers.contains('5v5')
                     ? '5v5'
@@ -75,21 +64,42 @@ class _MatchCreationViewState extends State<MatchCreationView> {
                 final int totalPlayers =
                     int.tryParse(numberOfPlayers.split(' ')[0]) ?? 10;
 
+                // Derive sport type from booking (assuming it's in the court name or facility name)
+                String derivedSportType = 'Football'; // Default
+                final courtName =
+                    selectedBooking!.courtName?.toLowerCase() ?? '';
+                final facilityName =
+                    selectedBooking!.facilityName?.toLowerCase() ?? '';
+
+                if (courtName.contains('basketball') ||
+                    facilityName.contains('basketball')) {
+                  derivedSportType = 'Basketball';
+                } else if (courtName.contains('tennis') ||
+                    facilityName.contains('tennis')) {
+                  derivedSportType = 'Tennis';
+                } else if (courtName.contains('volleyball') ||
+                    facilityName.contains('volleyball')) {
+                  derivedSportType = 'Volleyball';
+                }
+
                 final Map<String, dynamic> matchData = {
                   'bookingId': selectedBooking!.id,
-                  'sportType': sportType,
+                  'sportType': derivedSportType,
                   'teamSize': totalPlayers ~/
                       2, // Divide total players by 2 for team size
-                  'title':
-                      titleController.text, // Use the actual location input
-                  'description': descriptionController.text,
-                  'minSkillLevel': minSkillLevel,
-                  'maxSkillLevel': maxSkillLevel,
-                  'isPrivate': isPrivate,
+                  'title': selectedBooking!.city ??
+                      selectedBooking!.facilityName ??
+                      'Unknown Location', // Use city as title
+                  'description':
+                      'Match at ${selectedBooking!.facilityName}', // Simple default description
+                  'minSkillLevel': 1, // Default minimum skill level
+                  'maxSkillLevel': 10, // Default maximum skill level
+                  'isPrivate': false,
                   'date': selectedBooking!.date,
                   'time':
                       '${selectedBooking!.startTime} - ${selectedBooking!.endTime}',
-                  'location': selectedBooking!.facilityName,
+                  'location':
+                      selectedBooking!.city ?? selectedBooking!.facilityName,
                   'court': selectedBooking!.courtName,
                   'status': 'OPEN',
                   'match_type': matchType,
@@ -97,8 +107,8 @@ class _MatchCreationViewState extends State<MatchCreationView> {
                   'joined_players': 1,
                   'price': selectedBooking!.totalPrice,
                   'is_creator': true,
-                  'payment_at_location': paymentAtLocation,
-                  'notes': notesController.text,
+                  'payment_at_location': true, // Default to true
+                  'notes': '', // Empty notes
                   'team_a': [
                     {'id': 'current_user_id', 'name': 'You', 'is_captain': true}
                   ],
@@ -203,6 +213,7 @@ class _MatchCreationViewState extends State<MatchCreationView> {
                             value: booking,
                             child: Container(
                               width: double.infinity,
+                              constraints: const BoxConstraints(maxWidth: 300),
                               child: Column(
                                 crossAxisAlignment: CrossAxisAlignment.start,
                                 mainAxisSize: MainAxisSize.min,
@@ -262,10 +273,13 @@ class _MatchCreationViewState extends State<MatchCreationView> {
                               const Icon(Icons.calendar_today,
                                   color: Colors.white70, size: 18),
                               const SizedBox(width: 8),
-                              Text(
-                                selectedBooking!.date ?? 'Date not available',
-                                style: const TextStyle(
-                                    color: Colors.white, fontSize: 14),
+                              Expanded(
+                                child: Text(
+                                  selectedBooking!.date ?? 'Date not available',
+                                  style: const TextStyle(
+                                      color: Colors.white, fontSize: 14),
+                                  overflow: TextOverflow.ellipsis,
+                                ),
                               ),
                             ],
                           ),
@@ -275,10 +289,30 @@ class _MatchCreationViewState extends State<MatchCreationView> {
                               const Icon(Icons.access_time,
                                   color: Colors.white70, size: 18),
                               const SizedBox(width: 8),
-                              Text(
-                                '${selectedBooking!.startTime} - ${selectedBooking!.endTime}',
-                                style: const TextStyle(
-                                    color: Colors.white, fontSize: 14),
+                              Expanded(
+                                child: Text(
+                                  '${selectedBooking!.startTime} - ${selectedBooking!.endTime}',
+                                  style: const TextStyle(
+                                      color: Colors.white, fontSize: 14),
+                                  overflow: TextOverflow.ellipsis,
+                                ),
+                              ),
+                            ],
+                          ),
+                          const SizedBox(height: 8),
+                          Row(
+                            children: [
+                              const Icon(Icons.location_city,
+                                  color: Colors.white70, size: 18),
+                              const SizedBox(width: 8),
+                              Expanded(
+                                child: Text(
+                                  '${selectedBooking!.facilityName} - ${selectedBooking!.courtName}',
+                                  style: const TextStyle(
+                                      color: Colors.white, fontSize: 14),
+                                  overflow: TextOverflow.ellipsis,
+                                  maxLines: 2,
+                                ),
                               ),
                             ],
                           ),
@@ -288,10 +322,15 @@ class _MatchCreationViewState extends State<MatchCreationView> {
                               const Icon(Icons.location_on,
                                   color: Colors.white70, size: 18),
                               const SizedBox(width: 8),
-                              Text(
-                                '${selectedBooking!.facilityName} - ${selectedBooking!.courtName}',
-                                style: const TextStyle(
-                                    color: Colors.white, fontSize: 14),
+                              Expanded(
+                                child: Text(
+                                  selectedBooking!.city ??
+                                      selectedBooking!.facilityName ??
+                                      'Location not available',
+                                  style: const TextStyle(
+                                      color: Colors.white, fontSize: 14),
+                                  overflow: TextOverflow.ellipsis,
+                                ),
                               ),
                             ],
                           ),
@@ -301,10 +340,13 @@ class _MatchCreationViewState extends State<MatchCreationView> {
                               const Icon(Icons.attach_money,
                                   color: Colors.white70, size: 18),
                               const SizedBox(width: 8),
-                              Text(
-                                'Price: ${selectedBooking!.totalPrice} LE/player',
-                                style: const TextStyle(
-                                    color: Colors.white, fontSize: 14),
+                              Expanded(
+                                child: Text(
+                                  'Price: ${selectedBooking!.totalPrice} LE/player',
+                                  style: const TextStyle(
+                                      color: Colors.white, fontSize: 14),
+                                  overflow: TextOverflow.ellipsis,
+                                ),
                               ),
                             ],
                           ),
@@ -343,294 +385,6 @@ class _MatchCreationViewState extends State<MatchCreationView> {
                         ),
                       );
                     },
-                  ),
-
-                  const SizedBox(height: 12),
-
-                  // Invite Friends
-                  CustomFormField(
-                    label: 'Invite Friends',
-                    value: 'Optional',
-                    icon: Icons.chevron_right,
-                    onTap: () {
-                      // Show friend invitation dialog or navigate to friends selection
-                    },
-                  ),
-
-                  const SizedBox(height: 12),
-
-                  // Add Guests
-                  CustomFormField(
-                    label: 'Add Guests',
-                    value: 'Optional',
-                    icon: Icons.chevron_right,
-                    onTap: () {
-                      // Show guest addition dialog
-                    },
-                  ),
-
-                  const SizedBox(height: 12),
-
-                  // Payment at location toggle
-                  Container(
-                    padding: const EdgeInsets.symmetric(
-                        vertical: 16.0, horizontal: 16.0),
-                    decoration: BoxDecoration(
-                      color: const Color(0xFF06845A),
-                      borderRadius: BorderRadius.circular(8.0),
-                    ),
-                    child: Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: [
-                        const Text(
-                          'Payment at location',
-                          style: TextStyle(
-                            color: Colors.white,
-                            fontSize: 16.0,
-                          ),
-                        ),
-                        Switch(
-                          value: paymentAtLocation,
-                          onChanged: (value) {
-                            setState(() {
-                              paymentAtLocation = value;
-                            });
-                          },
-                          activeColor: Colors.white,
-                          activeTrackColor: Colors.green.shade300,
-                        ),
-                      ],
-                    ),
-                  ),
-
-                  const SizedBox(height: 12),
-
-                  // Match Title
-                  Container(
-                    padding: const EdgeInsets.symmetric(
-                        vertical: 16.0, horizontal: 16.0),
-                    decoration: BoxDecoration(
-                      color: const Color(0xFF06845A),
-                      borderRadius: BorderRadius.circular(8.0),
-                    ),
-                    child: TextFormField(
-                      controller: titleController,
-                      decoration: const InputDecoration(
-                        hintText: 'Match Location',
-                        hintStyle: TextStyle(color: Colors.white70),
-                        border: InputBorder.none,
-                      ),
-                      style: const TextStyle(color: Colors.white),
-                      validator: (value) {
-                        if (value == null || value.isEmpty) {
-                          return 'Please enter a match title';
-                        }
-                        return null;
-                      },
-                    ),
-                  ),
-
-                  const SizedBox(height: 12),
-
-                  // Sport Type Selection
-                  Container(
-                    padding: const EdgeInsets.symmetric(
-                        vertical: 16.0, horizontal: 16.0),
-                    decoration: BoxDecoration(
-                      color: const Color(0xFF06845A),
-                      borderRadius: BorderRadius.circular(8.0),
-                    ),
-                    child: DropdownButtonHideUnderline(
-                      child: DropdownButton<String>(
-                        value: sportType,
-                        dropdownColor: const Color(0xFF06845A),
-                        isExpanded: true,
-                        icon: const Icon(Icons.arrow_drop_down,
-                            color: Colors.white),
-                        style: const TextStyle(color: Colors.white),
-                        items: [
-                          'Football',
-                          'Basketball',
-                          'Tennis',
-                          'Volleyball'
-                        ].map((String value) {
-                          return DropdownMenuItem<String>(
-                            value: value,
-                            child: Text(value),
-                          );
-                        }).toList(),
-                        onChanged: (String? newValue) {
-                          if (newValue != null) {
-                            setState(() {
-                              sportType = newValue;
-                            });
-                          }
-                        },
-                      ),
-                    ),
-                  ),
-
-                  const SizedBox(height: 12),
-
-                  // Description
-                  Container(
-                    padding: const EdgeInsets.symmetric(
-                        vertical: 16.0, horizontal: 16.0),
-                    decoration: BoxDecoration(
-                      color: const Color(0xFF06845A),
-                      borderRadius: BorderRadius.circular(8.0),
-                    ),
-                    child: TextFormField(
-                      controller: descriptionController,
-                      decoration: const InputDecoration(
-                        hintText: 'Match Description',
-                        hintStyle: TextStyle(color: Colors.white70),
-                        border: InputBorder.none,
-                      ),
-                      style: const TextStyle(color: Colors.white),
-                      maxLines: 3,
-                      validator: (value) {
-                        if (value == null || value.isEmpty) {
-                          return 'Please enter a match description';
-                        }
-                        return null;
-                      },
-                    ),
-                  ),
-
-                  const SizedBox(height: 12),
-
-                  // Skill Level Range
-                  Container(
-                    padding: const EdgeInsets.symmetric(
-                        vertical: 16.0, horizontal: 16.0),
-                    decoration: BoxDecoration(
-                      color: const Color(0xFF06845A),
-                      borderRadius: BorderRadius.circular(8.0),
-                    ),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        const Text(
-                          'Skill Level Range',
-                          style: TextStyle(color: Colors.white, fontSize: 16),
-                        ),
-                        const SizedBox(height: 8),
-                        Row(
-                          children: [
-                            Expanded(
-                              child: DropdownButtonFormField<int>(
-                                value: minSkillLevel,
-                                dropdownColor: const Color(0xFF06845A),
-                                decoration: const InputDecoration(
-                                  labelText: 'Min Level',
-                                  labelStyle: TextStyle(color: Colors.white70),
-                                  border: InputBorder.none,
-                                ),
-                                style: const TextStyle(color: Colors.white),
-                                items: List.generate(5, (index) => index + 1)
-                                    .map((int value) {
-                                  return DropdownMenuItem<int>(
-                                    value: value,
-                                    child: Text('Level $value'),
-                                  );
-                                }).toList(),
-                                onChanged: (int? newValue) {
-                                  if (newValue != null) {
-                                    setState(() {
-                                      minSkillLevel = newValue;
-                                    });
-                                  }
-                                },
-                              ),
-                            ),
-                            const SizedBox(width: 16),
-                            Expanded(
-                              child: DropdownButtonFormField<int>(
-                                value: maxSkillLevel,
-                                dropdownColor: const Color(0xFF06845A),
-                                decoration: const InputDecoration(
-                                  labelText: 'Max Level',
-                                  labelStyle: TextStyle(color: Colors.white70),
-                                  border: InputBorder.none,
-                                ),
-                                style: const TextStyle(color: Colors.white),
-                                items: List.generate(5, (index) => index + 1)
-                                    .map((int value) {
-                                  return DropdownMenuItem<int>(
-                                    value: value,
-                                    child: Text('Level $value'),
-                                  );
-                                }).toList(),
-                                onChanged: (int? newValue) {
-                                  if (newValue != null) {
-                                    setState(() {
-                                      maxSkillLevel = newValue;
-                                    });
-                                  }
-                                },
-                              ),
-                            ),
-                          ],
-                        ),
-                      ],
-                    ),
-                  ),
-
-                  const SizedBox(height: 12),
-
-                  // Private Match Toggle
-                  Container(
-                    padding: const EdgeInsets.symmetric(
-                        vertical: 16.0, horizontal: 16.0),
-                    decoration: BoxDecoration(
-                      color: const Color(0xFF06845A),
-                      borderRadius: BorderRadius.circular(8.0),
-                    ),
-                    child: Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: [
-                        const Text(
-                          'Private Match',
-                          style: TextStyle(
-                            color: Colors.white,
-                            fontSize: 16.0,
-                          ),
-                        ),
-                        Switch(
-                          value: isPrivate,
-                          onChanged: (value) {
-                            setState(() {
-                              isPrivate = value;
-                            });
-                          },
-                          activeColor: Colors.white,
-                          activeTrackColor: Colors.green.shade300,
-                        ),
-                      ],
-                    ),
-                  ),
-
-                  const SizedBox(height: 12),
-
-                  // Match Notes
-                  Container(
-                    padding: const EdgeInsets.all(8.0),
-                    decoration: BoxDecoration(
-                      color: const Color(0xFF06845A),
-                      borderRadius: BorderRadius.circular(8.0),
-                    ),
-                    child: TextField(
-                      controller: notesController,
-                      decoration: const InputDecoration(
-                        hintText: 'Match Notes',
-                        hintStyle: TextStyle(color: Colors.white70),
-                        border: InputBorder.none,
-                        contentPadding: EdgeInsets.all(8.0),
-                      ),
-                      style: const TextStyle(color: Colors.white),
-                      maxLines: 3,
-                    ),
                   ),
                 ],
               ),

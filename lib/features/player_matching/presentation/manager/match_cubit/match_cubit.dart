@@ -128,4 +128,136 @@ class MatchesCubit extends Cubit<MatchesState> {
       emit(MatchesError(e.toString()));
     }
   }
+
+  Future<void> leaveMatch(String matchId) async {
+    try {
+      print('🔍 CUBIT: Attempting to leave match $matchId');
+      final result = await matchesRepository.leaveMatch(matchId);
+
+      result.fold(
+        (failure) {
+          print('🔍 CUBIT: Leave match failed: ${failure.errMessage}');
+          emit(MatchesError(failure.errMessage));
+        },
+        (message) {
+          print('🔍 CUBIT: Leave match successful: $message');
+          // After successful leave, refresh match details and lists
+          getMatchDetails(matchId);
+          getAvailableMatches();
+          getMyMatches();
+          // Emit success message or handle navigation
+        },
+      );
+    } catch (e) {
+      print('🔍 CUBIT: Leave match exception: $e');
+      emit(MatchesError(e.toString()));
+    }
+  }
+
+  Future<void> cancelMatch(String matchId) async {
+    try {
+      final result = await matchesRepository.cancelMatch(matchId);
+
+      result.fold(
+        (failure) {
+          emit(MatchesError(failure.errMessage));
+          throw failure.errMessage;
+        },
+        (message) {
+          // After successful cancellation, refresh match details and lists
+          getMatchDetails(matchId);
+          getAvailableMatches();
+          getMyMatches();
+          return message;
+        },
+      );
+    } catch (e) {
+      emit(MatchesError(e.toString()));
+      throw e;
+    }
+  }
+
+  Future<void> inviteFriend(String matchId, int invitedUserId) async {
+    try {
+      final result =
+          await matchesRepository.inviteFriend(matchId, invitedUserId);
+
+      result.fold(
+        (failure) {
+          emit(MatchesError(failure.errMessage));
+          throw failure.errMessage;
+        },
+        (message) {
+          // No need to refresh match details for invitation
+          // Just return success message
+          return message;
+        },
+      );
+    } catch (e) {
+      emit(MatchesError(e.toString()));
+      throw e;
+    }
+  }
+
+  Future<void> getMatchInvitations() async {
+    emit(MatchesLoading());
+    try {
+      final result = await matchesRepository.getMatchInvitations();
+
+      result.fold(
+        (failure) => emit(MatchesError(failure.errMessage)),
+        (invitations) => emit(MatchInvitationsLoaded(invitations)),
+      );
+    } catch (e) {
+      emit(MatchesError(e.toString()));
+    }
+  }
+
+  Future<void> respondToInvitation(String matchId, bool accept) async {
+    try {
+      final result =
+          await matchesRepository.respondToInvitation(matchId, accept);
+
+      result.fold(
+        (failure) {
+          emit(MatchesError(failure.errMessage));
+          throw failure.errMessage;
+        },
+        (message) {
+          // After responding to invitation, refresh invitations list
+          getMatchInvitations();
+          // Also refresh other match lists
+          getAvailableMatches();
+          getMyMatches();
+          return message;
+        },
+      );
+    } catch (e) {
+      emit(MatchesError(e.toString()));
+      throw e;
+    }
+  }
+
+  Future<void> kickPlayer(String matchId, int playerId) async {
+    try {
+      final result = await matchesRepository.kickPlayer(matchId, playerId);
+
+      result.fold(
+        (failure) {
+          emit(MatchesError(failure.errMessage));
+          throw failure.errMessage;
+        },
+        (message) {
+          // After kicking player, refresh match details and lists
+          getMatchDetails(matchId);
+          getAvailableMatches();
+          getMyMatches();
+          return message;
+        },
+      );
+    } catch (e) {
+      emit(MatchesError(e.toString()));
+      throw e;
+    }
+  }
 }

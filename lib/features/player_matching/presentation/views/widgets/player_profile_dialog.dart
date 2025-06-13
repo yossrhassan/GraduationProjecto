@@ -1,11 +1,22 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:graduation_project/features/player_matching/data/models/player_model.dart';
 import 'package:graduation_project/constants.dart';
 import 'package:graduation_project/core/utils/app_router.dart';
+import 'package:graduation_project/core/utils/auth_manager.dart';
+import 'package:graduation_project/core/utils/service_locator.dart';
+import 'package:graduation_project/features/player_matching/presentation/manager/match_cubit/match_cubit.dart';
 import 'package:go_router/go_router.dart';
 
 class PlayerProfileDialog {
-  static void show(BuildContext context, PlayerModel player, bool isCaptain) {
+  static void show(
+    BuildContext context,
+    PlayerModel player,
+    bool isCaptain, {
+    String? matchId,
+    bool isMatchCreator = false,
+    Function(int)? onKickPlayer,
+  }) {
     showModalBottomSheet(
       context: context,
       backgroundColor: Colors.transparent,
@@ -13,20 +24,80 @@ class PlayerProfileDialog {
       builder: (context) => PlayerProfileBottomSheet(
         player: player,
         isCaptain: isCaptain,
+        matchId: matchId,
+        isMatchCreator: isMatchCreator,
+        onKickPlayer: onKickPlayer,
       ),
     );
   }
 }
 
-class PlayerProfileBottomSheet extends StatelessWidget {
+class PlayerProfileBottomSheet extends StatefulWidget {
   final PlayerModel player;
   final bool isCaptain;
+  final String? matchId;
+  final bool isMatchCreator;
+  final Function(int)? onKickPlayer;
 
   const PlayerProfileBottomSheet({
     super.key,
     required this.player,
     required this.isCaptain,
+    this.matchId,
+    this.isMatchCreator = false,
+    this.onKickPlayer,
   });
+
+  @override
+  State<PlayerProfileBottomSheet> createState() =>
+      _PlayerProfileBottomSheetState();
+}
+
+class _PlayerProfileBottomSheetState extends State<PlayerProfileBottomSheet> {
+  bool isKicking = false;
+
+  Future<void> _kickPlayer() async {
+    if (widget.onKickPlayer == null) return;
+
+    // Show confirmation dialog
+    final shouldKick = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        backgroundColor: kBackGroundColor,
+        title: const Text(
+          'Kick Player',
+          style: TextStyle(color: Colors.white),
+        ),
+        content: Text(
+          'Are you sure you want to kick ${widget.player.userName.isNotEmpty ? widget.player.userName : 'this player'} from the match?',
+          style: const TextStyle(color: Colors.white70),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(false),
+            child:
+                const Text('Cancel', style: TextStyle(color: Colors.white70)),
+          ),
+          ElevatedButton(
+            onPressed: () => Navigator.of(context).pop(true),
+            style: ElevatedButton.styleFrom(
+              backgroundColor: Colors.red,
+              foregroundColor: Colors.white,
+            ),
+            child: const Text('Kick Player'),
+          ),
+        ],
+      ),
+    );
+
+    if (shouldKick != true) return;
+
+    // Close the dialog immediately and let the parent handle the kick
+    Navigator.of(context).pop();
+
+    // Call the parent's kick method which handles optimistic UI
+    widget.onKickPlayer!(widget.player.userId);
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -71,7 +142,7 @@ class PlayerProfileBottomSheet extends StatelessWidget {
                   color: Colors.white54,
                 ),
               ),
-              if (isCaptain)
+              if (widget.isCaptain)
                 Positioned(
                   bottom: 0,
                   right: 0,
@@ -94,7 +165,9 @@ class PlayerProfileBottomSheet extends StatelessWidget {
 
           // Player Name
           Text(
-            player.userName.isNotEmpty ? player.userName : 'Player',
+            widget.player.userName.isNotEmpty
+                ? widget.player.userName
+                : 'Player',
             style: const TextStyle(
               color: Colors.white,
               fontSize: 24,
@@ -104,7 +177,7 @@ class PlayerProfileBottomSheet extends StatelessWidget {
           const SizedBox(height: 8),
 
           // Captain badge
-          if (isCaptain)
+          if (widget.isCaptain)
             Container(
               padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
               decoration: BoxDecoration(
@@ -134,16 +207,16 @@ class PlayerProfileBottomSheet extends StatelessWidget {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                _buildDetailRow('Team', 'Team ${player.team}'),
+                _buildDetailRow('Team', 'Team ${widget.player.team}'),
                 const SizedBox(height: 12),
-                _buildDetailRow('Joined', _formatDate(player.invitedAt)),
+                _buildDetailRow('Joined', _formatDate(widget.player.invitedAt)),
               ],
             ),
           ),
 
           const SizedBox(height: 24),
 
-          // Action Button
+          // Action Buttons
           SizedBox(
             width: double.infinity,
             child: OutlinedButton.icon(
@@ -152,8 +225,8 @@ class PlayerProfileBottomSheet extends StatelessWidget {
                 GoRouter.of(context).push(
                   AppRouter.kPlayerProfileView,
                   extra: {
-                    'player': player,
-                    'isCaptain': isCaptain,
+                    'player': widget.player,
+                    'isCaptain': widget.isCaptain,
                   },
                 );
               },
@@ -169,6 +242,32 @@ class PlayerProfileBottomSheet extends StatelessWidget {
               ),
             ),
           ),
+
+          // Kick Player Button (only for match creators)
+          if (widget.isMatchCreator &&
+              widget.onKickPlayer != null &&
+              !widget.isCaptain)
+            Column(
+              children: [
+                const SizedBox(height: 12),
+                SizedBox(
+                  width: double.infinity,
+                  child: ElevatedButton.icon(
+                    onPressed: _kickPlayer,
+                    icon: const Icon(Icons.person_remove, color: Colors.white),
+                    label: const Text('Kick Player'),
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: Colors.red,
+                      foregroundColor: Colors.white,
+                      padding: const EdgeInsets.symmetric(vertical: 12),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                    ),
+                  ),
+                ),
+              ],
+            ),
 
           const SizedBox(height: 12),
 

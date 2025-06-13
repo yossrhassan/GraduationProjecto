@@ -7,12 +7,13 @@ import 'package:graduation_project/features/player_matching/presentation/manager
 import 'package:graduation_project/features/player_matching/presentation/views/widgets/match_box_details.dart';
 import 'package:graduation_project/features/player_matching/presentation/views/widgets/player_avatar.dart';
 import 'package:graduation_project/features/player_matching/presentation/views/widgets/player_profile_dialog.dart';
+import 'package:graduation_project/features/player_matching/presentation/views/widgets/invite_friends_dialog.dart';
 import 'package:graduation_project/core/utils/auth_manager.dart';
 
-class DetailsTab extends StatefulWidget {
+class MatchDetailsBody extends StatefulWidget {
 // Pass from parent if user created this match
 
-  const DetailsTab({
+  const MatchDetailsBody({
     super.key,
     this.isCreator = false,
     this.matchData,
@@ -23,12 +24,13 @@ class DetailsTab extends StatefulWidget {
   final MatchModel? matchData;
 
   @override
-  State<DetailsTab> createState() => _DetailsTabState();
+  State<MatchDetailsBody> createState() => _MatchDetailsBodyState();
 }
 
-class _DetailsTabState extends State<DetailsTab> {
+class _MatchDetailsBodyState extends State<MatchDetailsBody> {
   String? userJoinedTeam; // Track which team the current user joined
   bool isJoining = false; // Track if join request is in progress
+  Set<int> kickedPlayerIds = {}; // Track kicked players for optimistic UI
 
   // Track who created the match (the captain)
   final String captainTeam = 'A'; // Captain is always initially in team A
@@ -174,6 +176,99 @@ class _DetailsTabState extends State<DetailsTab> {
     }
   }
 
+  void _leaveMatch() {
+    if (widget.matchData != null) {
+      final cubit = context.read<MatchesCubit>();
+      cubit.leaveMatch(widget.matchData!.id.toString()).then((_) {
+        // Show success message and navigate back
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Successfully left the match')),
+        );
+        Navigator.of(context).pop(); // Go back to matches list
+      }).catchError((error) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Failed to leave match: $error')),
+        );
+      });
+    }
+  }
+
+  Future<void> _kickPlayerOptimistic(int playerId) async {
+    if (widget.matchData == null) return;
+
+    // Immediately add to kicked players set for optimistic UI
+    setState(() {
+      kickedPlayerIds.add(playerId);
+    });
+
+    try {
+      final cubit = context.read<MatchesCubit>();
+      await cubit.kickPlayer(widget.matchData!.id.toString(), playerId);
+
+      // Success - the player stays kicked
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Row(
+              children: [
+                Icon(Icons.check_circle, color: Colors.white),
+                SizedBox(width: 8),
+                Text('Player kicked successfully'),
+              ],
+            ),
+            backgroundColor: Colors.green,
+          ),
+        );
+      }
+    } catch (e) {
+      // Error - revert the optimistic update
+      if (mounted) {
+        setState(() {
+          kickedPlayerIds.remove(playerId);
+        });
+
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Row(
+              children: [
+                const Icon(Icons.error, color: Colors.white),
+                const SizedBox(width: 8),
+                Expanded(child: Text('Error: $e')),
+              ],
+            ),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
+    }
+  }
+
+  void _cancelMatch() async {
+    if (widget.matchData != null) {
+      final cubit = context.read<MatchesCubit>();
+
+      try {
+        // Wait for the cancel operation to complete
+        await cubit.cancelMatch(widget.matchData!.id.toString());
+
+        // Check if the widget is still mounted before showing snackbar
+        if (mounted) {
+          // Show success message and navigate back
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text('Match canceled successfully')),
+          );
+          Navigator.of(context).pop(); // Go back to matches list
+        }
+      } catch (error) {
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text('Failed to cancel match: $error')),
+          );
+        }
+      }
+    }
+  }
+
   // Helper method to organize players by team
   Map<String, List<PlayerModel>> _organizePlayersByTeam(
       List<PlayerModel>? players) {
@@ -286,10 +381,10 @@ class _DetailsTabState extends State<DetailsTab> {
               isJoining; // Also hide during joining process
 
           // Check if user has joined the match (for management interface)
-          // Exclude creators as they have manage tab for management options
+          // Show management interface for both creators and users who have joined
           final userHasJoinedTeam =
               currentUserTeam != null || userJoinedTeam != null;
-          final hasUserJoined = !widget.isCreator && userHasJoinedTeam;
+          final hasUserJoined = widget.isCreator || userHasJoinedTeam;
 
           print('🔍 DEBUGGING JOIN BUTTONS:');
           print('  - isCreator: ${widget.isCreator}');
@@ -343,12 +438,16 @@ class _DetailsTabState extends State<DetailsTab> {
                                     child: InkWell(
                                       borderRadius: BorderRadius.circular(8),
                                       onTap: () {
-                                        ScaffoldMessenger.of(context)
-                                            .showSnackBar(
-                                          const SnackBar(
-                                              content: Text(
-                                                  'Invite Friends feature coming soon!')),
-                                        );
+                                        if (widget.matchData != null) {
+                                          showDialog(
+                                            context: context,
+                                            builder: (context) =>
+                                                InviteFriendsDialog(
+                                              matchId: widget.matchData!.id
+                                                  .toString(),
+                                            ),
+                                          );
+                                        }
                                       },
                                       child: const Column(
                                         mainAxisAlignment:
@@ -416,7 +515,7 @@ class _DetailsTabState extends State<DetailsTab> {
                             ],
                           ),
                           const SizedBox(height: 8),
-                          // Leave Match
+                          // Leave/Cancel Match
                           Container(
                             width: double.infinity,
                             height: 70,
@@ -429,12 +528,16 @@ class _DetailsTabState extends State<DetailsTab> {
                               child: InkWell(
                                 borderRadius: BorderRadius.circular(8),
                                 onTap: () {
+                                  final isCreator = widget.isCreator;
                                   showDialog(
                                     context: context,
                                     builder: (context) => AlertDialog(
-                                      title: const Text('Leave Match'),
-                                      content: const Text(
-                                          'Are you sure you want to leave this match?'),
+                                      title: Text(isCreator
+                                          ? 'Cancel Match'
+                                          : 'Leave Match'),
+                                      content: Text(isCreator
+                                          ? 'Are you sure you want to cancel this match?'
+                                          : 'Are you sure you want to leave this match?'),
                                       actions: [
                                         TextButton(
                                           onPressed: () =>
@@ -444,28 +547,37 @@ class _DetailsTabState extends State<DetailsTab> {
                                         TextButton(
                                           onPressed: () {
                                             Navigator.pop(context);
-                                            ScaffoldMessenger.of(context)
-                                                .showSnackBar(
-                                              const SnackBar(
-                                                  content: Text(
-                                                      'Leave Match feature coming soon!')),
-                                            );
+                                            if (isCreator) {
+                                              // Call cancel match functionality
+                                              _cancelMatch();
+                                            } else {
+                                              // Call leave match functionality
+                                              _leaveMatch();
+                                            }
                                           },
-                                          child: const Text('Leave'),
+                                          child: Text(isCreator
+                                              ? 'Cancel Match'
+                                              : 'Leave'),
                                         ),
                                       ],
                                     ),
                                   );
                                 },
-                                child: const Column(
+                                child: Column(
                                   mainAxisAlignment: MainAxisAlignment.center,
                                   children: [
-                                    Icon(Icons.exit_to_app,
-                                        size: 32, color: Colors.black54),
-                                    SizedBox(height: 8),
+                                    Icon(
+                                        widget.isCreator
+                                            ? Icons.cancel
+                                            : Icons.exit_to_app,
+                                        size: 32,
+                                        color: Colors.black54),
+                                    const SizedBox(height: 8),
                                     Text(
-                                      'LEAVE MATCH',
-                                      style: TextStyle(
+                                      widget.isCreator
+                                          ? 'CANCEL MATCH'
+                                          : 'LEAVE MATCH',
+                                      style: const TextStyle(
                                         color: Colors.black87,
                                         fontSize: 12,
                                         fontWeight: FontWeight.bold,
@@ -609,7 +721,10 @@ class _DetailsTabState extends State<DetailsTab> {
         String? playerName;
 
         // Get all players for this team and remove duplicates based on userId
-        final teamPlayers = players.where((p) => p.team == team).toList();
+        // Also filter out kicked players for optimistic UI
+        final teamPlayers = players
+            .where((p) => p.team == team && !kickedPlayerIds.contains(p.userId))
+            .toList();
 
         // Remove duplicate players based on userId
         final uniqueTeamPlayers = <PlayerModel>[];
@@ -705,9 +820,17 @@ class _DetailsTabState extends State<DetailsTab> {
             isUser: isCurrentUser,
             isCaptain: isCaptain,
             playerName: playerName,
-            onTap: player != null
+            onTap: player != null && !isCurrentUser
                 ? () {
-                    PlayerProfileDialog.show(context, player!, isCaptain);
+                    PlayerProfileDialog.show(
+                      context,
+                      player!,
+                      isCaptain,
+                      matchId: widget.matchData?.id.toString(),
+                      isMatchCreator: widget.isCreator,
+                      onKickPlayer:
+                          widget.isCreator ? _kickPlayerOptimistic : null,
+                    );
                   }
                 : null,
           ),

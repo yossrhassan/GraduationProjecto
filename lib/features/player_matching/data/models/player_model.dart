@@ -22,12 +22,14 @@ class PlayerModel {
 
   factory PlayerModel.fromJson(Map<String, dynamic> json) {
     return PlayerModel(
-      id: json['id'],
-      userId: json['userId'],
-      userName: json['userName'],
-      status: json['status'],
-      team: json['team'],
-      invitedAt: DateTime.parse(json['invitedAt']),
+      id: json['id'] ?? 0,
+      userId: json['userId'] ?? 0,
+      userName: json['userName']?.toString() ?? 'Unknown Player',
+      status: json['status']?.toString() ?? 'Unknown',
+      team: json['team']?.toString() ?? 'A',
+      invitedAt: json['invitedAt'] != null
+          ? DateTime.parse(json['invitedAt'])
+          : DateTime.now(),
       // responseAt: DateTime.parse(json['responseAt']),
       // checkedInAt: DateTime.parse(json['checkedInAt']),
     );

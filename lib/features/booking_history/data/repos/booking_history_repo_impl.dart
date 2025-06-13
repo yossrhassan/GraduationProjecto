@@ -17,7 +17,8 @@ class BookingHistoryRepoImpl implements BookingHistoryRepo {
       final response = await apiService.get(endPoint: 'Booking/user');
 
       if (response is List) {
-        final bookings = response.map((e) => BookingHistoryModel.fromJson(e)).toList();
+        final bookings =
+            response.map((e) => BookingHistoryModel.fromJson(e)).toList();
         return right(bookings);
       } else {
         return left(ServerFailure('Unexpected response format from server'));

@@ -38,6 +38,11 @@ class CompletedMatchesLoaded extends MatchesState {
   CompletedMatchesLoaded(this.matches);
 }
 
+class MatchInvitationsLoaded extends MatchesState {
+  final List<MatchModel> invitations;
+  MatchInvitationsLoaded(this.invitations);
+}
+
 class MatchesError extends MatchesState {
   final String message;
 

@@ -7,6 +7,7 @@ class BookingHistoryModel extends Equatable {
   final int? courtId;
   final String? courtName;
   final String? facilityName;
+  final String? city;
   final String? date;
   final String? startTime;
   final String? endTime;
@@ -20,6 +21,7 @@ class BookingHistoryModel extends Equatable {
     this.courtId,
     this.courtName,
     this.facilityName,
+    this.city,
     this.date,
     this.startTime,
     this.endTime,
@@ -27,13 +29,15 @@ class BookingHistoryModel extends Equatable {
     this.totalPrice,
   });
 
-  factory BookingHistoryModel.fromJson(Map<String, dynamic> json) => BookingHistoryModel(
+  factory BookingHistoryModel.fromJson(Map<String, dynamic> json) =>
+      BookingHistoryModel(
         id: json['id'] as int?,
         userId: json['userId'] as int?,
         userName: json['userName'] as String?,
         courtId: json['courtId'] as int?,
         courtName: json['courtName'] as String?,
         facilityName: json['facilityName'] as String?,
+        city: json['city'] as String?,
         date: json['date'] as String?,
         startTime: json['startTime'] as String?,
         endTime: json['endTime'] as String?,
@@ -48,6 +52,7 @@ class BookingHistoryModel extends Equatable {
         'courtId': courtId,
         'courtName': courtName,
         'facilityName': facilityName,
+        'city': city,
         'date': date,
         'startTime': startTime,
         'endTime': endTime,
@@ -64,6 +69,7 @@ class BookingHistoryModel extends Equatable {
       courtId,
       courtName,
       facilityName,
+      city,
       date,
       startTime,
       endTime,

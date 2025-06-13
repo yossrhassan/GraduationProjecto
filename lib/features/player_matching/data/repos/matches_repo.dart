@@ -13,4 +13,12 @@ abstract class MatchesRepository {
   Future<Either<Failure, bool>> joinTeam(String matchId, String team);
   Future<Either<Failure, List<SportModel>>> getSports();
   Future<Either<Failure, List<MatchModel>>> getCompletedMatches();
+  Future<Either<Failure, String>> leaveMatch(String matchId);
+  Future<Either<Failure, String>> cancelMatch(String matchId);
+  Future<Either<Failure, String>> inviteFriend(
+      String matchId, int invitedUserId);
+  Future<Either<Failure, List<MatchModel>>> getMatchInvitations();
+  Future<Either<Failure, String>> respondToInvitation(
+      String matchId, bool accept);
+  Future<Either<Failure, String>> kickPlayer(String matchId, int playerId);
 }

@@ -106,18 +106,20 @@ class MatchModel {
     }
 
     return MatchModel(
-      id: json['id'],
-      creatorUserId: json['creatorUserId'],
+      id: json['id'] ?? 0,
+      creatorUserId: json['creatorUserId'] ?? 0,
       creatorUserName: json['creatorUserName']?.toString(),
-      bookingId: json['bookingId'],
-      sportName: json['sportName'],
-      teamSize: json['teamSize'],
-      title: json['title'],
-      description: json['description'],
-      minSkillLevel: json['minSkillLevel'],
-      maxSkillLevel: json['maxSkillLevel'],
-      status: json['status'],
-      createdAt: DateTime.parse(json['createdAt']),
+      bookingId: json['bookingId'] ?? 0,
+      sportName: json['sportName']?.toString() ?? 'Unknown Sport',
+      teamSize: json['teamSize'] ?? 1,
+      title: json['title']?.toString() ?? 'Untitled Match',
+      description: json['description']?.toString() ?? '',
+      minSkillLevel: json['minSkillLevel'] ?? 1,
+      maxSkillLevel: json['maxSkillLevel'] ?? 10,
+      status: json['status']?.toString() ?? 'Unknown',
+      createdAt: json['createdAt'] != null
+          ? DateTime.parse(json['createdAt'])
+          : DateTime.now(),
       completedAt: json['completedAt'] != null
           ? DateTime.parse(json['completedAt'])
           : null,

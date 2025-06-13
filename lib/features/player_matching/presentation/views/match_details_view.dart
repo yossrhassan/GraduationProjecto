@@ -2,14 +2,12 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:graduation_project/features/player_matching/presentation/manager/match_cubit/match_cubit.dart';
 import 'package:graduation_project/features/player_matching/presentation/manager/match_cubit/match_state.dart';
-import 'package:graduation_project/features/player_matching/presentation/views/widgets/details_tab.dart';
-import 'package:graduation_project/features/player_matching/presentation/views/widgets/manage_tab.dart';
+import 'package:graduation_project/features/player_matching/presentation/views/widgets/match_details_body.dart';
 import 'package:graduation_project/features/player_matching/data/models/match_model.dart';
 import 'package:intl/intl.dart';
 import 'package:graduation_project/constants.dart';
 import 'package:graduation_project/core/utils/auth_manager.dart';
 
-// In match_details_view.dart
 class MatchDetailsView extends StatefulWidget {
   final String matchId;
   final bool isCreator;
@@ -28,49 +26,12 @@ class MatchDetailsView extends StatefulWidget {
   State<MatchDetailsView> createState() => _MatchDetailsViewState();
 }
 
-class _MatchDetailsViewState extends State<MatchDetailsView>
-    with SingleTickerProviderStateMixin {
-  late TabController tabController;
-
-  // Helper method to check if current user has joined the match
-  bool _hasUserJoinedMatch(MatchModel? match) {
-    if (match == null || match.players == null) return false;
-
-    final currentUserId = AuthManager.userId;
-    if (currentUserId == null) return false;
-
-    // Check if user is creator
-    if (match.creatorUserId == currentUserId) return true;
-
-    // Check if user is in players list
-    return match.players!.any((player) => player.userId == currentUserId);
-  }
-
-  // Helper method to determine if tabs should be shown
-  bool _shouldShowTabs(MatchModel? match) {
-    // Only show tabs if user is the creator of the match
-    return widget.isCreator;
-  }
-
-  // Update in the initState method
+class _MatchDetailsViewState extends State<MatchDetailsView> {
   @override
   void initState() {
     super.initState();
-    tabController = TabController(length: 3, vsync: this);
-    tabController.addListener(() {
-      setState(() {});
-    });
-
     // Always call API to get the most up-to-date match details
-    // This ensures we have complete player information regardless of the source
     context.read<MatchesCubit>().getMatchDetails(widget.matchId);
-  }
-
-  // Rest of the class remains the same...
-  @override
-  void dispose() {
-    tabController.dispose();
-    super.dispose();
   }
 
   @override
@@ -84,8 +45,6 @@ class _MatchDetailsViewState extends State<MatchDetailsView>
         } else if (widget.matchData != null) {
           currentMatch = widget.matchData!;
         }
-
-        final shouldShowTabs = _shouldShowTabs(currentMatch);
 
         return Scaffold(
           backgroundColor: kBackGroundColor,
@@ -231,129 +190,40 @@ class _MatchDetailsViewState extends State<MatchDetailsView>
                 }
               },
             ),
-            // Conditionally show TabBar
-            bottom: shouldShowTabs
-                ? TabBar(
-                    controller: tabController,
-                    indicatorColor: Colors.white,
-                    indicatorWeight: 3.0,
-                    tabs: const [
-                      Tab(text: 'UPDATES'),
-                      Tab(text: 'DETAILS'),
-                      Tab(text: 'MANAGE'),
-                    ],
-                    labelColor: Colors.white,
-                  )
-                : null,
             elevation: 0,
           ),
-          body: shouldShowTabs
-              ?
-              // Show TabBarView when tabs are visible
-              BlocBuilder<MatchesCubit, MatchesState>(
-                  builder: (context, state) {
-                    // Always prefer current state data, but fallback to initial data if loading
-                    MatchModel? currentMatch;
+          body: BlocBuilder<MatchesCubit, MatchesState>(
+            builder: (context, state) {
+              MatchModel? currentMatch;
 
-                    if (state is MatchDetailsLoaded) {
-                      currentMatch = state.match;
-                    } else if (widget.matchData != null) {
-                      // Use initial match data when state is loading or not loaded yet
-                      currentMatch = widget.matchData!;
-                    }
+              if (state is MatchDetailsLoaded) {
+                currentMatch = state.match;
+              } else if (widget.matchData != null) {
+                currentMatch = widget.matchData!;
+              }
 
-                    if (currentMatch != null) {
-                      return TabBarView(
-                        controller: tabController,
-                        children: [
-                          // Updates Tab
-                          const Center(
-                              child: Text('Updates content here',
-                                  style: TextStyle(color: Colors.white))),
-
-                          // Details Tab (Teams) - Always pass the current match data
-                          DetailsTab(
-                            isCreator: widget.isCreator,
-                            matchData: currentMatch,
-                          ),
-
-                          // Manage Tab
-                          const ManageTab(),
-                        ],
-                      );
-                    } else if (state is MatchesLoading) {
-                      return const Center(child: CircularProgressIndicator());
-                    } else if (state is MatchesError) {
-                      return Center(
-                        child: Text(
-                          'Error: ${state.message}',
-                          style: const TextStyle(color: Colors.white),
-                        ),
-                      );
-                    } else {
-                      return const Center(child: CircularProgressIndicator());
-                    }
-                  },
-                )
-              :
-              // Show only Details tab content when tabs are hidden
-              BlocBuilder<MatchesCubit, MatchesState>(
-                  builder: (context, state) {
-                    MatchModel? currentMatch;
-
-                    if (state is MatchDetailsLoaded) {
-                      currentMatch = state.match;
-                    } else if (widget.matchData != null) {
-                      currentMatch = widget.matchData!;
-                    }
-
-                    if (currentMatch != null) {
-                      return DetailsTab(
-                        isCreator: widget.isCreator,
-                        matchData: currentMatch,
-                      );
-                    } else if (state is MatchesLoading) {
-                      return const Center(child: CircularProgressIndicator());
-                    } else if (state is MatchesError) {
-                      return Center(
-                        child: Text(
-                          'Error: ${state.message}',
-                          style: const TextStyle(color: Colors.white),
-                        ),
-                      );
-                    } else {
-                      return const Center(child: CircularProgressIndicator());
-                    }
-                  },
-                ),
+              if (currentMatch != null) {
+                return MatchDetailsBody(
+                  isCreator: widget.isCreator,
+                  matchData: currentMatch,
+                );
+              } else if (state is MatchesLoading) {
+                return const Center(child: CircularProgressIndicator());
+              } else if (state is MatchesError) {
+                return Center(
+                  child: Text(
+                    'Error: ${state.message}',
+                    style: const TextStyle(color: Colors.white),
+                  ),
+                );
+              } else {
+                return const Center(child: CircularProgressIndicator());
+              }
+            },
+          ),
         );
       },
     );
-  }
-
-  String _formatTime(String time) {
-    if (time.isNotEmpty) {
-      // If the time already contains AM/PM, return as is
-      if (time.toUpperCase().contains('AM') ||
-          time.toUpperCase().contains('PM')) {
-        return time;
-      }
-
-      // If the time contains a dash (range format), handle both start and end times
-      if (time.contains(' - ') || time.contains('-')) {
-        final parts =
-            time.split(' - ').isNotEmpty ? time.split(' - ') : time.split('-');
-        if (parts.length == 2) {
-          final startTime = _convertTo12Hour(parts[0].trim());
-          final endTime = _convertTo12Hour(parts[1].trim());
-          return '$startTime - $endTime';
-        }
-      } else {
-        // Single time
-        return _convertTo12Hour(time.trim());
-      }
-    }
-    return '';
   }
 
   String _convertTo12Hour(String time24) {
