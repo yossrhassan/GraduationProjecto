@@ -7,7 +7,7 @@ abstract class Failure {
 
 class ServerFailure extends Failure {
   ServerFailure(super.errMessage);
-  
+
   factory ServerFailure.fromDioError(DioError dioError) {
     switch (dioError.type) {
       case DioExceptionType.connectionTimeout:
@@ -35,20 +35,26 @@ class ServerFailure extends Failure {
         return ServerFailure('Unexpected error occurred');
     }
   }
-  
+
   factory ServerFailure.fromResponse(int statusCode, dynamic response) {
     if (statusCode == 400 || statusCode == 401 || statusCode == 403) {
       // Handle null or unexpected response structures
       if (response == null) {
         return ServerFailure('Authentication error');
       }
-      
+
       try {
         // Try to safely access error message
         if (response is Map && response['error'] is Map) {
-          return ServerFailure(response['error']['message']?.toString() ?? 'Authentication error');
-        } else if (response is Map && response['message'] != null) {
-          return ServerFailure(response['message'].toString());
+          return ServerFailure(response['error']['message']?.toString() ??
+              'Authentication error');
+        } else if (response is Map &&
+            (response['message'] != null || response['messege'] != null)) {
+          // Handle both 'message' and 'messege' (API typo) fields
+          String errorMessage = response['message']?.toString() ??
+              response['messege']?.toString() ??
+              'Request failed';
+          return ServerFailure(errorMessage);
         } else {
           return ServerFailure('Request failed with status: $statusCode');
         }

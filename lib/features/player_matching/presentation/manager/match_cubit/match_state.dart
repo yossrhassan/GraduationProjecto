@@ -1,6 +1,7 @@
 // player_matching/presentation/cubit/matches_state.dart
 
 import 'package:graduation_project/features/player_matching/data/models/match_model.dart';
+import 'package:graduation_project/features/player_matching/data/models/match_invitation_model.dart';
 import 'package:graduation_project/features/player_matching/data/models/sport_model.dart';
 
 abstract class MatchesState {}
@@ -39,7 +40,7 @@ class CompletedMatchesLoaded extends MatchesState {
 }
 
 class MatchInvitationsLoaded extends MatchesState {
-  final List<MatchModel> invitations;
+  final List<MatchInvitationModel> invitations;
   MatchInvitationsLoaded(this.invitations);
 }
 

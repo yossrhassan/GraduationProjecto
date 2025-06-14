@@ -4,6 +4,7 @@ import 'package:dio/dio.dart';
 import 'package:graduation_project/core/errors/failures.dart';
 import 'package:graduation_project/core/utils/api_service.dart';
 import 'package:graduation_project/features/player_matching/data/models/match_model.dart';
+import 'package:graduation_project/features/player_matching/data/models/match_invitation_model.dart';
 import 'package:graduation_project/features/player_matching/data/models/sport_model.dart';
 import 'package:graduation_project/features/player_matching/data/repos/matches_repo.dart';
 
@@ -257,6 +258,22 @@ class MatchesRepositoryImpl implements MatchesRepository {
         if (e.response?.statusCode == 403) {
           return left(ServerFailure(
               'You do not have permission to create a match. Please check your authentication.'));
+        } else if (e.response?.statusCode == 400) {
+          // Extract the actual error message from the API response
+          dynamic responseData = e.response?.data;
+          String errorMessage = 'Failed to create match';
+
+          if (responseData is Map<String, dynamic>) {
+            // Handle both 'message' and 'messege' (API typo) fields
+            errorMessage = responseData['message']?.toString() ??
+                responseData['messege']?.toString() ??
+                responseData['error']?.toString() ??
+                'Failed to create match';
+          } else if (responseData is String) {
+            errorMessage = responseData;
+          }
+
+          return left(ServerFailure(errorMessage));
         }
         return left(ServerFailure.fromDioError(e));
       }
@@ -469,33 +486,84 @@ class MatchesRepositoryImpl implements MatchesRepository {
   }
 
   @override
-  Future<Either<Failure, List<MatchModel>>> getMatchInvitations() async {
+  Future<Either<Failure, List<MatchInvitationModel>>>
+      getMatchInvitations() async {
     try {
       print('📨 Getting match invitations...');
-      final response = await apiService.get(endPoint: 'Match/invitations');
+      final response =
+          await apiService.get(endPoint: 'Match/match/invitations');
 
       print('✅ Match invitations response: $response');
+      print('✅ Response type: ${response.runtimeType}');
 
       if (response is List) {
-        final invitations =
-            response.map((match) => MatchModel.fromJson(match)).toList();
+        final invitations = response
+            .map((invitation) => MatchInvitationModel.fromJson(invitation))
+            .toList();
+        print('✅ Parsed ${invitations.length} invitations successfully');
         return right(invitations);
       } else if (response is Map<String, dynamic>) {
         if (response['success'] == true && response['data'] is List) {
           final invitations = (response['data'] as List)
-              .map((match) => MatchModel.fromJson(match))
+              .map((invitation) => MatchInvitationModel.fromJson(invitation))
               .toList();
+          print(
+              '✅ Parsed ${invitations.length} invitations from wrapped response');
           return right(invitations);
+        } else if (response['data'] is List) {
+          // Handle case where there's a data field but no success flag
+          final invitations = (response['data'] as List)
+              .map((invitation) => MatchInvitationModel.fromJson(invitation))
+              .toList();
+          print('✅ Parsed ${invitations.length} invitations from data field');
+          return right(invitations);
+        } else {
+          // Handle error responses
+          String errorMessage = response['message'] ??
+              response['error'] ??
+              'Failed to load invitations';
+          print('❌ API returned error: $errorMessage');
+          return left(ServerFailure(errorMessage));
         }
       }
 
+      print('✅ No invitations found, returning empty list');
       return right([]);
     } catch (e) {
       print('❌ Error getting match invitations: $e');
       if (e is DioException) {
+        print('❌ DioException details:');
+        print('  Status code: ${e.response?.statusCode}');
+        print('  Response data: ${e.response?.data}');
+
+        // Handle specific error cases
+        if (e.response?.statusCode == 404) {
+          return left(ServerFailure(
+              'No invitations found. The invitation service may be temporarily unavailable.'));
+        } else if (e.response?.statusCode == 401) {
+          return left(
+              ServerFailure('Please log in again to view your invitations.'));
+        } else if (e.response?.statusCode == 400) {
+          // Extract specific error message from bad request
+          String errorMessage = 'Invalid request. Please try again.';
+          if (e.response?.data != null) {
+            final responseData = e.response!.data;
+            if (responseData is String) {
+              errorMessage = responseData;
+            } else if (responseData is Map<String, dynamic>) {
+              errorMessage = responseData['message'] ??
+                  responseData['error'] ??
+                  responseData['title'] ??
+                  errorMessage;
+            }
+          }
+          return left(ServerFailure(errorMessage));
+        }
+
         return left(ServerFailure.fromDioError(e));
       }
-      return left(ServerFailure(e.toString()));
+      return left(ServerFailure(
+          'Unable to load invitations. Please check your internet connection and try again.'));
     }
   }
 
@@ -513,6 +581,7 @@ class MatchesRepositoryImpl implements MatchesRepository {
       );
 
       print('✅ Respond to invitation response: $response');
+      print('✅ Response type: ${response.runtimeType}');
 
       // Handle different response types
       if (response is String) {
@@ -534,18 +603,45 @@ class MatchesRepositoryImpl implements MatchesRepository {
     } catch (e) {
       print('❌ Error responding to invitation: $e');
       if (e is DioException) {
-        // Extract error message from response
-        String errorMessage = 'Failed to respond to invitation';
+        print('❌ DioException details:');
+        print('  Status code: ${e.response?.statusCode}');
+        print('  Response data: ${e.response?.data}');
 
+        // Handle specific error cases
+        if (e.response?.statusCode == 404) {
+          return left(
+              ServerFailure('Invitation not found or already expired.'));
+        } else if (e.response?.statusCode == 401) {
+          return left(
+              ServerFailure('Please log in again to respond to invitations.'));
+        } else if (e.response?.statusCode == 409) {
+          return left(
+              ServerFailure('This invitation has already been responded to.'));
+        } else if (e.response?.statusCode == 400) {
+          // Extract specific error message from bad request
+          String errorMessage =
+              'Invalid invitation response. Please try again.';
+          if (e.response?.data != null) {
+            final responseData = e.response!.data;
+            if (responseData is String) {
+              errorMessage = responseData;
+            } else if (responseData is Map<String, dynamic>) {
+              errorMessage = responseData['message'] ??
+                  responseData['error'] ??
+                  responseData['title'] ??
+                  errorMessage;
+            }
+          }
+          return left(ServerFailure(errorMessage));
+        }
+
+        // Extract error message from response for other status codes
+        String errorMessage = 'Failed to respond to invitation';
         if (e.response?.data != null) {
           final responseData = e.response!.data;
-          print('❌ Error response data: $responseData');
-          print('❌ Error response type: ${responseData.runtimeType}');
-
           if (responseData is String) {
             errorMessage = responseData;
           } else if (responseData is Map<String, dynamic>) {
-            // Try different possible error message fields
             errorMessage = responseData['message'] ??
                 responseData['error'] ??
                 responseData['title'] ??
@@ -555,7 +651,8 @@ class MatchesRepositoryImpl implements MatchesRepository {
 
         return left(ServerFailure(errorMessage));
       }
-      return left(ServerFailure(e.toString()));
+      return left(ServerFailure(
+          'Unable to respond to invitation. Please check your internet connection and try again.'));
     }
   }
 

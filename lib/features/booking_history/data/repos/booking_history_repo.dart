@@ -5,4 +5,5 @@ import 'package:graduation_project/features/booking_history/data/models/booking/
 
 abstract class BookingHistoryRepo {
   Future<Either<Failure, List<BookingHistoryModel>>> getUserBookings();
+  Future<Either<Failure, String>> cancelBooking(int bookingId);
 }

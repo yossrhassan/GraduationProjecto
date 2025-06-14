@@ -30,4 +30,54 @@ class BookingHistoryRepoImpl implements BookingHistoryRepo {
       return left(ServerFailure(e.toString()));
     }
   }
+
+  @override
+  Future<Either<Failure, String>> cancelBooking(int bookingId) async {
+    try {
+      final response = await apiService.put(
+        endPoint: 'Booking/cancel/$bookingId',
+        data: {}, // Empty data for PUT request
+      );
+
+      // Handle different response types
+      if (response is String) {
+        return right(response);
+      } else if (response is Map<String, dynamic>) {
+        // Extract message from response object if it exists
+        final message = response['message'] ??
+            response['messege'] ??
+            'Booking cancelled successfully';
+        return right(message.toString());
+      } else {
+        return right('Booking cancelled successfully');
+      }
+    } catch (e) {
+      // Extract clean error message from any error type
+      String errorMessage = e.toString();
+
+      // Check if it's a DioError first
+      if (e is DioError) {
+        if (e.response?.statusCode == 400 && e.response?.data != null) {
+          // Get the raw response data directly for 400 errors
+          errorMessage = e.response!.data.toString();
+        } else {
+          return left(ServerFailure.fromDioError(e));
+        }
+      } else {
+        // For non-DioError exceptions, try to extract clean message
+        String errorString = e.toString();
+
+        // Check if the error contains "body: " and extract the part after it
+        if (errorString.contains('body: ')) {
+          int bodyIndex = errorString.indexOf('body: ') + 6;
+          errorMessage = errorString.substring(bodyIndex).trim();
+        } else {
+          // Use the error message as is
+          errorMessage = errorString;
+        }
+      }
+
+      return left(ServerFailure(errorMessage));
+    }
+  }
 }

@@ -21,6 +21,40 @@ class _MatchCreationViewState extends State<MatchCreationView> {
   BookingHistoryModel? selectedBooking;
   String numberOfPlayers = '10 Players (5v5)';
 
+  // Helper function to convert 24-hour time to 12-hour format with AM/PM
+  String formatTime(String? time24) {
+    if (time24 == null || time24.isEmpty) return '';
+
+    try {
+      // Parse the time (assuming format like "14:30" or "14:30:00")
+      final parts = time24.split(':');
+      if (parts.isEmpty) return time24;
+
+      int hour = int.parse(parts[0]);
+      String minute = parts.length > 1 ? parts[1] : '00';
+
+      String period = hour >= 12 ? 'PM' : 'AM';
+      int displayHour = hour == 0 ? 12 : (hour > 12 ? hour - 12 : hour);
+
+      return '$displayHour:$minute $period';
+    } catch (e) {
+      // If parsing fails, return original time
+      return time24;
+    }
+  }
+
+  // Helper function to format time range
+  String formatTimeRange(String? startTime, String? endTime) {
+    final formattedStart = formatTime(startTime);
+    final formattedEnd = formatTime(endTime);
+
+    if (formattedStart.isEmpty || formattedEnd.isEmpty) {
+      return 'Time not available';
+    }
+
+    return '$formattedStart to $formattedEnd';
+  }
+
   @override
   void initState() {
     super.initState();
@@ -42,15 +76,16 @@ class _MatchCreationViewState extends State<MatchCreationView> {
           style: TextStyle(
             color: Colors.white,
             fontWeight: FontWeight.w500,
+            fontSize: 22,
           ),
         ),
         leading: IconButton(
-          icon: const Icon(Icons.arrow_back, color: Colors.white),
+          icon: const Icon(Icons.arrow_back, color: Colors.white, size: 28),
           onPressed: () => GoRouter.of(context).pop(),
         ),
         actions: [
           IconButton(
-            icon: const Icon(Icons.check, color: Colors.white),
+            icon: const Icon(Icons.check, color: Colors.white, size: 28),
             onPressed: () {
               if (selectedBooking != null) {
                 // Extract match type from the selected option
@@ -98,8 +133,8 @@ class _MatchCreationViewState extends State<MatchCreationView> {
                   'maxSkillLevel': 10, // Default maximum skill level
                   'isPrivate': false,
                   'date': selectedBooking!.date,
-                  'time':
-                      '${selectedBooking!.startTime} - ${selectedBooking!.endTime}',
+                  'time': formatTimeRange(
+                      selectedBooking!.startTime, selectedBooking!.endTime),
                   'location':
                       selectedBooking!.city ?? selectedBooking!.facilityName,
                   'court': selectedBooking!.courtName,
@@ -132,7 +167,10 @@ class _MatchCreationViewState extends State<MatchCreationView> {
                   );
                 }).catchError((error) {
                   ScaffoldMessenger.of(context).showSnackBar(
-                    SnackBar(content: Text('Error creating match: $error')),
+                    SnackBar(
+                      content: Text('$error'),
+                      backgroundColor: Colors.white,
+                    ),
                   );
                 });
               } else {
@@ -151,7 +189,9 @@ class _MatchCreationViewState extends State<MatchCreationView> {
           if (state is BookingHistoryLoading) {
             return const Center(child: CircularProgressIndicator());
           } else if (state is BookingHistoryError) {
-            return Center(child: Text('Error: ${state.message}'));
+            return Center(
+                child: Text('Error: ${state.message}',
+                    style: TextStyle(fontSize: 18)));
           } else if (state is BookingHistoryLoaded) {
             final upcomingBookings = state.upcomingBookings;
 
@@ -168,7 +208,7 @@ class _MatchCreationViewState extends State<MatchCreationView> {
                   // Booking Selection Dropdown
                   Container(
                     padding: const EdgeInsets.symmetric(
-                        vertical: 16.0, horizontal: 16.0),
+                        vertical: 20.0, horizontal: 20.0),
                     decoration: BoxDecoration(
                       color: const Color(0xFF06845A),
                       borderRadius: BorderRadius.circular(8.0),
@@ -179,10 +219,10 @@ class _MatchCreationViewState extends State<MatchCreationView> {
                         dropdownColor: const Color(0xFF06845A),
                         isExpanded: true,
                         icon: const Icon(Icons.arrow_drop_down,
-                            color: Colors.white),
+                            color: Colors.white, size: 30),
                         hint: const Text(
                           'Select a booking',
-                          style: TextStyle(color: Colors.white54),
+                          style: TextStyle(color: Colors.white54, fontSize: 18),
                         ),
                         selectedItemBuilder: (context) {
                           return upcomingBookings.map((booking) {
@@ -192,18 +232,28 @@ class _MatchCreationViewState extends State<MatchCreationView> {
                                 crossAxisAlignment: CrossAxisAlignment.start,
                                 mainAxisAlignment: MainAxisAlignment.center,
                                 children: [
-                                  Text(
-                                    '${booking.facilityName} - ${booking.courtName}',
-                                    style: const TextStyle(color: Colors.white),
-                                    overflow: TextOverflow.ellipsis,
-                                    maxLines: 1,
+                                  Flexible(
+                                    child: Text(
+                                      '${booking.facilityName} - ${booking.courtName}',
+                                      style: const TextStyle(
+                                          color: Colors.white,
+                                          fontSize: 18,
+                                          fontWeight: FontWeight.w500),
+                                      softWrap: true,
+                                      maxLines: 1,
+                                      overflow: TextOverflow.ellipsis,
+                                    ),
                                   ),
-                                  Text(
-                                    '${booking.date} | ${booking.startTime} - ${booking.endTime}',
-                                    style: const TextStyle(
-                                        color: Colors.white70, fontSize: 12),
-                                    overflow: TextOverflow.ellipsis,
-                                    maxLines: 1,
+                                  const SizedBox(height: 4),
+                                  Flexible(
+                                    child: Text(
+                                      '${booking.date} | ${formatTimeRange(booking.startTime, booking.endTime)}',
+                                      style: const TextStyle(
+                                          color: Colors.white70, fontSize: 14),
+                                      softWrap: true,
+                                      maxLines: 1,
+                                      overflow: TextOverflow.ellipsis,
+                                    ),
                                   ),
                                 ],
                               ),
@@ -215,24 +265,32 @@ class _MatchCreationViewState extends State<MatchCreationView> {
                             value: booking,
                             child: Container(
                               width: double.infinity,
-                              constraints: const BoxConstraints(maxWidth: 300),
+                              padding: const EdgeInsets.symmetric(
+                                  vertical: 8.0, horizontal: 4.0),
                               child: Column(
                                 crossAxisAlignment: CrossAxisAlignment.start,
                                 mainAxisSize: MainAxisSize.min,
                                 children: [
-                                  Text(
-                                    '${booking.facilityName} - ${booking.courtName}',
-                                    style: const TextStyle(color: Colors.white),
-                                    overflow: TextOverflow.ellipsis,
-                                    maxLines: 1,
+                                  Flexible(
+                                    child: Text(
+                                      '${booking.facilityName} - ${booking.courtName}',
+                                      style: const TextStyle(
+                                          color: Colors.white, fontSize: 16),
+                                      softWrap: true,
+                                      maxLines: 2,
+                                      overflow: TextOverflow.visible,
+                                    ),
                                   ),
                                   const SizedBox(height: 4),
-                                  Text(
-                                    '${booking.date} | ${booking.startTime} - ${booking.endTime}',
-                                    style: const TextStyle(
-                                        color: Colors.white70, fontSize: 12),
-                                    overflow: TextOverflow.ellipsis,
-                                    maxLines: 1,
+                                  Flexible(
+                                    child: Text(
+                                      '${booking.date} | ${formatTimeRange(booking.startTime, booking.endTime)}',
+                                      style: const TextStyle(
+                                          color: Colors.white70, fontSize: 14),
+                                      softWrap: true,
+                                      maxLines: 2,
+                                      overflow: TextOverflow.visible,
+                                    ),
                                   ),
                                 ],
                               ),
@@ -253,7 +311,7 @@ class _MatchCreationViewState extends State<MatchCreationView> {
                   // Display selected booking info
                   if (selectedBooking != null)
                     Container(
-                      padding: const EdgeInsets.all(16.0),
+                      padding: const EdgeInsets.all(20.0),
                       decoration: BoxDecoration(
                         color: Colors.green.shade800,
                         borderRadius: BorderRadius.circular(12),
@@ -265,89 +323,89 @@ class _MatchCreationViewState extends State<MatchCreationView> {
                             'Selected Booking',
                             style: TextStyle(
                               color: Colors.white,
-                              fontSize: 18,
+                              fontSize: 22,
                               fontWeight: FontWeight.bold,
                             ),
                           ),
-                          const SizedBox(height: 12),
+                          const SizedBox(height: 16),
                           Row(
+                            crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
                               const Icon(Icons.calendar_today,
-                                  color: Colors.white70, size: 18),
-                              const SizedBox(width: 8),
+                                  color: Colors.white70, size: 24),
+                              const SizedBox(width: 12),
                               Expanded(
                                 child: Text(
                                   selectedBooking!.date ?? 'Date not available',
                                   style: const TextStyle(
-                                      color: Colors.white, fontSize: 14),
-                                  overflow: TextOverflow.ellipsis,
+                                      color: Colors.white, fontSize: 18),
                                 ),
                               ),
                             ],
                           ),
-                          const SizedBox(height: 8),
+                          const SizedBox(height: 12),
                           Row(
+                            crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
                               const Icon(Icons.access_time,
-                                  color: Colors.white70, size: 18),
-                              const SizedBox(width: 8),
+                                  color: Colors.white70, size: 24),
+                              const SizedBox(width: 12),
                               Expanded(
                                 child: Text(
-                                  '${selectedBooking!.startTime} - ${selectedBooking!.endTime}',
+                                  formatTimeRange(selectedBooking!.startTime,
+                                      selectedBooking!.endTime),
                                   style: const TextStyle(
-                                      color: Colors.white, fontSize: 14),
-                                  overflow: TextOverflow.ellipsis,
+                                      color: Colors.white, fontSize: 18),
                                 ),
                               ),
                             ],
                           ),
-                          const SizedBox(height: 8),
+                          const SizedBox(height: 12),
                           Row(
+                            crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
                               const Icon(Icons.location_city,
-                                  color: Colors.white70, size: 18),
-                              const SizedBox(width: 8),
+                                  color: Colors.white70, size: 24),
+                              const SizedBox(width: 12),
                               Expanded(
                                 child: Text(
                                   '${selectedBooking!.facilityName} - ${selectedBooking!.courtName}',
                                   style: const TextStyle(
-                                      color: Colors.white, fontSize: 14),
-                                  overflow: TextOverflow.ellipsis,
-                                  maxLines: 2,
+                                      color: Colors.white, fontSize: 18),
                                 ),
                               ),
                             ],
                           ),
-                          const SizedBox(height: 8),
+                          const SizedBox(height: 12),
                           Row(
+                            crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
                               const Icon(Icons.location_on,
-                                  color: Colors.white70, size: 18),
-                              const SizedBox(width: 8),
+                                  color: Colors.white70, size: 24),
+                              const SizedBox(width: 12),
                               Expanded(
                                 child: Text(
                                   selectedBooking!.city ??
                                       selectedBooking!.facilityName ??
                                       'Location not available',
                                   style: const TextStyle(
-                                      color: Colors.white, fontSize: 14),
-                                  overflow: TextOverflow.ellipsis,
+                                      color: Colors.white, fontSize: 18),
                                 ),
                               ),
                             ],
                           ),
-                          const SizedBox(height: 8),
+                          const SizedBox(height: 12),
                           Row(
+                            crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
                               const Icon(Icons.attach_money,
-                                  color: Colors.white70, size: 18),
-                              const SizedBox(width: 8),
+                                  color: Colors.white70, size: 24),
+                              const SizedBox(width: 12),
                               Expanded(
                                 child: Text(
                                   'Price: ${selectedBooking!.totalPrice} LE/player',
                                   style: const TextStyle(
-                                      color: Colors.white, fontSize: 14),
-                                  overflow: TextOverflow.ellipsis,
+                                      color: Colors.white, fontSize: 18),
                                 ),
                               ),
                             ],
@@ -368,7 +426,8 @@ class _MatchCreationViewState extends State<MatchCreationView> {
                       showDialog(
                         context: context,
                         builder: (context) => SimpleDialog(
-                          title: const Text('Select Number of Players'),
+                          title: const Text('Select Number of Players',
+                              style: TextStyle(fontSize: 20)),
                           children: [
                             '4 Players (2v2)',
                             '10 Players (5v5)',
@@ -382,7 +441,12 @@ class _MatchCreationViewState extends State<MatchCreationView> {
                                       });
                                       Navigator.pop(context);
                                     },
-                                    child: Text(option),
+                                    child: Padding(
+                                      padding: const EdgeInsets.symmetric(
+                                          vertical: 8.0),
+                                      child: Text(option,
+                                          style: TextStyle(fontSize: 18)),
+                                    ),
                                   ))
                               .toList(),
                         ),
@@ -394,7 +458,9 @@ class _MatchCreationViewState extends State<MatchCreationView> {
             );
           } else {
             // Handle any other state or empty state
-            return const Center(child: Text('No bookings available'));
+            return const Center(
+                child: Text('No bookings available',
+                    style: TextStyle(fontSize: 18)));
           }
         },
       ),

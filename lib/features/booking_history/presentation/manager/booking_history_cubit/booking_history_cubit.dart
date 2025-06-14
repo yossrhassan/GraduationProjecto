@@ -25,8 +25,9 @@ class BookingHistoryCubit extends Cubit<BookingHistoryState> {
         if (isClosed) return;
         final now = DateTime.now();
         final upcoming = bookings
-            .where(
-                (b) => DateTime.parse("${b.date}T${b.startTime}").isAfter(now))
+            .where((b) =>
+                DateTime.parse("${b.date}T${b.startTime}").isAfter(now) &&
+                b.status?.toLowerCase() == 'pending')
             .toList();
         final past = bookings
             .where(
@@ -37,6 +38,21 @@ class BookingHistoryCubit extends Cubit<BookingHistoryState> {
           emit(BookingHistoryLoaded(
               upcomingBookings: upcoming, pastBookings: past));
         }
+      },
+    );
+  }
+
+  Future<String> cancelBooking(int bookingId) async {
+    final result = await bookinghistoryRepo.cancelBooking(bookingId);
+
+    return result.fold(
+      (failure) {
+        throw failure.errMessage;
+      },
+      (message) {
+        // Reload bookings after successful cancellation
+        loadBookings();
+        return message;
       },
     );
   }

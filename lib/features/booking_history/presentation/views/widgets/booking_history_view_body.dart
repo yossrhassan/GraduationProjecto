@@ -24,6 +24,9 @@ class _BookingHistoryViewBodyState extends State<BookingHistoryViewBody>
   // Track loading state for each booking's Get Directions button
   final Set<int> _loadingDirections = <int>{};
 
+  // Track loading state for each booking's Cancel button
+  final Set<int> _loadingCancellations = <int>{};
+
   @override
   void initState() {
     super.initState();
@@ -125,19 +128,28 @@ class _BookingHistoryViewBodyState extends State<BookingHistoryViewBody>
                   children: [
                     Expanded(
                       child: ElevatedButton(
-                        onPressed: isPast
+                        onPressed: isPast ||
+                                _loadingCancellations.contains(booking.id ?? 0)
                             ? null
-                            : () {
-                                // Handle cancellation
-                              },
+                            : () => _handleCancelBooking(booking),
                         style: ElevatedButton.styleFrom(
                           backgroundColor: isPast ? Colors.white : Colors.red,
                         ),
-                        child: Text(
-                          isPast ? "Past Booking" : "Cancel",
-                          textAlign: TextAlign.center,
-                          style: const TextStyle(color: Colors.white),
-                        ),
+                        child: _loadingCancellations.contains(booking.id ?? 0)
+                            ? const SizedBox(
+                                width: 16,
+                                height: 16,
+                                child: CircularProgressIndicator(
+                                  strokeWidth: 2,
+                                  valueColor: AlwaysStoppedAnimation<Color>(
+                                      Colors.white),
+                                ),
+                              )
+                            : Text(
+                                isPast ? "Past Booking" : "Cancel",
+                                textAlign: TextAlign.center,
+                                style: const TextStyle(color: Colors.white),
+                              ),
                       ),
                     ),
                     const SizedBox(width: 10),
@@ -174,6 +186,109 @@ class _BookingHistoryViewBodyState extends State<BookingHistoryViewBody>
         );
       },
     );
+  }
+
+  Future<void> _handleCancelBooking(BookingHistoryModel booking) async {
+    final bookingId = booking.id ?? 0;
+
+    // Show confirmation dialog
+    final shouldCancel = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Cancel Booking'),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+                'Are you sure you want to cancel your booking at ${booking.facilityName}?'),
+            const SizedBox(height: 16),
+            Container(
+              padding: const EdgeInsets.all(12),
+              decoration: BoxDecoration(
+                color: Colors.red.shade50,
+                borderRadius: BorderRadius.circular(8),
+                border: Border.all(
+                  color: Colors.red.shade200,
+                  width: 1,
+                ),
+              ),
+              child: Row(
+                children: [
+                  Icon(
+                    Icons.warning_amber_rounded,
+                    color: Colors.red.shade700,
+                    size: 20,
+                  ),
+                  const SizedBox(width: 8),
+                  Expanded(
+                    child: Text(
+                      'Note: This action cannot be undone.',
+                      style: TextStyle(
+                        color: Colors.red.shade800,
+                        fontSize: 13,
+                        fontWeight: FontWeight.w500,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(false),
+            child: const Text('Keep Booking'),
+          ),
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(true),
+            child: const Text('Cancel Booking',
+                style: TextStyle(color: Colors.red)),
+          ),
+        ],
+      ),
+    );
+
+    if (shouldCancel != true) return;
+
+    setState(() {
+      _loadingCancellations.add(bookingId);
+    });
+
+    try {
+      final message =
+          await context.read<BookingHistoryCubit>().cancelBooking(bookingId);
+
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(message),
+            backgroundColor: Colors.green,
+            duration: const Duration(seconds: 3),
+          ),
+        );
+      }
+    } catch (error) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(
+              '$error',
+              style: const TextStyle(color: Colors.white),
+            ),
+            backgroundColor: Colors.red,
+            duration: const Duration(seconds: 3),
+          ),
+        );
+      }
+    } finally {
+      if (mounted) {
+        setState(() {
+          _loadingCancellations.remove(bookingId);
+        });
+      }
+    }
   }
 
   Future<void> _handleGetDirections(BookingHistoryModel booking) async {

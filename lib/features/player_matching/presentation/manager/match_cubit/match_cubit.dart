@@ -1,6 +1,7 @@
 // player_matching/presentation/cubit/matches_cubit.dart
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:graduation_project/features/player_matching/data/repos/matches_repo.dart';
+import 'package:graduation_project/features/player_matching/data/models/match_invitation_model.dart';
 import 'package:graduation_project/features/player_matching/presentation/manager/match_cubit/match_state.dart';
 
 class MatchesCubit extends Cubit<MatchesState> {
@@ -199,42 +200,77 @@ class MatchesCubit extends Cubit<MatchesState> {
     }
   }
 
-  Future<void> getMatchInvitations() async {
-    emit(MatchesLoading());
+  Future<void> getMatchInvitations({int retryCount = 0}) async {
+    // Don't emit loading state on retries to avoid flickering
+    if (retryCount == 0) {
+      emit(MatchesLoading());
+    }
+
     try {
       final result = await matchesRepository.getMatchInvitations();
 
       result.fold(
-        (failure) => emit(MatchesError(failure.errMessage)),
-        (invitations) => emit(MatchInvitationsLoaded(invitations)),
+        (failure) {
+          // Retry on network errors up to 2 times
+          if (retryCount < 2 &&
+              (failure.errMessage.toLowerCase().contains('connection') ||
+                  failure.errMessage.toLowerCase().contains('timeout') ||
+                  failure.errMessage.toLowerCase().contains('network'))) {
+            print(
+                '🔄 Retrying getMatchInvitations (attempt ${retryCount + 1})');
+            Future.delayed(const Duration(seconds: 2), () {
+              getMatchInvitations(retryCount: retryCount + 1);
+            });
+          } else {
+            emit(MatchesError(failure.errMessage));
+          }
+        },
+        (invitations) {
+          print('✅ Successfully loaded ${invitations.length} invitations');
+          emit(MatchInvitationsLoaded(invitations));
+        },
       );
     } catch (e) {
-      emit(MatchesError(e.toString()));
+      print('❌ Exception in getMatchInvitations: $e');
+      emit(MatchesError('Unexpected error occurred. Please try again.'));
     }
   }
 
   Future<void> respondToInvitation(String matchId, bool accept) async {
+    // Get current invitations to update locally FIRST
+    List<MatchInvitationModel> currentInvitations = [];
+    if (state is MatchInvitationsLoaded) {
+      currentInvitations =
+          List.from((state as MatchInvitationsLoaded).invitations);
+    }
+
+    // IMMEDIATELY remove the responded invitation from local list
+    currentInvitations
+        .removeWhere((invitation) => invitation.matchId.toString() == matchId);
+
+    // IMMEDIATELY update the state with the new list (no loading state)
+    emit(MatchInvitationsLoaded(currentInvitations));
+
+    // Handle server request in background without affecting UI state
     try {
       final result =
           await matchesRepository.respondToInvitation(matchId, accept);
 
       result.fold(
         (failure) {
-          emit(MatchesError(failure.errMessage));
-          throw failure.errMessage;
+          // On error, add the invitation back to the list
+          print('❌ Failed to respond to invitation: ${failure.errMessage}');
+          // Optionally restore the invitation or show a snackbar error
         },
         (message) {
-          // After responding to invitation, refresh invitations list
-          getMatchInvitations();
-          // Also refresh other match lists
-          getAvailableMatches();
-          getMyMatches();
-          return message;
+          print('✅ Successfully responded to invitation: $message');
+          // Don't refresh other match lists to avoid state conflicts
+          // Let other screens refresh when they're opened/focused
         },
       );
     } catch (e) {
-      emit(MatchesError(e.toString()));
-      throw e;
+      print('❌ Exception responding to invitation: $e');
+      // Handle error silently or restore invitation
     }
   }
 

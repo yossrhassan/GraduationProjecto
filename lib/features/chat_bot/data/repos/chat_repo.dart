@@ -74,7 +74,23 @@ class ChatRepoImpl implements ChatRepo {
         .replaceAll('\n\n\n', '\n\n')
         .replaceAll('\n\n\n\n', '\n\n');
 
-    // Parse and restructure the response
+    // Check if this is a facilities response (contains facility-related keywords)
+    bool isFacilitiesResponse = formatted.contains('Sports') ||
+        formatted.contains('Club') ||
+        formatted.contains('Complex') ||
+        formatted.contains('Hall') ||
+        formatted.contains('Dome') ||
+        formatted.contains('Center') ||
+        formatted.contains('Address:') ||
+        formatted.contains('Price:') ||
+        formatted.contains('Operating Hours:');
+
+    // If it's not a facilities response, return the original formatted text
+    if (!isFacilitiesResponse) {
+      return formatted.trim();
+    }
+
+    // Parse and restructure the response for facilities
     List<String> lines = formatted.split('\n');
     StringBuffer result = StringBuffer();
 

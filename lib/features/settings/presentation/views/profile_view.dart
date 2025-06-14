@@ -106,38 +106,15 @@ class _ProfileViewState extends State<ProfileView> {
             padding: const EdgeInsets.only(top: 24, bottom: 48),
             child: Column(
               children: [
-                Stack(
-                  alignment: Alignment.bottomRight,
-                  children: [
-                    CircleAvatar(
-                      radius: 54,
-                      backgroundColor: Colors.white,
-                      child: CircleAvatar(
-                        radius: 50,
-                        backgroundColor: Colors.grey[300],
-                        child: const Icon(Icons.person,
-                            size: 60, color: Colors.grey),
-                      ),
-                    ),
-                    Positioned(
-                      bottom: 8,
-                      right: 8,
-                      child: Container(
-                        decoration: BoxDecoration(
-                          color: Colors.green,
-                          shape: BoxShape.circle,
-                          border: Border.all(color: Colors.white, width: 2),
-                        ),
-                        child: IconButton(
-                          icon: const Icon(Icons.camera_alt,
-                              color: Colors.white, size: 20),
-                          onPressed: () {
-                            // TODO: Implement profile picture change
-                          },
-                        ),
-                      ),
-                    ),
-                  ],
+                CircleAvatar(
+                  radius: 54,
+                  backgroundColor: Colors.white,
+                  child: CircleAvatar(
+                    radius: 50,
+                    backgroundColor: Colors.grey[300],
+                    child:
+                        const Icon(Icons.person, size: 60, color: Colors.grey),
+                  ),
                 ),
                 const SizedBox(height: 12),
                 Text(
@@ -188,47 +165,6 @@ class _ProfileViewState extends State<ProfileView> {
                   onTap: () {
                     GoRouter.of(context)
                         .push(AppRouter.kEditProfileView, extra: user);
-                  },
-                ),
-              ),
-              Card(
-                color: const Color(0xFF18191A),
-                shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(12)),
-                child: ListTile(
-                  leading: const Icon(Icons.lock, color: Colors.green),
-                  title: const Text('Change Password',
-                      style: TextStyle(color: Colors.white)),
-                  trailing:
-                      const Icon(Icons.chevron_right, color: Colors.white54),
-                  onTap: () {
-                    GoRouter.of(context).push(AppRouter.kChangePasswordView);
-                  },
-                ),
-              ),
-              const SizedBox(height: 16),
-              const Text(
-                'DANGER ZONE',
-                style: TextStyle(
-                  color: Colors.redAccent,
-                  fontWeight: FontWeight.bold,
-                  fontSize: 13,
-                  letterSpacing: 1.1,
-                ),
-              ),
-              const SizedBox(height: 8),
-              Card(
-                color: const Color(0xFF18191A),
-                shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(12)),
-                child: ListTile(
-                  leading: const Icon(Icons.delete, color: Colors.red),
-                  title: const Text('Delete Account',
-                      style: TextStyle(color: Colors.red)),
-                  trailing:
-                      const Icon(Icons.chevron_right, color: Colors.white54),
-                  onTap: () {
-                    GoRouter.of(context).push(AppRouter.kDeleteAccountView);
                   },
                 ),
               ),

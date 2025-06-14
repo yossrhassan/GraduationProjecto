@@ -423,96 +423,47 @@ class _MatchDetailsBodyState extends State<MatchDetailsBody> {
                       padding: const EdgeInsets.all(16.0),
                       child: Column(
                         children: [
-                          Row(
-                            children: [
-                              // Invite Friends
-                              Expanded(
-                                child: Container(
-                                  height: 70,
-                                  decoration: BoxDecoration(
-                                    color: Colors.white,
-                                    borderRadius: BorderRadius.circular(8),
-                                  ),
-                                  child: Material(
-                                    color: Colors.transparent,
-                                    child: InkWell(
-                                      borderRadius: BorderRadius.circular(8),
-                                      onTap: () {
-                                        if (widget.matchData != null) {
-                                          showDialog(
-                                            context: context,
-                                            builder: (context) =>
-                                                InviteFriendsDialog(
-                                              matchId: widget.matchData!.id
-                                                  .toString(),
-                                            ),
-                                          );
-                                        }
-                                      },
-                                      child: const Column(
-                                        mainAxisAlignment:
-                                            MainAxisAlignment.center,
-                                        children: [
-                                          Icon(Icons.people_outline,
-                                              size: 32, color: Colors.black54),
-                                          SizedBox(height: 8),
-                                          Text(
-                                            'INVITE FRIENDS',
-                                            style: TextStyle(
-                                              color: Colors.black87,
-                                              fontSize: 12,
-                                              fontWeight: FontWeight.bold,
-                                            ),
-                                          ),
-                                        ],
+                          // Invite Friends
+                          Container(
+                            width: double.infinity,
+                            height: 70,
+                            decoration: BoxDecoration(
+                              color: Colors.white,
+                              borderRadius: BorderRadius.circular(8),
+                            ),
+                            child: Material(
+                              color: Colors.transparent,
+                              child: InkWell(
+                                borderRadius: BorderRadius.circular(8),
+                                onTap: () {
+                                  if (widget.matchData != null) {
+                                    showDialog(
+                                      context: context,
+                                      builder: (context) => InviteFriendsDialog(
+                                        matchId:
+                                            widget.matchData!.id.toString(),
+                                      ),
+                                    );
+                                  }
+                                },
+                                child: const Column(
+                                  mainAxisAlignment: MainAxisAlignment.center,
+                                  children: [
+                                    Icon(Icons.people_outline,
+                                        size: 32, color: Colors.black54),
+                                    SizedBox(height: 8),
+                                    Text(
+                                      'INVITE FRIENDS',
+                                      style: TextStyle(
+                                        color: Colors.black87,
+                                        fontSize: 12,
+                                        fontWeight: FontWeight.bold,
                                       ),
                                     ),
-                                  ),
+                                  ],
                                 ),
                               ),
-                              const SizedBox(width: 8),
-                              // Share Match
-                              Expanded(
-                                child: Container(
-                                  height: 70,
-                                  decoration: BoxDecoration(
-                                    color: Colors.white,
-                                    borderRadius: BorderRadius.circular(8),
-                                  ),
-                                  child: Material(
-                                    color: Colors.transparent,
-                                    child: InkWell(
-                                      borderRadius: BorderRadius.circular(8),
-                                      onTap: () {
-                                        ScaffoldMessenger.of(context)
-                                            .showSnackBar(
-                                          const SnackBar(
-                                              content: Text(
-                                                  'Share Match feature coming soon!')),
-                                        );
-                                      },
-                                      child: const Column(
-                                        mainAxisAlignment:
-                                            MainAxisAlignment.center,
-                                        children: [
-                                          Icon(Icons.share_outlined,
-                                              size: 32, color: Colors.black54),
-                                          SizedBox(height: 8),
-                                          Text(
-                                            'SHARE MATCH',
-                                            style: TextStyle(
-                                              color: Colors.black87,
-                                              fontSize: 12,
-                                              fontWeight: FontWeight.bold,
-                                            ),
-                                          ),
-                                        ],
-                                      ),
-                                    ),
-                                  ),
-                                ),
-                              ),
-                            ],
+                            ),
                           ),
                           const SizedBox(height: 8),
                           // Leave/Cancel Match
@@ -535,9 +486,54 @@ class _MatchDetailsBodyState extends State<MatchDetailsBody> {
                                       title: Text(isCreator
                                           ? 'Cancel Match'
                                           : 'Leave Match'),
-                                      content: Text(isCreator
-                                          ? 'Are you sure you want to cancel this match?'
-                                          : 'Are you sure you want to leave this match?'),
+                                      content: Column(
+                                        mainAxisSize: MainAxisSize.min,
+                                        crossAxisAlignment:
+                                            CrossAxisAlignment.start,
+                                        children: [
+                                          Text(isCreator
+                                              ? 'Are you sure you want to cancel this match?'
+                                              : 'Are you sure you want to leave this match?'),
+                                          if (isCreator) ...[
+                                            const SizedBox(height: 16),
+                                            Container(
+                                              padding: const EdgeInsets.all(12),
+                                              decoration: BoxDecoration(
+                                                color: Colors.orange.shade50,
+                                                borderRadius:
+                                                    BorderRadius.circular(8),
+                                                border: Border.all(
+                                                  color: Colors.orange.shade200,
+                                                  width: 1,
+                                                ),
+                                              ),
+                                              child: Row(
+                                                children: [
+                                                  Icon(
+                                                    Icons.warning_amber_rounded,
+                                                    color:
+                                                        Colors.orange.shade700,
+                                                    size: 20,
+                                                  ),
+                                                  const SizedBox(width: 8),
+                                                  Expanded(
+                                                    child: Text(
+                                                      'Note: If you cancel the match, you cannot create it again.',
+                                                      style: TextStyle(
+                                                        color: Colors
+                                                            .orange.shade800,
+                                                        fontSize: 13,
+                                                        fontWeight:
+                                                            FontWeight.w500,
+                                                      ),
+                                                    ),
+                                                  ),
+                                                ],
+                                              ),
+                                            ),
+                                          ],
+                                        ],
+                                      ),
                                       actions: [
                                         TextButton(
                                           onPressed: () =>
@@ -614,26 +610,37 @@ class _MatchDetailsBodyState extends State<MatchDetailsBody> {
                             ),
                             if (!shouldHideJoinButtons)
                               Padding(
-                                padding:
-                                    const EdgeInsets.symmetric(vertical: 4.0),
-                                child: ElevatedButton(
-                                  onPressed: isJoining
-                                      ? null
-                                      : () => _handleJoinTeam('A'),
-                                  style: ElevatedButton.styleFrom(
-                                    backgroundColor: Colors.white,
-                                    minimumSize:
-                                        const Size(double.infinity, 32),
-                                    shape: RoundedRectangleBorder(
-                                      borderRadius: BorderRadius.circular(6),
+                                padding: const EdgeInsets.symmetric(
+                                    vertical: 8.0, horizontal: 4.0),
+                                child: Container(
+                                  decoration: BoxDecoration(
+                                    color: Colors.transparent,
+                                    borderRadius: BorderRadius.circular(12),
+                                    border: Border.all(
+                                      color: Colors.green,
+                                      width: 2,
                                     ),
                                   ),
-                                  child: Text(
-                                    isJoining ? 'Joining...' : 'Join Team A',
-                                    style: const TextStyle(
-                                      color: Colors.black,
-                                      fontSize: 12,
-                                      fontWeight: FontWeight.bold,
+                                  child: ElevatedButton(
+                                    onPressed: isJoining
+                                        ? null
+                                        : () => _handleJoinTeam('A'),
+                                    style: ElevatedButton.styleFrom(
+                                      backgroundColor: Colors.transparent,
+                                      shadowColor: Colors.transparent,
+                                      minimumSize:
+                                          const Size(double.infinity, 44),
+                                      shape: RoundedRectangleBorder(
+                                        borderRadius: BorderRadius.circular(12),
+                                      ),
+                                    ),
+                                    child: Text(
+                                      isJoining ? 'Joining...' : 'Join Team A',
+                                      style: const TextStyle(
+                                        color: Colors.green,
+                                        fontSize: 14,
+                                        fontWeight: FontWeight.bold,
+                                      ),
                                     ),
                                   ),
                                 ),
@@ -660,26 +667,37 @@ class _MatchDetailsBodyState extends State<MatchDetailsBody> {
                             ),
                             if (!shouldHideJoinButtons)
                               Padding(
-                                padding:
-                                    const EdgeInsets.symmetric(vertical: 4.0),
-                                child: ElevatedButton(
-                                  onPressed: isJoining
-                                      ? null
-                                      : () => _handleJoinTeam('B'),
-                                  style: ElevatedButton.styleFrom(
-                                    backgroundColor: Colors.white,
-                                    minimumSize:
-                                        const Size(double.infinity, 32),
-                                    shape: RoundedRectangleBorder(
-                                      borderRadius: BorderRadius.circular(6),
+                                padding: const EdgeInsets.symmetric(
+                                    vertical: 8.0, horizontal: 4.0),
+                                child: Container(
+                                  decoration: BoxDecoration(
+                                    color: Colors.transparent,
+                                    borderRadius: BorderRadius.circular(12),
+                                    border: Border.all(
+                                      color: Colors.green,
+                                      width: 2,
                                     ),
                                   ),
-                                  child: Text(
-                                    isJoining ? 'Joining...' : 'Join Team B',
-                                    style: const TextStyle(
-                                      color: Colors.black,
-                                      fontSize: 12,
-                                      fontWeight: FontWeight.bold,
+                                  child: ElevatedButton(
+                                    onPressed: isJoining
+                                        ? null
+                                        : () => _handleJoinTeam('B'),
+                                    style: ElevatedButton.styleFrom(
+                                      backgroundColor: Colors.transparent,
+                                      shadowColor: Colors.transparent,
+                                      minimumSize:
+                                          const Size(double.infinity, 44),
+                                      shape: RoundedRectangleBorder(
+                                        borderRadius: BorderRadius.circular(12),
+                                      ),
+                                    ),
+                                    child: Text(
+                                      isJoining ? 'Joining...' : 'Join Team B',
+                                      style: const TextStyle(
+                                        color: Colors.green,
+                                        fontSize: 14,
+                                        fontWeight: FontWeight.bold,
+                                      ),
                                     ),
                                   ),
                                 ),

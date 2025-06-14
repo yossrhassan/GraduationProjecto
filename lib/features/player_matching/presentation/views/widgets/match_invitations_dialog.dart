@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:graduation_project/constants.dart';
 import 'package:graduation_project/features/player_matching/data/models/match_model.dart';
+import 'package:graduation_project/features/player_matching/data/models/match_invitation_model.dart';
 import 'package:graduation_project/features/player_matching/presentation/manager/match_cubit/match_cubit.dart';
 import 'package:graduation_project/features/player_matching/presentation/manager/match_cubit/match_state.dart';
 import 'package:intl/intl.dart';
@@ -14,8 +15,35 @@ class MatchInvitationsDialog extends StatefulWidget {
 }
 
 class _MatchInvitationsDialogState extends State<MatchInvitationsDialog> {
-  Set<String> respondingInvitations =
+  Set<int> respondingInvitations =
       {}; // Track which invitations are being responded to
+
+  String _formatTime(String time24) {
+    try {
+      // Parse time in HH:mm:ss format
+      final timeParts = time24.split(':');
+      if (timeParts.length >= 2) {
+        int hour = int.parse(timeParts[0]);
+        final minute = timeParts[1];
+
+        String period = 'AM';
+        if (hour == 0) {
+          hour = 12; // Midnight
+        } else if (hour == 12) {
+          period = 'PM'; // Noon
+        } else if (hour > 12) {
+          hour = hour - 12;
+          period = 'PM';
+        }
+
+        return '$hour:$minute $period';
+      }
+    } catch (e) {
+      // If parsing fails, return the original time
+      return time24;
+    }
+    return time24;
+  }
 
   @override
   void initState() {
@@ -24,16 +52,19 @@ class _MatchInvitationsDialogState extends State<MatchInvitationsDialog> {
     context.read<MatchesCubit>().getMatchInvitations();
   }
 
-  Future<void> _respondToInvitation(MatchModel match, bool accept) async {
+  Future<void> _respondToInvitation(
+      MatchInvitationModel invitation, bool accept) async {
     setState(() {
-      respondingInvitations.add(match.id.toString());
+      respondingInvitations.add(invitation.matchId);
     });
 
     try {
+      // Call the cubit method and wait for it to complete
       await context
           .read<MatchesCubit>()
-          .respondToInvitation(match.id.toString(), accept);
+          .respondToInvitation(invitation.matchId.toString(), accept);
 
+      // Show success message
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
@@ -57,61 +88,25 @@ class _MatchInvitationsDialogState extends State<MatchInvitationsDialog> {
           ),
         );
       }
+
+      // No need to refresh manually - the cubit handles state update optimistically
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Row(
-              children: [
-                const Icon(Icons.error, color: Colors.white),
-                const SizedBox(width: 8),
-                Expanded(child: Text('Error: $e')),
-              ],
-            ),
+            content:
+                Text('Failed to ${accept ? 'accept' : 'decline'} invitation'),
             backgroundColor: Colors.red,
           ),
         );
       }
     } finally {
+      // Remove button loading state
       if (mounted) {
         setState(() {
-          respondingInvitations.remove(match.id.toString());
+          respondingInvitations.remove(invitation.matchId);
         });
       }
-    }
-  }
-
-  String _formatTime(String startTime, String endTime) {
-    try {
-      final startParts = startTime.split(':');
-      final endParts = endTime.split(':');
-
-      final startHour = int.parse(startParts[0]);
-      final startMinute = int.parse(startParts[1]);
-      final endHour = int.parse(endParts[0]);
-      final endMinute = int.parse(endParts[1]);
-
-      final now = DateTime.now();
-      final startDateTime =
-          DateTime(now.year, now.month, now.day, startHour, startMinute);
-      final endDateTime =
-          DateTime(now.year, now.month, now.day, endHour, endMinute);
-
-      final formattedStartTime = DateFormat('h:mm a').format(startDateTime);
-      final formattedEndTime = DateFormat('h:mm a').format(endDateTime);
-
-      return '$formattedStartTime - $formattedEndTime';
-    } catch (e) {
-      return '${startTime.substring(0, 5)} - ${endTime.substring(0, 5)}';
-    }
-  }
-
-  String _formatDate(String dateString) {
-    try {
-      final date = DateTime.parse(dateString);
-      return DateFormat('MMM d, y').format(date);
-    } catch (e) {
-      return dateString;
     }
   }
 
@@ -168,14 +163,44 @@ class _MatchInvitationsDialogState extends State<MatchInvitationsDialog> {
             Flexible(
               child: BlocBuilder<MatchesCubit, MatchesState>(
                 builder: (context, state) {
-                  if (state is MatchesLoading) {
-                    return const Center(
-                      child: Padding(
-                        padding: EdgeInsets.all(40),
-                        child: CircularProgressIndicator(color: kPrimaryColor),
+                  // If we have a loaded state with empty invitations, show no invitations message
+                  if (state is MatchInvitationsLoaded &&
+                      state.invitations.isEmpty) {
+                    return const Padding(
+                      padding: EdgeInsets.all(40),
+                      child: Column(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Icon(
+                            Icons.mail_outline,
+                            size: 64,
+                            color: Colors.white54,
+                          ),
+                          SizedBox(height: 16),
+                          Text(
+                            'No pending invitations',
+                            style: TextStyle(
+                              color: Colors.white,
+                              fontSize: 18,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                          SizedBox(height: 8),
+                          Text(
+                            'You\'ll see match invitations from friends here!',
+                            style: TextStyle(
+                              color: Colors.white70,
+                              fontSize: 14,
+                            ),
+                            textAlign: TextAlign.center,
+                          ),
+                        ],
                       ),
                     );
-                  } else if (state is MatchesError) {
+                  }
+
+                  // Handle error state
+                  if (state is MatchesError) {
                     return Padding(
                       padding: const EdgeInsets.all(40),
                       child: Column(
@@ -187,9 +212,9 @@ class _MatchInvitationsDialogState extends State<MatchInvitationsDialog> {
                             color: Colors.red,
                           ),
                           const SizedBox(height: 16),
-                          Text(
+                          const Text(
                             'Error loading invitations',
-                            style: const TextStyle(
+                            style: TextStyle(
                               color: Colors.white,
                               fontSize: 18,
                               fontWeight: FontWeight.bold,
@@ -204,12 +229,45 @@ class _MatchInvitationsDialogState extends State<MatchInvitationsDialog> {
                             ),
                             textAlign: TextAlign.center,
                           ),
+                          const SizedBox(height: 24),
+                          Row(
+                            mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                            children: [
+                              TextButton.icon(
+                                onPressed: () => Navigator.of(context).pop(),
+                                icon: const Icon(Icons.close,
+                                    color: Colors.white70),
+                                label: const Text(
+                                  'Close',
+                                  style: TextStyle(color: Colors.white70),
+                                ),
+                              ),
+                              ElevatedButton.icon(
+                                onPressed: () {
+                                  context
+                                      .read<MatchesCubit>()
+                                      .getMatchInvitations();
+                                },
+                                style: ElevatedButton.styleFrom(
+                                  backgroundColor: kPrimaryColor,
+                                  foregroundColor: Colors.white,
+                                ),
+                                icon: const Icon(Icons.refresh),
+                                label: const Text('Retry'),
+                              ),
+                            ],
+                          ),
                         ],
                       ),
                     );
-                  } else if (state is MatchInvitationsLoaded) {
+                  }
+
+                  // Handle loaded state with invitations
+                  if (state is MatchInvitationsLoaded) {
+                    // Use invitations directly from state
                     final invitations = state.invitations;
 
+                    // If no invitations, show empty state
                     if (invitations.isEmpty) {
                       return const Padding(
                         padding: EdgeInsets.all(40),
@@ -244,219 +302,238 @@ class _MatchInvitationsDialogState extends State<MatchInvitationsDialog> {
                       );
                     }
 
-                    return ListView.builder(
-                      shrinkWrap: true,
-                      padding: const EdgeInsets.all(16),
-                      itemCount: invitations.length,
-                      itemBuilder: (context, index) {
-                        final invitation = invitations[index];
-                        final isResponding = respondingInvitations
-                            .contains(invitation.id.toString());
+                    return RefreshIndicator(
+                      color: kPrimaryColor,
+                      onRefresh: () async {
+                        context.read<MatchesCubit>().getMatchInvitations();
+                        // Wait a bit for the API call to complete
+                        await Future.delayed(const Duration(milliseconds: 500));
+                      },
+                      child: ListView.builder(
+                        shrinkWrap: true,
+                        padding: const EdgeInsets.all(16),
+                        itemCount: invitations.length,
+                        itemBuilder: (context, index) {
+                          final invitation = invitations[index];
+                          final isResponding = respondingInvitations
+                              .contains(invitation.matchId);
 
-                        return Container(
-                          margin: const EdgeInsets.only(bottom: 16),
-                          decoration: BoxDecoration(
-                            color: Colors.white.withOpacity(0.1),
-                            borderRadius: BorderRadius.circular(12),
-                            border: Border.all(
-                              color: Colors.white.withOpacity(0.2),
+                          return Container(
+                            margin: const EdgeInsets.only(bottom: 16),
+                            decoration: BoxDecoration(
+                              color: Colors.white.withOpacity(0.1),
+                              borderRadius: BorderRadius.circular(12),
+                              border: Border.all(
+                                color: Colors.white.withOpacity(0.2),
+                              ),
                             ),
-                          ),
-                          child: Padding(
-                            padding: const EdgeInsets.all(16),
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                // Match info
-                                Row(
-                                  children: [
-                                    const Icon(
-                                      Icons.sports_soccer,
-                                      color: kPrimaryColor,
-                                      size: 20,
-                                    ),
-                                    const SizedBox(width: 8),
-                                    Expanded(
-                                      child: Text(
-                                        invitation.sportName,
-                                        style: const TextStyle(
-                                          color: kPrimaryColor,
-                                          fontSize: 16,
-                                          fontWeight: FontWeight.bold,
+                            child: Padding(
+                              padding: const EdgeInsets.all(16),
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  // Match info
+                                  Row(
+                                    children: [
+                                      const Icon(
+                                        Icons.sports_soccer,
+                                        color: kPrimaryColor,
+                                        size: 20,
+                                      ),
+                                      const SizedBox(width: 8),
+                                      Expanded(
+                                        child: Text(
+                                          invitation.sportName,
+                                          style: const TextStyle(
+                                            color: kPrimaryColor,
+                                            fontSize: 16,
+                                            fontWeight: FontWeight.bold,
+                                          ),
                                         ),
                                       ),
-                                    ),
-                                  ],
-                                ),
-                                const SizedBox(height: 8),
+                                    ],
+                                  ),
+                                  const SizedBox(height: 8),
 
-                                // Location
-                                Row(
-                                  children: [
-                                    const Icon(
-                                      Icons.location_on,
-                                      color: Colors.white70,
-                                      size: 16,
+                                  // Location
+                                  Row(
+                                    children: [
+                                      const Icon(
+                                        Icons.location_on,
+                                        color: Colors.white70,
+                                        size: 16,
+                                      ),
+                                      const SizedBox(width: 8),
+                                      Expanded(
+                                        child: Text(
+                                          invitation.matchTitle,
+                                          style: const TextStyle(
+                                            color: Colors.white,
+                                            fontSize: 14,
+                                          ),
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                  const SizedBox(height: 8),
+
+                                  // Facility name
+                                  if (invitation.facilityName.isNotEmpty) ...[
+                                    Row(
+                                      children: [
+                                        const Icon(
+                                          Icons.sports_tennis,
+                                          color: Colors.white70,
+                                          size: 16,
+                                        ),
+                                        const SizedBox(width: 8),
+                                        Expanded(
+                                          child: Text(
+                                            invitation.facilityName,
+                                            style: const TextStyle(
+                                              color: Colors.white,
+                                              fontSize: 14,
+                                            ),
+                                          ),
+                                        ),
+                                      ],
                                     ),
-                                    const SizedBox(width: 8),
-                                    Expanded(
-                                      child: Text(
-                                        invitation.title,
+                                    const SizedBox(height: 8),
+                                  ],
+
+                                  // Booking time
+                                  if (invitation.bookingStartTime.isNotEmpty &&
+                                      invitation.bookingEndTime.isNotEmpty) ...[
+                                    Row(
+                                      children: [
+                                        const Icon(
+                                          Icons.access_time,
+                                          color: Colors.white70,
+                                          size: 16,
+                                        ),
+                                        const SizedBox(width: 8),
+                                        Text(
+                                          '${_formatTime(invitation.bookingStartTime)} - ${_formatTime(invitation.bookingEndTime)}',
+                                          style: const TextStyle(
+                                            color: Colors.white,
+                                            fontSize: 14,
+                                          ),
+                                        ),
+                                      ],
+                                    ),
+                                    const SizedBox(height: 8),
+                                  ],
+
+                                  // Inviter info
+                                  Row(
+                                    children: [
+                                      const Icon(
+                                        Icons.person,
+                                        color: Colors.white70,
+                                        size: 16,
+                                      ),
+                                      const SizedBox(width: 8),
+                                      Text(
+                                        'Invited by ${invitation.inviterName}',
                                         style: const TextStyle(
-                                          color: Colors.white,
+                                          color: Colors.white70,
                                           fontSize: 14,
                                         ),
                                       ),
-                                    ),
-                                  ],
-                                ),
-                                const SizedBox(height: 4),
+                                    ],
+                                  ),
+                                  const SizedBox(height: 16),
 
-                                // Date and time
-                                Row(
-                                  children: [
-                                    const Icon(
-                                      Icons.calendar_today,
-                                      color: Colors.white70,
-                                      size: 16,
-                                    ),
-                                    const SizedBox(width: 8),
-                                    Text(
-                                      _formatDate(invitation.date),
-                                      style: const TextStyle(
-                                        color: Colors.white70,
-                                        fontSize: 14,
-                                      ),
-                                    ),
-                                    const SizedBox(width: 16),
-                                    const Icon(
-                                      Icons.access_time,
-                                      color: Colors.white70,
-                                      size: 16,
-                                    ),
-                                    const SizedBox(width: 8),
-                                    Text(
-                                      _formatTime(invitation.startTime,
-                                          invitation.endTime),
-                                      style: const TextStyle(
-                                        color: Colors.white70,
-                                        fontSize: 14,
-                                      ),
-                                    ),
-                                  ],
-                                ),
-                                const SizedBox(height: 4),
-
-                                // Players count
-                                Row(
-                                  children: [
-                                    const Icon(
-                                      Icons.people,
-                                      color: Colors.white70,
-                                      size: 16,
-                                    ),
-                                    const SizedBox(width: 8),
-                                    Text(
-                                      '${invitation.players?.length ?? 0}/${invitation.teamSize * 2} Players',
-                                      style: const TextStyle(
-                                        color: Colors.white70,
-                                        fontSize: 14,
-                                      ),
-                                    ),
-                                  ],
-                                ),
-
-                                const SizedBox(height: 16),
-
-                                // Action buttons
-                                Row(
-                                  children: [
-                                    Expanded(
-                                      child: ElevatedButton(
-                                        onPressed: isResponding
-                                            ? null
-                                            : () => _respondToInvitation(
-                                                invitation, false),
-                                        style: ElevatedButton.styleFrom(
-                                          backgroundColor: Colors.grey[600],
-                                          foregroundColor: Colors.white,
-                                          padding: const EdgeInsets.symmetric(
-                                              vertical: 12),
-                                          shape: RoundedRectangleBorder(
-                                            borderRadius:
-                                                BorderRadius.circular(8),
+                                  // Action buttons
+                                  Row(
+                                    children: [
+                                      Expanded(
+                                        child: ElevatedButton(
+                                          onPressed: isResponding
+                                              ? null
+                                              : () => _respondToInvitation(
+                                                  invitation, false),
+                                          style: ElevatedButton.styleFrom(
+                                            backgroundColor: Colors.grey[600],
+                                            foregroundColor: Colors.white,
+                                            padding: const EdgeInsets.symmetric(
+                                                vertical: 12),
+                                            shape: RoundedRectangleBorder(
+                                              borderRadius:
+                                                  BorderRadius.circular(8),
+                                            ),
                                           ),
-                                        ),
-                                        child: isResponding
-                                            ? const SizedBox(
-                                                width: 16,
-                                                height: 16,
-                                                child:
-                                                    CircularProgressIndicator(
-                                                  strokeWidth: 2,
-                                                  valueColor:
-                                                      AlwaysStoppedAnimation<
-                                                          Color>(
-                                                    Colors.white,
+                                          child: isResponding
+                                              ? const SizedBox(
+                                                  width: 16,
+                                                  height: 16,
+                                                  child:
+                                                      CircularProgressIndicator(
+                                                    strokeWidth: 2,
+                                                    valueColor:
+                                                        AlwaysStoppedAnimation<
+                                                            Color>(
+                                                      Colors.white,
+                                                    ),
+                                                  ),
+                                                )
+                                              : const Text(
+                                                  'Decline',
+                                                  style: TextStyle(
+                                                    fontSize: 14,
+                                                    fontWeight: FontWeight.bold,
                                                   ),
                                                 ),
-                                              )
-                                            : const Text(
-                                                'Decline',
-                                                style: TextStyle(
-                                                  fontSize: 14,
-                                                  fontWeight: FontWeight.bold,
-                                                ),
-                                              ),
-                                      ),
-                                    ),
-                                    const SizedBox(width: 12),
-                                    Expanded(
-                                      child: ElevatedButton(
-                                        onPressed: isResponding
-                                            ? null
-                                            : () => _respondToInvitation(
-                                                invitation, true),
-                                        style: ElevatedButton.styleFrom(
-                                          backgroundColor: kPrimaryColor,
-                                          foregroundColor: Colors.white,
-                                          padding: const EdgeInsets.symmetric(
-                                              vertical: 12),
-                                          shape: RoundedRectangleBorder(
-                                            borderRadius:
-                                                BorderRadius.circular(8),
-                                          ),
                                         ),
-                                        child: isResponding
-                                            ? const SizedBox(
-                                                width: 16,
-                                                height: 16,
-                                                child:
-                                                    CircularProgressIndicator(
-                                                  strokeWidth: 2,
-                                                  valueColor:
-                                                      AlwaysStoppedAnimation<
-                                                          Color>(
-                                                    Colors.white,
+                                      ),
+                                      const SizedBox(width: 12),
+                                      Expanded(
+                                        child: ElevatedButton(
+                                          onPressed: isResponding
+                                              ? null
+                                              : () => _respondToInvitation(
+                                                  invitation, true),
+                                          style: ElevatedButton.styleFrom(
+                                            backgroundColor: kPrimaryColor,
+                                            foregroundColor: Colors.white,
+                                            padding: const EdgeInsets.symmetric(
+                                                vertical: 12),
+                                            shape: RoundedRectangleBorder(
+                                              borderRadius:
+                                                  BorderRadius.circular(8),
+                                            ),
+                                          ),
+                                          child: isResponding
+                                              ? const SizedBox(
+                                                  width: 16,
+                                                  height: 16,
+                                                  child:
+                                                      CircularProgressIndicator(
+                                                    strokeWidth: 2,
+                                                    valueColor:
+                                                        AlwaysStoppedAnimation<
+                                                            Color>(
+                                                      Colors.white,
+                                                    ),
+                                                  ),
+                                                )
+                                              : const Text(
+                                                  'Accept',
+                                                  style: TextStyle(
+                                                    fontSize: 14,
+                                                    fontWeight: FontWeight.bold,
                                                   ),
                                                 ),
-                                              )
-                                            : const Text(
-                                                'Accept',
-                                                style: TextStyle(
-                                                  fontSize: 14,
-                                                  fontWeight: FontWeight.bold,
-                                                ),
-                                              ),
+                                        ),
                                       ),
-                                    ),
-                                  ],
-                                ),
-                              ],
+                                    ],
+                                  ),
+                                ],
+                              ),
                             ),
-                          ),
-                        );
-                      },
+                          );
+                        },
+                      ),
                     );
                   }
 

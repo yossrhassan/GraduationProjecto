@@ -116,7 +116,7 @@ List<List<int>> _groupConsecutiveIndices(List<int> indices) {
             const Padding(
               padding: EdgeInsets.only(top: 4.0, bottom: 6),
               child: Text(
-                'You can cancel a booking no later than 4 hours from its starting time',
+                'You can cancel a booking no later than 24 hours from its starting time',
                 style: TextStyle(
                   color: Colors.redAccent,
                   fontSize: 14,
