@@ -30,7 +30,6 @@ class _MatchDetailsViewState extends State<MatchDetailsView> {
   @override
   void initState() {
     super.initState();
-    // Always call API to get the most up-to-date match details
     context.read<MatchesCubit>().getMatchDetails(widget.matchId);
   }
 
@@ -38,7 +37,6 @@ class _MatchDetailsViewState extends State<MatchDetailsView> {
   Widget build(BuildContext context) {
     return BlocBuilder<MatchesCubit, MatchesState>(
       builder: (context, state) {
-        // Determine current match data
         MatchModel? currentMatch;
         if (state is MatchDetailsLoaded) {
           currentMatch = state.match;
@@ -64,7 +62,6 @@ class _MatchDetailsViewState extends State<MatchDetailsView> {
                   final formattedDate =
                       DateFormat('EEEE, MMMM d, y').format(date);
 
-                  // Create time range from start and end times
                   String formattedTime = '';
                   if (match.startTime.isNotEmpty && match.endTime.isNotEmpty) {
                     final startTime = _convertTo12Hour(match.startTime);
@@ -98,7 +95,6 @@ class _MatchDetailsViewState extends State<MatchDetailsView> {
                     ],
                   );
                 } else if (widget.matchData != null) {
-                  // Use initial match data while loading fresh data
                   final match = widget.matchData!;
                   final DateTime date = DateTime.parse(match.date);
                   final formattedDate =
@@ -228,7 +224,6 @@ class _MatchDetailsViewState extends State<MatchDetailsView> {
 
   String _convertTo12Hour(String time24) {
     try {
-      // Parse time in HH:mm format
       final timeParts = time24.split(':');
       if (timeParts.length >= 2) {
         int hour = int.parse(timeParts[0]);
@@ -236,9 +231,9 @@ class _MatchDetailsViewState extends State<MatchDetailsView> {
 
         String period = 'AM';
         if (hour == 0) {
-          hour = 12; // Midnight
+          hour = 12;
         } else if (hour == 12) {
-          period = 'PM'; // Noon
+          period = 'PM';
         } else if (hour > 12) {
           hour = hour - 12;
           period = 'PM';
@@ -247,7 +242,6 @@ class _MatchDetailsViewState extends State<MatchDetailsView> {
         return '$hour:$minute $period';
       }
     } catch (e) {
-      // If parsing fails, return the original time
       return time24;
     }
     return time24;

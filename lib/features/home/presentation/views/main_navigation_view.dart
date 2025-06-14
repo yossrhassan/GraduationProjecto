@@ -31,7 +31,7 @@ class _MainNavigationViewState extends State<MainNavigationView> {
   @override
   void initState() {
     super.initState();
-    // Check if there's an initial index from navigation extra
+
     final extraIndex = widget.extra?['initial_index'] as int?;
     _currentIndex = extraIndex ?? widget.initialIndex;
     _pageController = PageController(initialPage: _currentIndex);
@@ -58,12 +58,11 @@ class _MainNavigationViewState extends State<MainNavigationView> {
   Widget build(BuildContext context) {
     return WillPopScope(
       onWillPop: () async {
-        // If not on home tab, go to home tab instead of exiting
         if (_currentIndex != 0) {
           _onTabTapped(0);
           return false; // Don't pop the route
         }
-        // If on home tab, allow normal back behavior
+
         return true;
       },
       child: Scaffold(

@@ -88,7 +88,6 @@ class _ProfileViewState extends State<ProfileView> {
   }
 
   Widget _buildProfile(BuildContext context, UserModel user) {
-    // Add fallback for empty user data
     final displayName = (user.firstName.isEmpty && user.lastName.isEmpty)
         ? 'User Name'
         : '${user.firstName} ${user.lastName}';

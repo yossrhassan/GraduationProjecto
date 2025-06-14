@@ -21,12 +21,10 @@ class _MatchCreationViewState extends State<MatchCreationView> {
   BookingHistoryModel? selectedBooking;
   String numberOfPlayers = '10 Players (5v5)';
 
-  // Helper function to convert 24-hour time to 12-hour format with AM/PM
   String formatTime(String? time24) {
     if (time24 == null || time24.isEmpty) return '';
 
     try {
-      // Parse the time (assuming format like "14:30" or "14:30:00")
       final parts = time24.split(':');
       if (parts.isEmpty) return time24;
 
@@ -38,12 +36,10 @@ class _MatchCreationViewState extends State<MatchCreationView> {
 
       return '$displayHour:$minute $period';
     } catch (e) {
-      // If parsing fails, return original time
       return time24;
     }
   }
 
-  // Helper function to format time range
   String formatTimeRange(String? startTime, String? endTime) {
     final formattedStart = formatTime(startTime);
     final formattedEnd = formatTime(endTime);
@@ -58,7 +54,6 @@ class _MatchCreationViewState extends State<MatchCreationView> {
   @override
   void initState() {
     super.initState();
-    // Load bookings using the cubit
     context.read<BookingHistoryCubit>().loadBookings();
   }
 
@@ -88,7 +83,6 @@ class _MatchCreationViewState extends State<MatchCreationView> {
             icon: const Icon(Icons.check, color: Colors.white, size: 28),
             onPressed: () {
               if (selectedBooking != null) {
-                // Extract match type from the selected option
                 final String matchType = numberOfPlayers.contains('2v2')
                     ? '2v2'
                     : numberOfPlayers.contains('5v5')
@@ -97,7 +91,6 @@ class _MatchCreationViewState extends State<MatchCreationView> {
                             ? '7v7'
                             : '11v11';
 
-                // Calculate total players based on match type
                 final int totalPlayers =
                     int.tryParse(numberOfPlayers.split(' ')[0]) ?? 10;
 
@@ -122,15 +115,13 @@ class _MatchCreationViewState extends State<MatchCreationView> {
                 final Map<String, dynamic> matchData = {
                   'bookingId': selectedBooking!.id,
                   'sportType': derivedSportType,
-                  'teamSize': totalPlayers ~/
-                      2, // Divide total players by 2 for team size
+                  'teamSize': totalPlayers ~/ 2,
                   'title': selectedBooking!.city ??
                       selectedBooking!.facilityName ??
-                      'Unknown Location', // Use city as title
-                  'description':
-                      'Match at ${selectedBooking!.facilityName}', // Simple default description
-                  'minSkillLevel': 1, // Default minimum skill level
-                  'maxSkillLevel': 10, // Default maximum skill level
+                      'Unknown Location',
+                  'description': 'Match at ${selectedBooking!.facilityName}',
+                  'minSkillLevel': 1,
+                  'maxSkillLevel': 10,
                   'isPrivate': false,
                   'date': selectedBooking!.date,
                   'time': formatTimeRange(
@@ -144,26 +135,23 @@ class _MatchCreationViewState extends State<MatchCreationView> {
                   'joined_players': 1,
                   'price': selectedBooking!.totalPrice,
                   'is_creator': true,
-                  'payment_at_location': true, // Default to true
-                  'notes': '', // Empty notes
+                  'payment_at_location': true,
+                  'notes': '',
                   'team_a': [
                     {'id': 'current_user_id', 'name': 'You', 'is_captain': true}
                   ],
                   'team_b': []
                 };
 
-                // Create match using Cubit
                 context.read<MatchesCubit>().createMatch(matchData).then((_) {
-                  // Show success message
                   ScaffoldMessenger.of(context).showSnackBar(
                     const SnackBar(
                         content: Text('Match created successfully!')),
                   );
 
-                  // Navigate to main navigation with Player Matching tab selected
                   GoRouter.of(context).pushReplacement(
                     AppRouter.kMainNavigationView,
-                    extra: {'initial_index': 2}, // 2 for Player Matching tab
+                    extra: {'initial_index': 2},
                   );
                 }).catchError((error) {
                   ScaffoldMessenger.of(context).showSnackBar(
@@ -195,7 +183,6 @@ class _MatchCreationViewState extends State<MatchCreationView> {
           } else if (state is BookingHistoryLoaded) {
             final upcomingBookings = state.upcomingBookings;
 
-            // Initialize selectedBooking if not already set and we have bookings
             if (selectedBooking == null && upcomingBookings.isNotEmpty) {
               selectedBooking = upcomingBookings.first;
             }
@@ -205,7 +192,6 @@ class _MatchCreationViewState extends State<MatchCreationView> {
               child: ListView(
                 padding: const EdgeInsets.all(16.0),
                 children: [
-                  // Booking Selection Dropdown
                   Container(
                     padding: const EdgeInsets.symmetric(
                         vertical: 20.0, horizontal: 20.0),
@@ -305,10 +291,7 @@ class _MatchCreationViewState extends State<MatchCreationView> {
                       ),
                     ),
                   ),
-
                   const SizedBox(height: 24),
-
-                  // Display selected booking info
                   if (selectedBooking != null)
                     Container(
                       padding: const EdgeInsets.all(20.0),
@@ -413,16 +396,12 @@ class _MatchCreationViewState extends State<MatchCreationView> {
                         ],
                       ),
                     ),
-
                   const SizedBox(height: 24),
-
-                  // Number of Players
                   CustomFormField(
                     label: 'Number Of Players',
                     value: numberOfPlayers,
                     icon: Icons.chevron_right,
                     onTap: () {
-                      // Show player count selection dialog
                       showDialog(
                         context: context,
                         builder: (context) => SimpleDialog(
@@ -457,7 +436,6 @@ class _MatchCreationViewState extends State<MatchCreationView> {
               ),
             );
           } else {
-            // Handle any other state or empty state
             return const Center(
                 child: Text('No bookings available',
                     style: TextStyle(fontSize: 18)));

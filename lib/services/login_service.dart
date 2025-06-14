@@ -16,24 +16,12 @@ class LoginService {
       body: requestBody,
     );
 
-    print("🧪 Full Login Response: $response");
-    print("🧪 Response Type: ${response.runtimeType}");
-
     if (response is Map<String, dynamic>) {
-      print("🧪 Response Keys: ${response.keys.toList()}");
-
       if (response.containsKey('data')) {
         var data = response['data'];
-        print("🧪 Data Type: ${data.runtimeType}");
-        print("🧪 Data Content: $data");
 
         if (data is Map<String, dynamic>) {
-          print("🧪 Data Keys: ${data.keys.toList()}");
-
-          // Create LoginModel directly from the data
           final userModel = LoginModel.fromJson(data);
-          print(
-              "🧪 Created LoginModel: id=${userModel.id}, token=${userModel.token}, email=${userModel.email}");
           return {'user': userModel};
         }
       }

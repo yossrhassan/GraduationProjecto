@@ -1,65 +1,3 @@
-// import 'package:flutter/foundation.dart';
-// import 'package:shared_preferences/shared_preferences.dart';
-
-// class AuthManager {
-//   static int? userId; // Add this line
-
-//   static String? _authToken;
-//   static final ValueNotifier<bool> authStateChanges =
-//       ValueNotifier<bool>(false);
-
-//   // Get the current token from memory
-//   static String? get authToken => _authToken;
-
-//   // Check if user is authenticated
-//   static bool get isAuthenticated =>
-//       _authToken != null && _authToken!.isNotEmpty;
-
-//   // Set token both in memory and persistent storage
-//   static Future<void> setAuthToken(String token) async {
-//     _authToken = token;
-//     print(
-//         'Auth token set in AuthManager: $_authToken'); // Add this print statement
-//     try {
-//       final prefs = await SharedPreferences.getInstance();
-//       await prefs.setString('auth_token', token);
-//       authStateChanges.value = true;
-//     } catch (e) {
-//       print('Failed to save token to SharedPreferences: $e');
-//     }
-//   }
-
-//   static Future<void> loadAuthToken() async {
-//     try {
-//       final prefs = await SharedPreferences.getInstance();
-//       _authToken = prefs.getString('auth_token');
-//       print(
-//           'Loaded auth token from SharedPreferences: $_authToken'); // Debug print
-//       authStateChanges.value = _authToken != null && _authToken!.isNotEmpty;
-//     } catch (e) {
-//       print('Failed to load token from SharedPreferences: $e');
-//     }
-//   }
-
-//   // Clear token when logging out
-//   static Future<void> clearAuthToken() async {
-//     _authToken = null;
-//     authStateChanges.value = false;
-//     try {
-//       final prefs = await SharedPreferences.getInstance();
-//       await prefs.remove('auth_token');
-//     } catch (e) {
-//       print('Failed to clear token from SharedPreferences: $e');
-//     }
-//   }
-
-//   Future<void> saveAuthToken(String token) async {
-//     SharedPreferences prefs = await SharedPreferences.getInstance();
-//     await prefs.setString('auth_token', token);
-//     print("Token saved: $token");
-//   }
-// }
-
 import 'package:flutter/foundation.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'dart:convert';
@@ -70,20 +8,16 @@ class AuthManager {
   static final ValueNotifier<bool> authStateChanges =
       ValueNotifier<bool>(false);
 
-  // Get the current token from memory
   static String? get authToken => _authToken;
 
-  // Get the current user ID from memory
   static int? get userId {
     print('🔍 AuthManager.userId called, returning: $_userId');
     return _userId;
   }
 
-  // Check if user is authenticated
   static bool get isAuthenticated =>
       _authToken != null && _authToken!.isNotEmpty;
 
-  // Extract user ID from JWT token
   static int? _extractUserIdFromToken(String token) {
     try {
       final parts = token.split('.');
@@ -108,13 +42,10 @@ class AuthManager {
     }
   }
 
-  // Set token both in memory and persistent storage
   static Future<void> setAuthToken(String token) async {
     _authToken = token;
-    print(
-        'Auth token set in AuthManager: $_authToken'); // Add this print statement
+    print('Auth token set in AuthManager: $_authToken');
 
-    // Extract and set user ID from token
     final userId = _extractUserIdFromToken(token);
     if (userId != null) {
       await setUserId(userId);
@@ -133,10 +64,8 @@ class AuthManager {
     try {
       final prefs = await SharedPreferences.getInstance();
       _authToken = prefs.getString('auth_token');
-      print(
-          'Loaded auth token from SharedPreferences: $_authToken'); // Debug print
+      print('Loaded auth token from SharedPreferences: $_authToken');
 
-      // Extract and set user ID from loaded token
       if (_authToken != null) {
         final userId = _extractUserIdFromToken(_authToken!);
         if (userId != null) {
@@ -150,7 +79,6 @@ class AuthManager {
     }
   }
 
-  // ✅ Clear token when logging out
   static Future<void> clearAuthToken() async {
     _authToken = null;
     authStateChanges.value = false;
@@ -201,7 +129,6 @@ class AuthManager {
     }
   }
 
-  // Clear all auth data when logging out
   static Future<void> clearAll() async {
     await clearAuthToken();
     await clearUserId();

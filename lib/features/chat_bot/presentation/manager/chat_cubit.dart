@@ -29,7 +29,6 @@ class ChatCubit extends Cubit<ChatState> {
   Future<void> sendMessage(String message) async {
     if (message.trim().isEmpty) return;
 
-    // Add user message
     final userMessage = ChatMessage(
       text: message,
       isUser: true,
@@ -38,12 +37,10 @@ class ChatCubit extends Cubit<ChatState> {
     _messages.insert(0, userMessage);
     emit(ChatLoading(_messages));
 
-    // Send message to API
     final result = await chatRepo.sendMessage(message);
 
     result.fold(
       (error) {
-        // Add error message
         final errorMessage = ChatMessage(
           text:
               "Sorry, I'm having trouble connecting. Please make sure the server is running and try again.",
@@ -54,7 +51,6 @@ class ChatCubit extends Cubit<ChatState> {
         emit(ChatError(_messages, error));
       },
       (response) {
-        // Add bot response
         final botMessage = ChatMessage(
           text: response.data.response,
           isUser: false,

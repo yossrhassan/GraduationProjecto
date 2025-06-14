@@ -11,36 +11,24 @@ class FacilitiesRepoImpl implements FacilitiesRepo {
   FacilitiesRepoImpl(this.apiService);
 
   @override
-  Future<Either<Failure, List<FacilitiesModel>>> fetchFacilities({int? sportId}) async {
+  Future<Either<Failure, List<FacilitiesModel>>> fetchFacilities(
+      {int? sportId}) async {
     try {
       String endpoint = 'Facilities?isOwner=false';
       if (sportId != null) {
         endpoint = '$endpoint&sportId=$sportId';
       }
-      print('🔍 FACILITIES: Fetching facilities with endpoint: $endpoint');
       var body = await apiService.get(endPoint: endpoint);
 
-      print('🔍 FACILITIES: Response type: ${body.runtimeType}');
-      print('🔍 FACILITIES: Response: $body');
-
-      // Handle different response formats
       List<dynamic> facilitiesData;
-      
+
       if (body is List) {
-        // Direct array response
         facilitiesData = body;
-        print('🔍 FACILITIES: Direct array response with ${facilitiesData.length} items');
       } else if (body is Map && body['success'] == true) {
-        // Wrapped response with success flag
         facilitiesData = body['data'] as List;
-        print('🔍 FACILITIES: Wrapped response with ${facilitiesData.length} items');
       } else if (body is Map && body['data'] != null) {
-        // Response with data field but no success flag
         facilitiesData = body['data'] as List;
-        print('🔍 FACILITIES: Data field response with ${facilitiesData.length} items');
       } else {
-        // Unexpected format
-        print('🔍 FACILITIES: Unexpected response format');
         String errorMessage = 'Unexpected response format';
         if (body is Map && body['message'] != null) {
           errorMessage = body['message'];
@@ -49,17 +37,11 @@ class FacilitiesRepoImpl implements FacilitiesRepo {
       }
 
       List<FacilitiesModel> facilities = facilitiesData
-          .map((facilityJson) {
-            print('🔍 FACILITIES: Processing facility: $facilityJson');
-            return FacilitiesModel.fromJson(facilityJson);
-          })
+          .map((facilityJson) => FacilitiesModel.fromJson(facilityJson))
           .toList();
 
-      print('🔍 FACILITIES: Successfully parsed ${facilities.length} facilities');
       return right(facilities);
-      
     } catch (e) {
-      print('🔍 FACILITIES: Error occurred: $e');
       if (e is DioException) {
         return left(ServerFailure.fromDioError(e));
       } else {
@@ -71,23 +53,15 @@ class FacilitiesRepoImpl implements FacilitiesRepo {
   @override
   Future<Either<Failure, List<String>>> fetchCities() async {
     try {
-      print('🔍 CITIES: Fetching cities from Facilities/cities');
       var body = await apiService.get(endPoint: 'Facilities/cities');
-
-      print('🔍 CITIES: Response type: ${body.runtimeType}');
-      print('🔍 CITIES: Response: $body');
 
       if (body is Map && body['success'] == true && body['data'] is List) {
         List<String> cities = List<String>.from(body['data']);
-        print('🔍 CITIES: Successfully parsed ${cities.length} cities: $cities');
         return right(cities);
       } else {
-        print('🔍 CITIES: Unexpected response format');
         return left(ServerFailure('Failed to fetch cities'));
       }
-      
     } catch (e) {
-      print('🔍 CITIES: Error occurred: $e');
       if (e is DioException) {
         return left(ServerFailure.fromDioError(e));
       } else {

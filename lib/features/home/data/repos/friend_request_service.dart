@@ -10,16 +10,15 @@ class FriendRequestService {
   Future<String> sendFriendRequest({required int receiverId}) async {
     try {
       print(
-          '🤝 FriendRequestService: Sending friend request to userId: $receiverId');
+          'FriendRequestService: Sending friend request to userId: $receiverId');
 
       final response = await apiService.post(
         endPoint: 'FriendRequest/friend-request/send?receiverId=$receiverId',
-        data: {}, // Empty body since receiverId is in query parameter
+        data: {},
       );
 
-      print('✅ FriendRequestService: Response: $response');
+      print('FriendRequestService: Response: $response');
 
-      // Handle different response types
       if (response is String) {
         return response;
       } else if (response is Map<String, dynamic>) {
@@ -32,19 +31,15 @@ class FriendRequestService {
 
       return 'Friend request sent successfully!';
     } catch (e) {
-      print('❌ FriendRequestService Error: $e');
+      print('FriendRequestService Error: $e');
 
-      // Handle specific error cases
-      String errorMessage =
-          e.toString().toLowerCase(); // Convert to lowercase once
+      String errorMessage = e.toString().toLowerCase();
 
-      // Check for specific error messages first
       if (errorMessage.contains('friend request already exists') ||
           errorMessage.contains('already exists between') ||
           errorMessage.contains('already sent') ||
           errorMessage.contains('duplicate request') ||
           errorMessage.contains('400')) {
-        // Include 400 here since it's related to duplicate request
         return 'A friend request already exists between you and this user';
       } else if (errorMessage.contains('404')) {
         return 'User not found';
@@ -60,18 +55,18 @@ class FriendRequestService {
 
   Future<String> acceptFriendRequest({required int requestId}) async {
     try {
-      print('✅ FriendRequestService: Accepting friend request ID: $requestId');
+      print('FriendRequestService: Accepting friend request ID: $requestId');
 
-      print('✅ FriendRequestService: Using query parameter approach');
+      print('FriendRequestService: Using query parameter approach');
 
       final response = await apiService.post(
         endPoint: 'FriendRequest/friend-request/accept?requestId=$requestId',
-        data: {}, // Empty body since requestId is in query parameter
+        data: {},
       );
 
-      print('✅ FriendRequestService Accept Response: $response');
+      print('FriendRequestService Accept Response: $response');
       print(
-          '✅ FriendRequestService Accept Response Type: ${response.runtimeType}');
+          'FriendRequestService Accept Response Type: ${response.runtimeType}');
 
       if (response is String) {
         return response;
@@ -85,22 +80,22 @@ class FriendRequestService {
 
       return 'Friend request accepted successfully!';
     } catch (e) {
-      print('❌ FriendRequestService Accept Error: $e');
-      print('❌ FriendRequestService Accept Error Type: ${e.runtimeType}');
+      print('FriendRequestService Accept Error: $e');
+      print('FriendRequestService Accept Error Type: ${e.runtimeType}');
       return 'Failed to accept friend request. Please try again.';
     }
   }
 
   Future<String> rejectFriendRequest({required int requestId}) async {
     try {
-      print('❌ FriendRequestService: Rejecting friend request ID: $requestId');
+      print('FriendRequestService: Rejecting friend request ID: $requestId');
 
       final response = await apiService.post(
         endPoint: 'FriendRequest/friend-request/reject?requestId=$requestId',
-        data: {}, // Empty body since requestId is in query parameter
+        data: {},
       );
 
-      print('❌ FriendRequestService Reject Response: $response');
+      print('FriendRequestService Reject Response: $response');
 
       if (response is String) {
         return response;
@@ -114,20 +109,20 @@ class FriendRequestService {
 
       return 'Friend request rejected successfully!';
     } catch (e) {
-      print('❌ FriendRequestService Reject Error: $e');
+      print('FriendRequestService Reject Error: $e');
       return 'Failed to reject friend request. Please try again.';
     }
   }
 
   Future<List<FriendRequestModel>> getReceivedFriendRequests() async {
     try {
-      print('📥 FriendRequestService: Getting received friend requests');
+      print('FriendRequestService: Getting received friend requests');
 
       final response = await apiService.get(
         endPoint: 'FriendRequest/friend-requests/received',
       );
 
-      print('📥 FriendRequestService Received Response: $response');
+      print('FriendRequestService Received Response: $response');
 
       if (response is Map<String, dynamic>) {
         if (response['success'] == true && response['data'] is List) {
@@ -142,20 +137,20 @@ class FriendRequestService {
 
       return [];
     } catch (e) {
-      print('❌ FriendRequestService Received Error: $e');
+      print('FriendRequestService Received Error: $e');
       return [];
     }
   }
 
   Future<List<FriendRequestModel>> getSentFriendRequests() async {
     try {
-      print('📤 FriendRequestService: Getting sent friend requests');
+      print('FriendRequestService: Getting sent friend requests');
 
       final response = await apiService.get(
         endPoint: 'FriendRequest/friend-requests/sent',
       );
 
-      print('📤 FriendRequestService Sent Response: $response');
+      print('FriendRequestService Sent Response: $response');
 
       if (response is Map<String, dynamic>) {
         if (response['success'] == true && response['data'] is List) {
@@ -170,20 +165,20 @@ class FriendRequestService {
 
       return [];
     } catch (e) {
-      print('❌ FriendRequestService Sent Error: $e');
+      print('FriendRequestService Sent Error: $e');
       return [];
     }
   }
 
   Future<List<FriendRequestModel>> getPendingFriendRequests() async {
     try {
-      print('⏳ FriendRequestService: Getting pending friend requests');
+      print('FriendRequestService: Getting pending friend requests');
 
       final response = await apiService.get(
         endPoint: 'FriendRequest/friend-requests/pending',
       );
 
-      print('⏳ FriendRequestService Pending Response: $response');
+      print('FriendRequestService Pending Response: $response');
 
       if (response is Map<String, dynamic>) {
         if (response['success'] == true && response['data'] is List) {
@@ -198,20 +193,20 @@ class FriendRequestService {
 
       return [];
     } catch (e) {
-      print('❌ FriendRequestService Pending Error: $e');
+      print('FriendRequestService Pending Error: $e');
       return [];
     }
   }
 
   Future<List<FriendRequestModel>> getAcceptedFriendRequests() async {
     try {
-      print('🤝 FriendRequestService: Getting accepted friend requests');
+      print('FriendRequestService: Getting accepted friend requests');
 
       final response = await apiService.get(
         endPoint: 'FriendRequest/friend-requests/accepted',
       );
 
-      print('🤝 FriendRequestService Accepted Response: $response');
+      print('FriendRequestService Accepted Response: $response');
 
       if (response is Map<String, dynamic>) {
         if (response['success'] == true && response['data'] is List) {
@@ -226,7 +221,7 @@ class FriendRequestService {
 
       return [];
     } catch (e) {
-      print('❌ FriendRequestService Accepted Error: $e');
+      print('FriendRequestService Accepted Error: $e');
       return [];
     }
   }

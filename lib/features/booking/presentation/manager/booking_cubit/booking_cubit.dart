@@ -1,5 +1,3 @@
-// First, modify your BookingCubit class to include the API integration
-
 import 'package:bloc/bloc.dart';
 import 'package:flutter/material.dart';
 import 'package:graduation_project/features/booking/data/models/booking.model.dart';
@@ -14,7 +12,7 @@ class BookingCubit extends Cubit<BookingState> {
   int? courtId;
 
   BookingCubit(this.bookingRepo) : super(BookingInitial()) {
-    fetchExistingBookings(); // ✅ Load data, but don't force a default date
+    fetchExistingBookings();
   }
 
   DateTime? _lastSelectedDate;
@@ -22,10 +20,9 @@ class BookingCubit extends Cubit<BookingState> {
 
   void setCourtId(int id) {
     courtId = id;
-    fetchExistingBookings(); // Refresh bookings when facility changes
+    fetchExistingBookings();
   }
 
-  // Method to fetch existing bookings from API
   Future<void> fetchExistingBookings() async {
     print('Fetching existing bookings for facility ID: $courtId');
 
@@ -37,9 +34,9 @@ class BookingCubit extends Cubit<BookingState> {
     final result = await bookingRepo.getBookings(courtId: courtId);
 
     result.fold((failure) {
-      print('❌ Failed to load bookings: ${failure.errMessage}');
+      print(' Failed to load bookings: ${failure.errMessage}');
     }, (response) {
-      print('📥 Bookings response: $response');
+      print(' Bookings response: $response');
 
       if (response is Map<String, dynamic>) {
         bookedSlots.clear();
@@ -48,8 +45,6 @@ class BookingCubit extends Cubit<BookingState> {
         final dynamic rawCourtId = response['courtId'];
 
         if (rawBookingSlots is Map<String, dynamic> && rawCourtId is int) {
-          // IMPORTANT FIX: Use the courtIndex from the current UI selection
-          // This ensures the booking slots get marked correctly for the current UI view
           int? currentCourtIndex;
           if (state is BookingSelection) {
             currentCourtIndex = (state as BookingSelection).courtIndex;
@@ -75,10 +70,8 @@ class BookingCubit extends Cubit<BookingState> {
                   final slotIndices =
                       _getSlotIndicesForTimeRange(startTime, endTime);
 
-                  // Only process if we have a valid court index
                   if (currentCourtIndex != null) {
                     for (var slotIndex in slotIndices) {
-                      // Use the currentCourtIndex from UI
                       bookSlot(currentCourtIndex, date, slotIndex);
                       print(
                           'Booking slot: date=$dateString, courtIndex=$currentCourtIndex, slotIndex=$slotIndex');
@@ -89,27 +82,24 @@ class BookingCubit extends Cubit<BookingState> {
             }
           });
 
-          print('✅ Booked slots parsed and saved.');
+          print(' Booked slots parsed and saved.');
         } else {
-          print('⚠️ Unexpected structure for bookingSlots or courtId.');
+          print(' Unexpected structure for bookingSlots or courtId.');
         }
       }
 
-      // 🔁 Force UI to update
       if (state is BookingSelection) {
         final current = state as BookingSelection;
         emit(BookingSelection(
           date: current.date,
           courtIndex: current.courtIndex,
-          selectedTimeIndices:
-              current.selectedTimeIndices, // Preserve selected indices
+          selectedTimeIndices: current.selectedTimeIndices,
           timeSlots: generateTimeSlots(current.date),
         ));
       }
     });
   }
 
-  // Helper method to find which slot indices correspond to a time range
   List<int> _getSlotIndicesForTimeRange(DateTime startTime, DateTime endTime) {
     List<int> indices = [];
     List<Map<String, String>> timeSlots = generateTimeSlots(
@@ -119,7 +109,6 @@ class BookingCubit extends Cubit<BookingState> {
       DateTime slotStart = DateTime.parse(timeSlots[i]['startTime']!);
       DateTime slotEnd = DateTime.parse(timeSlots[i]['endTime']!);
 
-      // Check if this slot overlaps with the booking time range
       if ((slotStart.isAtSameMomentAs(startTime) ||
               slotStart.isAfter(startTime)) &&
           (slotEnd.isAtSameMomentAs(endTime) || slotEnd.isBefore(endTime))) {
@@ -142,8 +131,6 @@ class BookingCubit extends Cubit<BookingState> {
     }
   }
 
-// In booking_cubit.dart, update the confirmBooking method
-
   Future<bool> confirmBooking(DateTime selectedDate, int courtIndex,
       List<int> selectedTimeIndices) async {
     if (selectedTimeIndices.isEmpty) {
@@ -151,13 +138,11 @@ class BookingCubit extends Cubit<BookingState> {
       return false;
     }
 
-    // Use the actual courtId that was set with setCourtId, not courtIndex + 1
     if (courtId == null) {
       emit(BookingError('No court selected'));
       return false;
     }
 
-    // Validate slots
     for (var index in selectedTimeIndices) {
       if (index is! int) {
         print(
@@ -185,7 +170,6 @@ class BookingCubit extends Cubit<BookingState> {
     for (var group in groupedIndices) {
       if (group.isEmpty) continue;
 
-      // Debug output
       print('Processing group: $group');
 
       final startSlotIndex = group.first;
@@ -195,7 +179,7 @@ class BookingCubit extends Cubit<BookingState> {
       final endTimeString = timeSlots[endSlotIndex]['endTime'];
 
       final booking = BookingModel(
-        courtId: courtId, // Use the actual courtId from the API
+        courtId: courtId,
         date: selectedDate.toIso8601String().split('T').first,
         startTime: startTimeString,
         endTime: endTimeString,
@@ -227,7 +211,6 @@ class BookingCubit extends Cubit<BookingState> {
       );
     }
 
-    // Always re-emit BookingSelection state with updated data to refresh UI
     final updatedTimeSlots = generateTimeSlots(selectedDate);
     emit(BookingSelection(
       date: _lastSelectedDate ?? selectedDate,
@@ -238,7 +221,6 @@ class BookingCubit extends Cubit<BookingState> {
 
     if (allSuccess) {
       emit(BookingSuccess());
-      // Add short delay before switching back to BookingSelection state
       await Future.delayed(Duration(milliseconds: 200));
       emit(BookingSelection(
         date: selectedDate,
@@ -249,7 +231,7 @@ class BookingCubit extends Cubit<BookingState> {
     }
 
     return allSuccess;
-  } // Helper method to group consecutive indices
+  }
 
   List<List<int>> _groupConsecutiveIndices(List<int> indices) {
     if (indices.isEmpty) return [];

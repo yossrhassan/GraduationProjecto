@@ -21,10 +21,7 @@ class _BookingHistoryViewBodyState extends State<BookingHistoryViewBody>
   final FacilityCoordinatesService _coordinatesService =
       FacilityCoordinatesService();
 
-  // Track loading state for each booking's Get Directions button
   final Set<int> _loadingDirections = <int>{};
-
-  // Track loading state for each booking's Cancel button
   final Set<int> _loadingCancellations = <int>{};
 
   @override
@@ -41,10 +38,10 @@ class _BookingHistoryViewBodyState extends State<BookingHistoryViewBody>
         title: const Text("My Bookings"),
         bottom: TabBar(
           controller: _tabController,
-          indicatorColor: kPrimaryColor, // underline color
-          labelColor: kPrimaryColor, // selected tab text color
-          unselectedLabelColor: Colors.grey, // unselected tab text color
-          indicatorWeight: 3, // thickness of the underline
+          indicatorColor: kPrimaryColor,
+          labelColor: kPrimaryColor,
+          unselectedLabelColor: Colors.grey,
+          indicatorWeight: 3,
           tabs: const [
             Tab(text: "Upcoming"),
             Tab(text: "Past"),
@@ -107,7 +104,6 @@ class _BookingHistoryViewBodyState extends State<BookingHistoryViewBody>
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                // Display facility name at the top
                 Text(booking.facilityName ?? "Unknown Facility",
                     style: const TextStyle(
                         fontWeight: FontWeight.bold,
@@ -191,7 +187,6 @@ class _BookingHistoryViewBodyState extends State<BookingHistoryViewBody>
   Future<void> _handleCancelBooking(BookingHistoryModel booking) async {
     final bookingId = booking.id ?? 0;
 
-    // Show confirmation dialog
     final shouldCancel = await showDialog<bool>(
       context: context,
       builder: (context) => AlertDialog(
@@ -300,21 +295,18 @@ class _BookingHistoryViewBodyState extends State<BookingHistoryViewBody>
 
     try {
       if (booking.facilityName != null) {
-        print('🗺️ Getting directions for ${booking.facilityName}');
+        print(' Getting directions for ${booking.facilityName}');
 
-        // Try to get exact coordinates first
         final coordinates = await _coordinatesService
             .getFacilityCoordinates(booking.facilityName!);
 
         if (coordinates != null) {
-          // Use real coordinates for precise navigation
           await MapsLauncher.launchMapsWithCoordinates(
             latitude: coordinates['latitude']!,
             longitude: coordinates['longitude']!,
             destinationName: '${booking.facilityName} - ${booking.courtName}',
           );
 
-          // Show success message
           if (mounted) {
             ScaffoldMessenger.of(context).showSnackBar(
               SnackBar(
@@ -325,14 +317,12 @@ class _BookingHistoryViewBodyState extends State<BookingHistoryViewBody>
             );
           }
         } else {
-          // Fallback to search-based navigation
-          print('🔍 Using search-based navigation for ${booking.facilityName}');
+          print('Using search-based navigation for ${booking.facilityName}');
           await MapsLauncher.launchMapsWithSearch(
             facilityName: booking.facilityName!,
             city: booking.city,
           );
 
-          // Show fallback message
           if (mounted) {
             ScaffoldMessenger.of(context).showSnackBar(
               SnackBar(
@@ -347,9 +337,8 @@ class _BookingHistoryViewBodyState extends State<BookingHistoryViewBody>
         throw Exception('Facility name not available');
       }
     } catch (e) {
-      print('❌ Error getting directions: $e');
+      print(' Error getting directions: $e');
 
-      // Show error message
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(

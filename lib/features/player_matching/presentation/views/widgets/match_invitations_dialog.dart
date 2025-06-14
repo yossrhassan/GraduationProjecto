@@ -15,12 +15,10 @@ class MatchInvitationsDialog extends StatefulWidget {
 }
 
 class _MatchInvitationsDialogState extends State<MatchInvitationsDialog> {
-  Set<int> respondingInvitations =
-      {}; // Track which invitations are being responded to
+  Set<int> respondingInvitations = {};
 
   String _formatTime(String time24) {
     try {
-      // Parse time in HH:mm:ss format
       final timeParts = time24.split(':');
       if (timeParts.length >= 2) {
         int hour = int.parse(timeParts[0]);
@@ -28,9 +26,9 @@ class _MatchInvitationsDialogState extends State<MatchInvitationsDialog> {
 
         String period = 'AM';
         if (hour == 0) {
-          hour = 12; // Midnight
+          hour = 12;
         } else if (hour == 12) {
-          period = 'PM'; // Noon
+          period = 'PM';
         } else if (hour > 12) {
           hour = hour - 12;
           period = 'PM';
@@ -39,7 +37,6 @@ class _MatchInvitationsDialogState extends State<MatchInvitationsDialog> {
         return '$hour:$minute $period';
       }
     } catch (e) {
-      // If parsing fails, return the original time
       return time24;
     }
     return time24;
@@ -48,7 +45,6 @@ class _MatchInvitationsDialogState extends State<MatchInvitationsDialog> {
   @override
   void initState() {
     super.initState();
-    // Load invitations when dialog opens
     context.read<MatchesCubit>().getMatchInvitations();
   }
 
@@ -59,12 +55,10 @@ class _MatchInvitationsDialogState extends State<MatchInvitationsDialog> {
     });
 
     try {
-      // Call the cubit method and wait for it to complete
       await context
           .read<MatchesCubit>()
           .respondToInvitation(invitation.matchId.toString(), accept);
 
-      // Show success message
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
@@ -88,8 +82,6 @@ class _MatchInvitationsDialogState extends State<MatchInvitationsDialog> {
           ),
         );
       }
-
-      // No need to refresh manually - the cubit handles state update optimistically
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
@@ -101,7 +93,6 @@ class _MatchInvitationsDialogState extends State<MatchInvitationsDialog> {
         );
       }
     } finally {
-      // Remove button loading state
       if (mounted) {
         setState(() {
           respondingInvitations.remove(invitation.matchId);
@@ -127,7 +118,6 @@ class _MatchInvitationsDialogState extends State<MatchInvitationsDialog> {
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            // Header
             Container(
               padding: const EdgeInsets.all(20),
               decoration: BoxDecoration(
@@ -158,12 +148,9 @@ class _MatchInvitationsDialogState extends State<MatchInvitationsDialog> {
                 ],
               ),
             ),
-
-            // Content
             Flexible(
               child: BlocBuilder<MatchesCubit, MatchesState>(
                 builder: (context, state) {
-                  // If we have a loaded state with empty invitations, show no invitations message
                   if (state is MatchInvitationsLoaded &&
                       state.invitations.isEmpty) {
                     return const Padding(
@@ -199,7 +186,6 @@ class _MatchInvitationsDialogState extends State<MatchInvitationsDialog> {
                     );
                   }
 
-                  // Handle error state
                   if (state is MatchesError) {
                     return Padding(
                       padding: const EdgeInsets.all(40),
@@ -262,12 +248,9 @@ class _MatchInvitationsDialogState extends State<MatchInvitationsDialog> {
                     );
                   }
 
-                  // Handle loaded state with invitations
                   if (state is MatchInvitationsLoaded) {
-                    // Use invitations directly from state
                     final invitations = state.invitations;
 
-                    // If no invitations, show empty state
                     if (invitations.isEmpty) {
                       return const Padding(
                         padding: EdgeInsets.all(40),
@@ -306,7 +289,6 @@ class _MatchInvitationsDialogState extends State<MatchInvitationsDialog> {
                       color: kPrimaryColor,
                       onRefresh: () async {
                         context.read<MatchesCubit>().getMatchInvitations();
-                        // Wait a bit for the API call to complete
                         await Future.delayed(const Duration(milliseconds: 500));
                       },
                       child: ListView.builder(
@@ -332,7 +314,6 @@ class _MatchInvitationsDialogState extends State<MatchInvitationsDialog> {
                               child: Column(
                                 crossAxisAlignment: CrossAxisAlignment.start,
                                 children: [
-                                  // Match info
                                   Row(
                                     children: [
                                       const Icon(
@@ -354,8 +335,6 @@ class _MatchInvitationsDialogState extends State<MatchInvitationsDialog> {
                                     ],
                                   ),
                                   const SizedBox(height: 8),
-
-                                  // Location
                                   Row(
                                     children: [
                                       const Icon(
@@ -376,8 +355,6 @@ class _MatchInvitationsDialogState extends State<MatchInvitationsDialog> {
                                     ],
                                   ),
                                   const SizedBox(height: 8),
-
-                                  // Facility name
                                   if (invitation.facilityName.isNotEmpty) ...[
                                     Row(
                                       children: [
@@ -400,8 +377,6 @@ class _MatchInvitationsDialogState extends State<MatchInvitationsDialog> {
                                     ),
                                     const SizedBox(height: 8),
                                   ],
-
-                                  // Booking time
                                   if (invitation.bookingStartTime.isNotEmpty &&
                                       invitation.bookingEndTime.isNotEmpty) ...[
                                     Row(
@@ -423,8 +398,6 @@ class _MatchInvitationsDialogState extends State<MatchInvitationsDialog> {
                                     ),
                                     const SizedBox(height: 8),
                                   ],
-
-                                  // Inviter info
                                   Row(
                                     children: [
                                       const Icon(
@@ -443,8 +416,6 @@ class _MatchInvitationsDialogState extends State<MatchInvitationsDialog> {
                                     ],
                                   ),
                                   const SizedBox(height: 16),
-
-                                  // Action buttons
                                   Row(
                                     children: [
                                       Expanded(
@@ -537,7 +508,6 @@ class _MatchInvitationsDialogState extends State<MatchInvitationsDialog> {
                     );
                   }
 
-                  // Default loading state
                   return const Center(
                     child: Padding(
                       padding: EdgeInsets.all(40),

@@ -50,7 +50,6 @@ class BookingHistoryCubit extends Cubit<BookingHistoryState> {
         throw failure.errMessage;
       },
       (message) {
-        // Reload bookings after successful cancellation
         loadBookings();
         return message;
       },

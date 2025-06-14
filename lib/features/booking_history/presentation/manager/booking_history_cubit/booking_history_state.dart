@@ -1,4 +1,3 @@
-// booking_history_state.dart (part of booking_history_cubit.dart)
 part of 'booking_history_cubit.dart';
 
 abstract class BookingHistoryState {}

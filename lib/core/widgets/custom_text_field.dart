@@ -20,7 +20,7 @@ class CustomTextField extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return SizedBox(
-      height: (height ?? 50) + 20, // Reserve extra space for error text
+      height: (height ?? 50) + 20,
       child: TextFormField(
         style: const TextStyle(color: kPrimaryColor),
         obscureText: obsecureText!,
@@ -30,8 +30,6 @@ class CustomTextField extends StatelessWidget {
         onChanged: onchanged,
         textAlignVertical: TextAlignVertical.center,
         decoration: InputDecoration(
-          // filled: true,
-          // fillColor: Color(0xff48444E),
           hintText: hintText,
           hintStyle: const TextStyle(color: Color(0xff7E807B)),
           suffixIcon: suffexicon,

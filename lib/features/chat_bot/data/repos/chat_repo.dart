@@ -36,7 +36,6 @@ class ChatRepoImpl implements ChatRepo {
         final chatResponse = ChatResponse.fromJson(responseData);
 
         if (chatResponse.status == 'success') {
-          // Format the response for better mobile display
           final formattedResponse = _formatResponse(chatResponse.data.response);
           final formattedChatResponse = ChatResponse(
             status: chatResponse.status,
@@ -60,21 +59,15 @@ class ChatRepoImpl implements ChatRepo {
   }
 
   String _formatResponse(String rawResponse) {
-    // Clean and simplify the response for mobile display
     String formatted = rawResponse
-        // Replace \n with actual line breaks
         .replaceAll('\\n', '\n')
-        // Remove all markdown formatting
         .replaceAll('**', '')
         .replaceAll('*', '')
-        // Clean up extra spaces and formatting
         .replaceAll('    ', '')
         .replaceAll('   ', ' ')
-        // Remove excessive line breaks
         .replaceAll('\n\n\n', '\n\n')
         .replaceAll('\n\n\n\n', '\n\n');
 
-    // Check if this is a facilities response (contains facility-related keywords)
     bool isFacilitiesResponse = formatted.contains('Sports') ||
         formatted.contains('Club') ||
         formatted.contains('Complex') ||
@@ -85,12 +78,10 @@ class ChatRepoImpl implements ChatRepo {
         formatted.contains('Price:') ||
         formatted.contains('Operating Hours:');
 
-    // If it's not a facilities response, return the original formatted text
     if (!isFacilitiesResponse) {
       return formatted.trim();
     }
 
-    // Parse and restructure the response for facilities
     List<String> lines = formatted.split('\n');
     StringBuffer result = StringBuffer();
 
@@ -101,7 +92,6 @@ class ChatRepoImpl implements ChatRepo {
       line = line.trim();
       if (line.isEmpty) continue;
 
-      // Check if this is a facility name (usually longer and doesn't contain ':' with details)
       if (line.contains('Sports') ||
           line.contains('Club') ||
           line.contains('Complex') ||
@@ -111,9 +101,8 @@ class ChatRepoImpl implements ChatRepo {
         if (!line.contains('Address:') &&
             !line.contains('Price:') &&
             !line.contains('Operating')) {
-          // This is a facility name
           if (currentFacility.isNotEmpty) {
-            result.write('\n\n'); // Add spacing between facilities
+            result.write('\n\n');
           }
           currentFacility = line;
           result.write('🏟️ $line\n');
@@ -122,7 +111,6 @@ class ChatRepoImpl implements ChatRepo {
         }
       }
 
-      // Process facility details
       if (line.contains('Address:')) {
         String address = line.replaceAll('Address:', '').trim();
         result.write('📍 $address\n');
@@ -140,7 +128,6 @@ class ChatRepoImpl implements ChatRepo {
         result.write('⚽ $includes\n');
       } else if (line.toLowerCase().contains('court') &&
           !currentFacility.isEmpty) {
-        // Handle court information
         if (!line.contains('Address:') &&
             !line.contains('Price:') &&
             !line.contains('Operating')) {
@@ -149,7 +136,6 @@ class ChatRepoImpl implements ChatRepo {
       }
     }
 
-    // Add summary
     result.write('\n✅ Multiple facilities found in your area!');
 
     return result.toString().trim();

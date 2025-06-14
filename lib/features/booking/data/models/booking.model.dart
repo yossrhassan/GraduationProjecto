@@ -16,7 +16,6 @@ class BookingModel extends Equatable {
       );
 
   Map<String, dynamic> toJson() {
-    // Convert startTime and endTime to time-only format (HH:mm:ss)
     String? formattedStartTime;
     String? formattedEndTime;
     if (startTime != null) {

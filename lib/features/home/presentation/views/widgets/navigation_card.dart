@@ -10,7 +10,6 @@ class NavigationCard extends StatelessWidget {
 
   Widget _buildImageWidget() {
     if (imageUrl == null || imageUrl!.isEmpty) {
-      // Show blank placeholder when no image
       return Container(
         color: Colors.grey[800],
         child: const Center(
@@ -23,14 +22,12 @@ class NavigationCard extends StatelessWidget {
       );
     }
 
-    // Show network image with error handling
     return Image.network(
       imageUrl!,
       fit: BoxFit.cover,
       width: double.infinity,
       height: double.infinity,
       errorBuilder: (context, error, stackTrace) {
-        // Show blank placeholder on error (404, network issues, etc.)
         return Container(
           color: Colors.grey[800],
           child: const Center(
@@ -80,9 +77,8 @@ class NavigationCard extends StatelessWidget {
             width: double.infinity,
             child: Stack(
               children: [
-                // Background image
                 _buildImageWidget(),
-                // Dark overlay
+
                 Container(
                   width: double.infinity,
                   height: double.infinity,

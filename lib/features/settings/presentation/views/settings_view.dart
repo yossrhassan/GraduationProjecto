@@ -66,7 +66,7 @@ class _SettingsViewState extends State<SettingsView> {
           color: Colors.green,
           child: Column(
             children: [
-              const SizedBox(height: 24), // Space below AppBar
+              const SizedBox(height: 24),
               CircleAvatar(
                 radius: 54,
                 backgroundColor: Colors.white,
@@ -77,7 +77,7 @@ class _SettingsViewState extends State<SettingsView> {
                       const Icon(Icons.person, size: 60, color: Colors.white),
                 ),
               ),
-              const SizedBox(height: 24), // Space below avatar
+              const SizedBox(height: 24),
             ],
           ),
         ),
@@ -128,7 +128,6 @@ class _SettingsViewState extends State<SettingsView> {
                 ),
               ),
               const SizedBox(height: 16),
-              // Delete Account (red card)
               Card(
                 color: const Color(0xFF18191A),
                 shape: RoundedRectangleBorder(
@@ -145,7 +144,6 @@ class _SettingsViewState extends State<SettingsView> {
                 ),
               ),
               const SizedBox(height: 16),
-              // Log Out (red button)
               SizedBox(
                 width: double.infinity,
                 child: ElevatedButton.icon(

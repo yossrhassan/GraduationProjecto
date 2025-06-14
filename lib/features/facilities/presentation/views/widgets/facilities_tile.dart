@@ -21,10 +21,6 @@ class FacilitiesTile extends StatelessWidget {
   Widget build(BuildContext context) {
     return GestureDetector(
       onTap: () {
-        // Navigator.push(context,
-        //     MaterialPageRoute(builder: (BuildContext context) {
-        //   return const BookingView();
-        // }));
         GoRouter.of(context).push(AppRouter.kBookingView, extra: {
           'facility': facilitiesModel,
           'sportId': sportId,

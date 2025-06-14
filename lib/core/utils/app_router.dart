@@ -138,7 +138,6 @@ abstract class AppRouter {
           final Map<String, dynamic> extra =
               state.extra as Map<String, dynamic>;
           return BlocProvider(
-            // Get the BookingRepo from the service locator
             create: (context) => BookingCubit(GetIt.instance<BookingRepo>()),
             child: BookingView(
               facilitiesModel: extra['facility'] as FacilitiesModel,

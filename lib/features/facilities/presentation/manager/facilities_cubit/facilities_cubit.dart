@@ -20,17 +20,12 @@ class FacilitiesCubit extends Cubit<FacilitiesState> {
     try {
       var result = await facilitiesRepo.fetchCities();
       result.fold(
-        (failure) {
-          print('Failed to fetch cities: ${failure.errMessage}');
-        },
+        (failure) {},
         (cities) {
-          _cities = ['All Cities', ...cities]; // Add "All Cities" option
-          print('Fetched cities: $_cities');
+          _cities = ['All Cities', ...cities];
         },
       );
-    } catch (e) {
-      print('Error fetching cities: $e');
-    }
+    } catch (e) {}
   }
 
   void selectCity(String? city) {

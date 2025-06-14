@@ -18,28 +18,22 @@ class LoginService {
       token: null,
     );
 
-    print("🧪 Full Login Response: $response");
-
     if (response is Map<String, dynamic> && response.containsKey('data')) {
       var data = response['data'];
-      print("Login response data: $data");
 
-      // Handle case where data might contain another 'data' key
       if (data is Map<String, dynamic> && data.containsKey('data')) {
         data = data['data'];
-        print("Nested data extracted: $data");
       }
 
       if (data is Map<String, dynamic>) {
         final userModel = LoginModel.fromJson(data);
-        print("Parsed LoginModel: id=${userModel.id}, token=${userModel.token}, email=${userModel.email}");
 
         if (userModel.token == null || userModel.token!.isEmpty) {
-          throw Exception("Login failed: Token is null or empty. Parsed data: $data");
+          throw Exception(
+              "Login failed: Token is null or empty. Parsed data: $data");
         }
 
         await AuthManager.setAuthToken(userModel.token!);
-        print("✅ Token stored successfully: ${userModel.token}");
         return {'user': userModel};
       } else {
         throw Exception("Data field is not a valid JSON object: $data");

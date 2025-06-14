@@ -53,7 +53,6 @@ class MatchBoxDetails extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // Match Title
           const Text(
             'Match Details',
             style: TextStyle(
@@ -64,7 +63,6 @@ class MatchBoxDetails extends StatelessWidget {
           ),
           const SizedBox(height: 12),
 
-          // Location
           Row(
             children: [
               const Icon(
@@ -106,7 +104,6 @@ class MatchBoxDetails extends StatelessWidget {
           ),
           const SizedBox(height: 8),
 
-          // Players
           Row(
             children: [
               const Icon(
@@ -126,7 +123,6 @@ class MatchBoxDetails extends StatelessWidget {
           ),
           const SizedBox(height: 8),
 
-          // Sport Type
           Row(
             children: [
               const Icon(
@@ -145,7 +141,6 @@ class MatchBoxDetails extends StatelessWidget {
             ],
           ),
 
-          // Match Description (only show if description is not empty)
           if (match.description.isNotEmpty) ...[
             const SizedBox(height: 8),
             Row(

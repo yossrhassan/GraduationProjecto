@@ -3,7 +3,6 @@ import 'package:graduation_project/core/utils/auth_manager.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
 
-// Custom exception class to handle API errors
 class ApiException implements Exception {
   final int statusCode;
   final Map<String, dynamic>? errorData;
@@ -53,9 +52,7 @@ class Api {
       Map<String, dynamic>? errorData;
       try {
         errorData = jsonDecode(response.body);
-      } catch (e) {
-        // If response body is not JSON, use null
-      }
+      } catch (e) {}
 
       throw ApiException(
         statusCode: response.statusCode,
@@ -104,9 +101,7 @@ class Api {
       Map<String, dynamic>? errorData;
       try {
         errorData = jsonDecode(response.body);
-      } catch (e) {
-        // If response body is not JSON, use null
-      }
+      } catch (e) {}
 
       throw ApiException(
         statusCode: response.statusCode,
@@ -145,9 +140,7 @@ class Api {
       Map<String, dynamic>? errorData;
       try {
         errorData = jsonDecode(response.body);
-      } catch (e) {
-        // If response body is not JSON, use null
-      }
+      } catch (e) {}
 
       throw ApiException(
         statusCode: response.statusCode,

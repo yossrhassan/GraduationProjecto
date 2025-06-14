@@ -22,10 +22,8 @@ import 'package:graduation_project/features/home/presentation/manager/friend_req
 final getIt = GetIt.instance;
 
 void setup() {
-  // Register API service
   getIt.registerSingleton<ApiService>(ApiService(Dio()));
 
-  // Register repositories
   getIt.registerSingleton<MatchesRepository>(
       MatchesRepositoryImpl(getIt.get<ApiService>()));
 
@@ -40,10 +38,8 @@ void setup() {
 
   getIt.registerSingleton<CourtsRepo>(CourtsRepoImpl(getIt.get<ApiService>()));
 
-  // Register chat repository
   getIt.registerSingleton<ChatRepo>(ChatRepoImpl());
 
-  // Register settings services
   getIt.registerSingleton<UserService>(UserService(getIt.get<ApiService>()));
   getIt.registerSingleton<SettingsRepo>(SettingsRepo(getIt.get<UserService>()));
   getIt.registerSingleton<DeleteAccountService>(
@@ -51,7 +47,6 @@ void setup() {
   getIt.registerSingleton<FriendRequestService>(
       FriendRequestService(getIt.get<ApiService>()));
 
-  // Register cubits that need to be globally accessible
   getIt.registerSingleton<MatchesCubit>(
       MatchesCubit(getIt.get<MatchesRepository>()));
   getIt.registerSingleton<FriendRequestsCubit>(

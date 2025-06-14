@@ -11,14 +11,11 @@ import 'package:graduation_project/features/player_matching/presentation/views/w
 import 'package:graduation_project/core/utils/auth_manager.dart';
 
 class MatchDetailsBody extends StatefulWidget {
-// Pass from parent if user created this match
-
   const MatchDetailsBody({
     super.key,
     this.isCreator = false,
     this.matchData,
   });
-// Pass from parent if user created this match
 
   final bool isCreator;
   final MatchModel? matchData;
@@ -28,16 +25,13 @@ class MatchDetailsBody extends StatefulWidget {
 }
 
 class _MatchDetailsBodyState extends State<MatchDetailsBody> {
-  String? userJoinedTeam; // Track which team the current user joined
-  bool isJoining = false; // Track if join request is in progress
-  Set<int> kickedPlayerIds = {}; // Track kicked players for optimistic UI
+  String? userJoinedTeam;
+  bool isJoining = false;
+  Set<int> kickedPlayerIds = {};
 
-  // Track who created the match (the captain)
-  final String captainTeam = 'A'; // Captain is always initially in team A
-  final int captainPosition =
-      0; // Position of the captain in their team (usually 0)
+  final String captainTeam = 'A';
+  final int captainPosition = 0;
 
-  // Mock data for players in each team - will be replaced with API data
   final List<String?> teamAPlayers = List.generate(10, (index) => null);
   final List<String?> teamBPlayers = List.generate(10, (index) => null);
 
@@ -45,23 +39,17 @@ class _MatchDetailsBodyState extends State<MatchDetailsBody> {
   void initState() {
     super.initState();
 
-    // If user is the match creator, automatically place them as captain
     if (widget.isCreator) {
       teamAPlayers[captainPosition] = 'current_user';
     } else {
-      // If not the creator, ensure there's a captain in team A
       teamAPlayers[captainPosition] = 'captain';
     }
-
-    // Check if user has already joined this match and retrieve team info
-    // TODO: Implement joined team tracking when AuthManager methods are available
   }
 
   @override
   void didChangeDependencies() {
     super.didChangeDependencies();
 
-    // Reset joining state when dependencies change (e.g., navigating to a different match)
     if (isJoining) {
       setState(() {
         isJoining = false;
@@ -71,7 +59,6 @@ class _MatchDetailsBodyState extends State<MatchDetailsBody> {
 
   void _handleJoinTeam(String team) {
     if (widget.matchData != null && !isJoining) {
-      // Check if user has already joined before attempting
       if (userJoinedTeam != null) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(content: Text('You have already joined this match!')),
@@ -83,7 +70,6 @@ class _MatchDetailsBodyState extends State<MatchDetailsBody> {
         isJoining = true;
       });
 
-      // Use the repository directly to avoid state conflicts
       final cubit = context.read<MatchesCubit>();
       final repository = cubit.matchesRepository;
 
@@ -99,27 +85,21 @@ class _MatchDetailsBodyState extends State<MatchDetailsBody> {
             );
           },
           (success) {
-            // Update local state immediately without backend refresh
             setState(() {
               userJoinedTeam = team;
               isJoining = false;
             });
 
-            // Create a new PlayerModel for the current user
             final currentUserId = AuthManager.userId;
             final newPlayer = PlayerModel(
               id: currentUserId ?? 0,
               userId: currentUserId ?? 0,
-              userName:
-                  'You', // Will be replaced with actual name from profile later
+              userName: 'You',
               status: 'CheckedIn',
               team: team,
               invitedAt: DateTime.now(),
-              // responseAt: DateTime.now(),
-              // checkedInAt: DateTime.now(),
             );
 
-            // Update the match data with the new player
             final updatedPlayers =
                 List<PlayerModel>.from(widget.matchData!.players ?? []);
             updatedPlayers.add(newPlayer);
@@ -144,34 +124,23 @@ class _MatchDetailsBodyState extends State<MatchDetailsBody> {
               endTime: widget.matchData!.endTime,
             );
 
-            // Emit the updated match without going through loading state
             cubit.emit(MatchDetailsLoaded(updatedMatch));
 
             ScaffoldMessenger.of(context).showSnackBar(
               SnackBar(content: Text('Successfully joined Team $team!')),
             );
 
-            // Refresh the matches lists in background to update filtering
-            print(
-                '🔍 DETAILS_TAB: Refreshing match lists after successful join');
             cubit.getAvailableMatches();
             cubit.getMyMatches();
-
-            // Just stay on the current page - the match lists will refresh automatically
-
-            print(
-                'User ${AuthManager.userId} joined team $team in match ${widget.matchData!.id}');
           },
         );
       }).catchError((error) {
-        // Handle any unexpected errors
         setState(() {
           isJoining = false;
         });
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(content: Text('Unexpected error: $error')),
         );
-        print('Unexpected error in join team: $error');
       });
     }
   }
@@ -180,11 +149,10 @@ class _MatchDetailsBodyState extends State<MatchDetailsBody> {
     if (widget.matchData != null) {
       final cubit = context.read<MatchesCubit>();
       cubit.leaveMatch(widget.matchData!.id.toString()).then((_) {
-        // Show success message and navigate back
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(content: Text('Successfully left the match')),
         );
-        Navigator.of(context).pop(); // Go back to matches list
+        Navigator.of(context).pop();
       }).catchError((error) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(content: Text('Failed to leave match: $error')),
@@ -196,7 +164,6 @@ class _MatchDetailsBodyState extends State<MatchDetailsBody> {
   Future<void> _kickPlayerOptimistic(int playerId) async {
     if (widget.matchData == null) return;
 
-    // Immediately add to kicked players set for optimistic UI
     setState(() {
       kickedPlayerIds.add(playerId);
     });
@@ -205,7 +172,6 @@ class _MatchDetailsBodyState extends State<MatchDetailsBody> {
       final cubit = context.read<MatchesCubit>();
       await cubit.kickPlayer(widget.matchData!.id.toString(), playerId);
 
-      // Success - the player stays kicked
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
@@ -221,7 +187,6 @@ class _MatchDetailsBodyState extends State<MatchDetailsBody> {
         );
       }
     } catch (e) {
-      // Error - revert the optimistic update
       if (mounted) {
         setState(() {
           kickedPlayerIds.remove(playerId);
@@ -248,16 +213,13 @@ class _MatchDetailsBodyState extends State<MatchDetailsBody> {
       final cubit = context.read<MatchesCubit>();
 
       try {
-        // Wait for the cancel operation to complete
         await cubit.cancelMatch(widget.matchData!.id.toString());
 
-        // Check if the widget is still mounted before showing snackbar
         if (mounted) {
-          // Show success message and navigate back
           ScaffoldMessenger.of(context).showSnackBar(
             const SnackBar(content: Text('Match canceled successfully')),
           );
-          Navigator.of(context).pop(); // Go back to matches list
+          Navigator.of(context).pop();
         }
       } catch (error) {
         if (mounted) {
@@ -269,7 +231,6 @@ class _MatchDetailsBodyState extends State<MatchDetailsBody> {
     }
   }
 
-  // Helper method to organize players by team
   Map<String, List<PlayerModel>> _organizePlayersByTeam(
       List<PlayerModel>? players) {
     final Map<String, List<PlayerModel>> organizedPlayers = {
@@ -290,7 +251,6 @@ class _MatchDetailsBodyState extends State<MatchDetailsBody> {
     return organizedPlayers;
   }
 
-  // Helper method to check if current user is already in a team
   String? _getCurrentUserTeam(List<PlayerModel>? players) {
     if (players == null) return null;
 
@@ -309,18 +269,15 @@ class _MatchDetailsBodyState extends State<MatchDetailsBody> {
   Widget build(BuildContext context) {
     return BlocBuilder<MatchesCubit, MatchesState>(
       builder: (context, state) {
-        print('🔄 DetailsTab build - State: ${state.runtimeType}');
+        print('DetailsTab build - State: ${state.runtimeType}');
 
-        // Prioritize state data (more up-to-date) over widget.matchData
         MatchModel? currentMatch;
 
-        // Check for updated match data in various state types
         if (state is MatchDetailsLoaded) {
           currentMatch = state.match;
           print(
               '🎯 Using MatchDetailsLoaded state data: ID=${currentMatch.id}, Players count: ${currentMatch.players?.length ?? 0}');
         } else if (state is MyMatchesLoaded && widget.matchData != null) {
-          // Find the updated match in MyMatches state
           try {
             final updatedMatch = state.matches.firstWhere(
               (match) => match.id == widget.matchData!.id,
@@ -329,14 +286,12 @@ class _MatchDetailsBodyState extends State<MatchDetailsBody> {
             print(
                 '🎯 Using MyMatchesLoaded state data: ID=${currentMatch.id}, Players count: ${currentMatch.players?.length ?? 0}');
           } catch (e) {
-            // Match not found in state, use widget data
             currentMatch = widget.matchData!;
             print(
                 '🎯 Match not found in MyMatchesLoaded, using widget data: ID=${currentMatch.id}, Players count: ${currentMatch.players?.length ?? 0}');
           }
         } else if (state is AvailableMatchesLoaded &&
             widget.matchData != null) {
-          // Find the updated match in AvailableMatches state
           try {
             final updatedMatch = state.matches.firstWhere(
               (match) => match.id == widget.matchData!.id,
@@ -345,7 +300,6 @@ class _MatchDetailsBodyState extends State<MatchDetailsBody> {
             print(
                 '🎯 Using AvailableMatchesLoaded state data: ID=${currentMatch.id}, Players count: ${currentMatch.players?.length ?? 0}');
           } catch (e) {
-            // Match not found in state, use widget data
             currentMatch = widget.matchData!;
             print(
                 '🎯 Match not found in AvailableMatchesLoaded, using widget data: ID=${currentMatch.id}, Players count: ${currentMatch.players?.length ?? 0}');
@@ -360,7 +314,6 @@ class _MatchDetailsBodyState extends State<MatchDetailsBody> {
           final organizedPlayers = _organizePlayersByTeam(currentMatch.players);
           final currentUserTeam = _getCurrentUserTeam(currentMatch.players);
 
-          // Debug organized players
           print(
               '👥 Team A players: ${organizedPlayers['A']?.map((p) => '${p.userName}(${p.userId})').join(', ')}');
           print(
@@ -368,32 +321,28 @@ class _MatchDetailsBodyState extends State<MatchDetailsBody> {
           print('👤 Current user team: $currentUserTeam');
           print('👤 Current user ID: ${AuthManager.userId}');
 
-          // Update userJoinedTeam if user is already in a team
           if (currentUserTeam != null && userJoinedTeam == null) {
             userJoinedTeam = currentUserTeam;
-            print('🔄 Updated userJoinedTeam to: $userJoinedTeam');
+            print('Updated userJoinedTeam to: $userJoinedTeam');
           }
 
-          // More comprehensive check for hiding join buttons
           final shouldHideJoinButtons = widget.isCreator ||
               userJoinedTeam != null ||
               currentUserTeam != null ||
-              isJoining; // Also hide during joining process
+              isJoining;
 
-          // Check if user has joined the match (for management interface)
-          // Show management interface for both creators and users who have joined
           final userHasJoinedTeam =
               currentUserTeam != null || userJoinedTeam != null;
           final hasUserJoined = widget.isCreator || userHasJoinedTeam;
 
-          print('🔍 DEBUGGING JOIN BUTTONS:');
+          print('DEBUGGING JOIN BUTTONS:');
           print('  - isCreator: ${widget.isCreator}');
           print('  - userJoinedTeam: $userJoinedTeam');
           print('  - currentUserTeam: $currentUserTeam');
           print('  - isJoining: $isJoining');
           print('  - shouldHideJoinButtons: $shouldHideJoinButtons');
 
-          print('🔍 DEBUGGING MANAGEMENT INTERFACE:');
+          print('DEBUGGING MANAGEMENT INTERFACE:');
           print('  - widget.isCreator: ${widget.isCreator}');
           print('  - userJoinedTeam: $userJoinedTeam');
           print('  - currentUserTeam: $currentUserTeam');
@@ -414,7 +363,6 @@ class _MatchDetailsBodyState extends State<MatchDetailsBody> {
                   child: MatchBoxDetails(match: currentMatch),
                 ),
               ),
-              // Management Interface - Only show if user has joined
               if (hasUserJoined)
                 SliverToBoxAdapter(
                   child: Padding(
@@ -423,7 +371,6 @@ class _MatchDetailsBodyState extends State<MatchDetailsBody> {
                       padding: const EdgeInsets.all(16.0),
                       child: Column(
                         children: [
-                          // Invite Friends
                           Container(
                             width: double.infinity,
                             height: 70,
@@ -466,7 +413,6 @@ class _MatchDetailsBodyState extends State<MatchDetailsBody> {
                             ),
                           ),
                           const SizedBox(height: 8),
-                          // Leave/Cancel Match
                           Container(
                             width: double.infinity,
                             height: 70,
@@ -544,10 +490,8 @@ class _MatchDetailsBodyState extends State<MatchDetailsBody> {
                                           onPressed: () {
                                             Navigator.pop(context);
                                             if (isCreator) {
-                                              // Call cancel match functionality
                                               _cancelMatch();
                                             } else {
-                                              // Call leave match functionality
                                               _leaveMatch();
                                             }
                                           },
@@ -595,7 +539,6 @@ class _MatchDetailsBodyState extends State<MatchDetailsBody> {
                   child: Row(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      // Team A
                       Expanded(
                         child: Column(
                           children: [
@@ -646,13 +589,11 @@ class _MatchDetailsBodyState extends State<MatchDetailsBody> {
                                 ),
                               ),
                             const SizedBox(height: 4),
-                            // Team A players
                             _buildTeamPlayers('A', organizedPlayers['A']!,
                                 currentMatch.teamSize),
                           ],
                         ),
                       ),
-                      // Team B
                       Expanded(
                         child: Column(
                           children: [
@@ -703,7 +644,6 @@ class _MatchDetailsBodyState extends State<MatchDetailsBody> {
                                 ),
                               ),
                             const SizedBox(height: 4),
-                            // Team B players
                             _buildTeamPlayers('B', organizedPlayers['B']!,
                                 currentMatch.teamSize),
                           ],
@@ -738,13 +678,10 @@ class _MatchDetailsBodyState extends State<MatchDetailsBody> {
         bool isCurrentUser = false;
         String? playerName;
 
-        // Get all players for this team and remove duplicates based on userId
-        // Also filter out kicked players for optimistic UI
         final teamPlayers = players
             .where((p) => p.team == team && !kickedPlayerIds.contains(p.userId))
             .toList();
 
-        // Remove duplicate players based on userId
         final uniqueTeamPlayers = <PlayerModel>[];
         final seenUserIds = <int>{};
 
@@ -755,11 +692,9 @@ class _MatchDetailsBodyState extends State<MatchDetailsBody> {
           }
         }
 
-        // Special handling for Team A position 0 (Captain)
         if (team == 'A' && index == 0) {
           isCaptain = true;
 
-          // Find the match creator (captain) in the unique players list
           final captainIndex = uniqueTeamPlayers.indexWhere(
             (p) => p.userId == widget.matchData?.creatorUserId,
           );
@@ -771,7 +706,6 @@ class _MatchDetailsBodyState extends State<MatchDetailsBody> {
                 ? 'You'
                 : (player.userName.isNotEmpty ? player.userName : 'Captain');
           } else {
-            // Creator not found in players list, create a placeholder
             final creatorName = widget.matchData?.creatorUserName ?? 'Captain';
             player = PlayerModel(
               id: 0,
@@ -785,7 +719,6 @@ class _MatchDetailsBodyState extends State<MatchDetailsBody> {
             playerName = isCurrentUser ? 'You' : creatorName;
           }
         } else {
-          // For other positions, get non-captain players in order
           final nonCaptainPlayers = uniqueTeamPlayers
               .where((p) => p.userId != widget.matchData?.creatorUserId)
               .toList();
@@ -799,16 +732,13 @@ class _MatchDetailsBodyState extends State<MatchDetailsBody> {
                 ? 'You'
                 : (player.userName.isNotEmpty ? player.userName : 'Player');
           } else {
-            // Check if the current user should be in this position (just joined but not in players list yet)
             final userJoinedThisTeam = userJoinedTeam == team;
 
             if (userJoinedThisTeam &&
                 adjustedIndex == nonCaptainPlayers.length &&
                 !seenUserIds.contains(currentUserId)) {
-              // This is likely the current user who just joined
               isCurrentUser = true;
               playerName = 'You';
-              // Create a temporary player model for display
               player = PlayerModel(
                 id: 0,
                 userId: currentUserId ?? 0,
@@ -821,15 +751,14 @@ class _MatchDetailsBodyState extends State<MatchDetailsBody> {
           }
         }
 
-        // Debug player information
         print('🎮 Team $team Position $index:');
         if (player != null) {
           print('  - Player: ${player.userName} (ID: ${player.userId})');
-          print('  - isCurrentUser: $isCurrentUser');
-          print('  - isCaptain: $isCaptain');
-          print('  - playerName: $playerName');
+          print('  - Status: ${player.status}');
+          print('  - Is Captain: $isCaptain');
+          print('  - Is Current User: $isCurrentUser');
         } else {
-          print('  - Empty slot');
+          print('  - Empty position');
         }
 
         return Padding(

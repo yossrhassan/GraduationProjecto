@@ -59,7 +59,6 @@ class _PlayerProfileBottomSheetState extends State<PlayerProfileBottomSheet> {
   Future<void> _kickPlayer() async {
     if (widget.onKickPlayer == null) return;
 
-    // Show confirmation dialog
     final shouldKick = await showDialog<bool>(
       context: context,
       builder: (context) => AlertDialog(
@@ -92,10 +91,8 @@ class _PlayerProfileBottomSheetState extends State<PlayerProfileBottomSheet> {
 
     if (shouldKick != true) return;
 
-    // Close the dialog immediately and let the parent handle the kick
     Navigator.of(context).pop();
 
-    // Call the parent's kick method which handles optimistic UI
     widget.onKickPlayer!(widget.player.userId);
   }
 
@@ -114,7 +111,6 @@ class _PlayerProfileBottomSheetState extends State<PlayerProfileBottomSheet> {
         mainAxisSize: MainAxisSize.min,
         crossAxisAlignment: CrossAxisAlignment.center,
         children: [
-          // Handle indicator
           Container(
             width: 40,
             height: 4,
@@ -124,8 +120,6 @@ class _PlayerProfileBottomSheetState extends State<PlayerProfileBottomSheet> {
             ),
           ),
           const SizedBox(height: 24),
-
-          // Player Avatar
           Stack(
             children: [
               Container(
@@ -162,8 +156,6 @@ class _PlayerProfileBottomSheetState extends State<PlayerProfileBottomSheet> {
             ],
           ),
           const SizedBox(height: 16),
-
-          // Player Name
           Text(
             widget.player.userName.isNotEmpty
                 ? widget.player.userName
@@ -175,8 +167,6 @@ class _PlayerProfileBottomSheetState extends State<PlayerProfileBottomSheet> {
             ),
           ),
           const SizedBox(height: 8),
-
-          // Captain badge
           if (widget.isCaptain)
             Container(
               padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
@@ -193,10 +183,7 @@ class _PlayerProfileBottomSheetState extends State<PlayerProfileBottomSheet> {
                 ),
               ),
             ),
-
           const SizedBox(height: 24),
-
-          // Player Details
           Container(
             width: double.infinity,
             padding: const EdgeInsets.all(16),
@@ -213,10 +200,7 @@ class _PlayerProfileBottomSheetState extends State<PlayerProfileBottomSheet> {
               ],
             ),
           ),
-
           const SizedBox(height: 24),
-
-          // Action Buttons
           SizedBox(
             width: double.infinity,
             child: OutlinedButton.icon(
@@ -242,8 +226,6 @@ class _PlayerProfileBottomSheetState extends State<PlayerProfileBottomSheet> {
               ),
             ),
           ),
-
-          // Kick Player Button (only for match creators)
           if (widget.isMatchCreator &&
               widget.onKickPlayer != null &&
               !widget.isCaptain)
@@ -253,12 +235,14 @@ class _PlayerProfileBottomSheetState extends State<PlayerProfileBottomSheet> {
                 SizedBox(
                   width: double.infinity,
                   child: ElevatedButton.icon(
-                    onPressed: _kickPlayer,
+                    onPressed: isKicking ? null : _kickPlayer,
                     icon: const Icon(Icons.person_remove, color: Colors.white),
-                    label: const Text('Kick Player'),
+                    label: Text(
+                      isKicking ? 'Kicking...' : 'Kick Player',
+                      style: const TextStyle(color: Colors.white),
+                    ),
                     style: ElevatedButton.styleFrom(
                       backgroundColor: Colors.red,
-                      foregroundColor: Colors.white,
                       padding: const EdgeInsets.symmetric(vertical: 12),
                       shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(8),
@@ -268,20 +252,6 @@ class _PlayerProfileBottomSheetState extends State<PlayerProfileBottomSheet> {
                 ),
               ],
             ),
-
-          const SizedBox(height: 12),
-
-          // Close button
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: const Text(
-              'Close',
-              style: TextStyle(color: Colors.white70),
-            ),
-          ),
-
-          // Add some bottom padding for safe area
-          SizedBox(height: MediaQuery.of(context).padding.bottom),
         ],
       ),
     );
@@ -289,26 +259,21 @@ class _PlayerProfileBottomSheetState extends State<PlayerProfileBottomSheet> {
 
   Widget _buildDetailRow(String label, String value) {
     return Row(
-      crossAxisAlignment: CrossAxisAlignment.start,
+      mainAxisAlignment: MainAxisAlignment.spaceBetween,
       children: [
-        SizedBox(
-          width: 80,
-          child: Text(
-            label,
-            style: const TextStyle(
-              color: Colors.white70,
-              fontSize: 14,
-            ),
+        Text(
+          label,
+          style: const TextStyle(
+            color: Colors.white70,
+            fontSize: 16,
           ),
         ),
-        Expanded(
-          child: Text(
-            value,
-            style: const TextStyle(
-              color: Colors.white,
-              fontSize: 14,
-              fontWeight: FontWeight.w500,
-            ),
+        Text(
+          value,
+          style: const TextStyle(
+            color: Colors.white,
+            fontSize: 16,
+            fontWeight: FontWeight.bold,
           ),
         ),
       ],
@@ -316,17 +281,6 @@ class _PlayerProfileBottomSheetState extends State<PlayerProfileBottomSheet> {
   }
 
   String _formatDate(DateTime date) {
-    final now = DateTime.now();
-    final difference = now.difference(date);
-
-    if (difference.inDays > 0) {
-      return '${difference.inDays} day(s) ago';
-    } else if (difference.inHours > 0) {
-      return '${difference.inHours} hour(s) ago';
-    } else if (difference.inMinutes > 0) {
-      return '${difference.inMinutes} minute(s) ago';
-    } else {
-      return 'Just now';
-    }
+    return '${date.day}/${date.month}/${date.year}';
   }
 }

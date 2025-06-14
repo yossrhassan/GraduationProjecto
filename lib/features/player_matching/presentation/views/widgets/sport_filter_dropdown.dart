@@ -52,7 +52,6 @@ class SportFilterDropdown extends StatelessWidget {
                 style: const TextStyle(color: Colors.white),
                 onChanged: onSportChanged,
                 items: [
-                  // Add "All Sports" option
                   const DropdownMenuItem<SportModel?>(
                     value: null,
                     child: Text(
@@ -60,7 +59,6 @@ class SportFilterDropdown extends StatelessWidget {
                       style: TextStyle(color: Colors.white),
                     ),
                   ),
-                  // Add individual sports
                   ...sports.map((sport) => DropdownMenuItem<SportModel?>(
                         value: sport,
                         child: Text(

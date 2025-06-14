@@ -14,32 +14,23 @@ class BookingRepoImpl implements BookingRepo {
   @override
   Future<Either<Failure, bool>> confirmBookingApi(BookingModel booking) async {
     try {
-      // Debug token before request
       print('Token before confirmation request: ${AuthManager.authToken}');
 
-      // Make the API request to confirm booking
       final response = await apiService.post(
-        endPoint: 'Booking', // Adjust the endpoint as needed
-        data: booking.toJson(), // Convert the booking model to JSON
+        endPoint: 'Booking',
+        data: booking.toJson(),
       );
 
-      // Debug response
       print('Booking confirmation response: $response');
 
-      // Parse response according to your API's structure
       if (response != null) {
-        // Check if response is a String (like "Booking successful!")
         if (response is String &&
             response.toLowerCase().contains('successful')) {
-          return right(true); // Booking was successful
-        }
-        // Check if response is a Map with status or success keys
-        else if (response is Map &&
+          return right(true);
+        } else if (response is Map &&
             (response['status'] == 'success' || response['success'] == true)) {
-          return right(true); // Booking was successful
-        }
-        // If none of the success conditions matched
-        else {
+          return right(true);
+        } else {
           String errorMessage = 'Booking failed';
           if (response is Map && response['message'] != null) {
             errorMessage = response['message'];
@@ -51,7 +42,6 @@ class BookingRepoImpl implements BookingRepo {
       }
     } catch (e) {
       if (e is DioError) {
-        // Check if it's an auth error
         if (e.response?.statusCode == 401) {
           return left(
               ServerFailure('Authentication required. Please log in again.'));
@@ -63,21 +53,16 @@ class BookingRepoImpl implements BookingRepo {
     }
   }
 
-// In booking_repo_impl.dart, update the getBookings method
-
   @override
   Future<Either<Failure, Map<String, dynamic>>> getBookings(
       {int? courtId}) async {
     try {
-      // Use current date in ISO format (YYYY-MM-DD)
       final today = DateTime.now();
       final formattedDate =
           "${today.year}-${today.month.toString().padLeft(2, '0')}-${today.day.toString().padLeft(2, '0')}";
 
-      // Use facilityId if provided, otherwise default to 1
       final actualCourtId = courtId ?? 1;
 
-      // Log the request being made
       print(
           'Requesting bookings for facility $actualCourtId on date $formattedDate');
 
@@ -90,7 +75,6 @@ class BookingRepoImpl implements BookingRepo {
         if (response is Map<String, dynamic>) {
           return right(response);
         } else if (response is List) {
-          // Handle case where response is a list by wrapping it
           return right({'bookings': response});
         } else {
           print('Unexpected response type: ${response.runtimeType}');

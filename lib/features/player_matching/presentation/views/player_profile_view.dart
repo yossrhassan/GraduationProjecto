@@ -85,21 +85,17 @@ class _PlayerProfileViewState extends State<PlayerProfileView> {
       );
 
       if (mounted) {
-        // Determine the type of message and show appropriate snackbar
         Color snackBarColor;
         IconData snackBarIcon;
 
         if (result.contains('A friend request already sent to this user')) {
-          // Info message - friend request already exists
           snackBarColor = Colors.red;
           snackBarIcon = Icons.error_outline;
         } else if (result.contains('sent successfully') ||
             result.contains('Friend request sent')) {
-          // Success message
           snackBarColor = Colors.green;
           snackBarIcon = Icons.check_circle_outline;
         } else {
-          // Error or other messages
           snackBarColor = Colors.red;
           snackBarIcon = Icons.error_outline;
         }
@@ -157,9 +153,7 @@ class _PlayerProfileViewState extends State<PlayerProfileView> {
         actions: [
           IconButton(
             icon: const Icon(Icons.more_vert, color: Colors.white),
-            onPressed: () {
-              // Add more options functionality later
-            },
+            onPressed: () {},
           ),
         ],
       ),
@@ -217,7 +211,6 @@ class _PlayerProfileViewState extends State<PlayerProfileView> {
 
                   const SizedBox(height: 30),
 
-                  // Player Name
                   Text(
                     widget.player.userName.isNotEmpty
                         ? widget.player.userName
@@ -231,7 +224,6 @@ class _PlayerProfileViewState extends State<PlayerProfileView> {
 
                   const SizedBox(height: 8),
 
-                  // Captain badge
                   if (widget.isCaptain)
                     Container(
                       padding: const EdgeInsets.symmetric(
@@ -253,7 +245,6 @@ class _PlayerProfileViewState extends State<PlayerProfileView> {
 
                   const SizedBox(height: 20),
 
-                  // Phone Number (if available)
                   if (userDetails?.phoneNumber?.isNotEmpty == true)
                     Container(
                       padding: const EdgeInsets.symmetric(
@@ -284,7 +275,6 @@ class _PlayerProfileViewState extends State<PlayerProfileView> {
 
                   const Spacer(),
 
-                  // Add as Friend Button
                   Padding(
                     padding: const EdgeInsets.symmetric(horizontal: 40),
                     child: SizedBox(

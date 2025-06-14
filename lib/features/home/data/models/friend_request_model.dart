@@ -6,7 +6,7 @@ class FriendRequestModel {
   final String receiverName;
   final String? senderEmail;
   final String? receiverEmail;
-  final String status; // pending, accepted, rejected
+  final String status;
   final DateTime createdAt;
   final DateTime? updatedAt;
 

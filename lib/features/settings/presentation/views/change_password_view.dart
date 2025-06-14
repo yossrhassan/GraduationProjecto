@@ -13,7 +13,6 @@ class _ChangePasswordViewState extends State<ChangePasswordView> {
       TextEditingController();
   bool _isLoading = false;
 
-  // Password validation flags
   bool get hasMinLength => newPasswordController.text.length >= 8;
   bool get hasNumber => RegExp(r'[0-9]').hasMatch(newPasswordController.text);
   bool get hasSpecial =>
@@ -29,7 +28,7 @@ class _ChangePasswordViewState extends State<ChangePasswordView> {
   void _updatePassword() async {
     // TODO: Implement password update logic
     setState(() => _isLoading = true);
-    await Future.delayed(const Duration(seconds: 1)); // Simulate network
+    await Future.delayed(const Duration(seconds: 1));
     setState(() => _isLoading = false);
     ScaffoldMessenger.of(context).showSnackBar(
       const SnackBar(content: Text('Password updated!')),

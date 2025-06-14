@@ -18,13 +18,11 @@ class UserService {
       print('✅ UserService: Raw API response: $response');
       print('✅ UserService: Response type: ${response.runtimeType}');
 
-      // Extract the 'data' field from the response
       Map<String, dynamic> userData;
       if (response is Map<String, dynamic> && response.containsKey('data')) {
         userData = response['data'] as Map<String, dynamic>;
         print('✅ UserService: Extracted data field: $userData');
       } else {
-        // Fallback if response doesn't have nested structure
         userData = response as Map<String, dynamic>;
         print('✅ UserService: Using response directly: $userData');
       }

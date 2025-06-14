@@ -159,14 +159,13 @@ class _DeleteAccountViewState extends State<DeleteAccountView> {
                 if (confirmed == true && context.mounted) {
                   setState(() => _isLoading = true);
                   try {
-                    final deleteService = getIt<
-                        DeleteAccountService>(); // ✅ use registered service
+                    final deleteService = getIt<DeleteAccountService>();
                     await deleteService.deleteAccount();
 
                     await AuthManager.clearAuthToken();
                     await AuthManager.clearUserId();
 
-                    GoRouter.of(context).go('/login'); // 🔁 Clear stack
+                    GoRouter.of(context).go('/login');
                   } catch (e) {
                     ScaffoldMessenger.of(context).showSnackBar(
                       SnackBar(content: Text('Failed to delete account: $e')),

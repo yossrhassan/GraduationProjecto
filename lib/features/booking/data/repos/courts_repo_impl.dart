@@ -20,7 +20,7 @@ class CourtsRepoImpl implements CourtsRepo {
       if (sportId != null) {
         endpoint = '$endpoint&SportId=$sportId';
       }
-      print('🔍 COURTS: Fetching courts with endpoint: $endpoint');
+      print(' COURTS: Fetching courts with endpoint: $endpoint');
       var data = await apiService.get(endPoint: endpoint);
 
       if (data is List) {

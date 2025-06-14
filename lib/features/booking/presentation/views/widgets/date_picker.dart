@@ -12,18 +12,16 @@ class DatePickerWidget extends StatefulWidget {
 }
 
 class _DatePickerWidgetState extends State<DatePickerWidget> {
-  // Don't initialize with DateTime.now() - instead use the date from the Cubit state
   DateTime? _selectedValue;
 
   @override
   void initState() {
     super.initState();
-    // Get the current date from the Cubit state, if available
     final state = context.read<BookingCubit>().state;
     if (state is BookingSelection) {
       _selectedValue = state.date;
     } else {
-      _selectedValue = DateTime.now(); // Fallback to today
+      _selectedValue = DateTime.now();
     }
   }
 
@@ -31,7 +29,6 @@ class _DatePickerWidgetState extends State<DatePickerWidget> {
   Widget build(BuildContext context) {
     return BlocConsumer<BookingCubit, BookingState>(
       listener: (context, state) {
-        // Update _selectedValue when the state changes
         if (state is BookingSelection) {
           setState(() {
             _selectedValue = state.date;
@@ -39,7 +36,6 @@ class _DatePickerWidgetState extends State<DatePickerWidget> {
         }
       },
       builder: (context, state) {
-        // Use date from state if available, otherwise keep current selection
         DateTime currentDate = _selectedValue ?? DateTime.now();
         if (state is BookingSelection) {
           currentDate = state.date;
@@ -60,7 +56,7 @@ class _DatePickerWidgetState extends State<DatePickerWidget> {
                 child: DatePicker(
                   DateTime.now(),
                   daysCount: 7,
-                  initialSelectedDate: currentDate,  // Always use the current selection
+                  initialSelectedDate: currentDate,
                   selectionColor: kPrimaryColor,
                   selectedTextColor: Colors.white,
                   dayTextStyle: const TextStyle(

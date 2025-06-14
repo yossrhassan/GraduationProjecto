@@ -19,10 +19,9 @@ class FacilitiesViewBody extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    // Trigger facilities and cities fetch when widget builds
     WidgetsBinding.instance.addPostFrameCallback((_) {
       final cubit = context.read<FacilitiesCubit>();
-      cubit.fetchCities(); // Fetch cities first
+      cubit.fetchCities();
       if (sportId != null) {
         cubit.fetchFacilities(sportId: sportId);
       } else {

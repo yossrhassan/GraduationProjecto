@@ -1,4 +1,3 @@
-// player_matching/data/models/player_model.dart
 class PlayerModel {
   final int id;
   final int userId;
@@ -6,8 +5,6 @@ class PlayerModel {
   final String status;
   final String team;
   final DateTime invitedAt;
-  // final DateTime responseAt;
-  // final DateTime checkedInAt;
 
   PlayerModel({
     required this.id,
@@ -16,8 +13,6 @@ class PlayerModel {
     required this.status,
     required this.team,
     required this.invitedAt,
-    // required this.responseAt,
-    // required this.checkedInAt,
   });
 
   factory PlayerModel.fromJson(Map<String, dynamic> json) {
@@ -30,8 +25,6 @@ class PlayerModel {
       invitedAt: json['invitedAt'] != null
           ? DateTime.parse(json['invitedAt'])
           : DateTime.now(),
-      // responseAt: DateTime.parse(json['responseAt']),
-      // checkedInAt: DateTime.parse(json['checkedInAt']),
     );
   }
 
@@ -43,8 +36,6 @@ class PlayerModel {
       'status': status,
       'team': team,
       'invitedAt': invitedAt.toIso8601String(),
-      // 'responseAt': responseAt.toIso8601String(),
-      // 'checkedInAt': checkedInAt.toIso8601String(),
     };
   }
 }

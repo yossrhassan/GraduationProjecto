@@ -398,7 +398,6 @@ class _NotificationsViewState extends State<NotificationsView>
   }
 
   Widget _buildAcceptedRequestCard(FriendRequestModel request) {
-    // Determine which user is the friend (not the current user)
     final currentUserId = AuthManager.userId;
     final friendName = currentUserId == request.senderId
         ? request.receiverName

@@ -43,9 +43,7 @@ class _HomeViewState extends State<HomeView> with RouteAware {
   void didChangeDependencies() {
     super.didChangeDependencies();
     final modalRoute = ModalRoute.of(context);
-    if (modalRoute is PageRoute) {
-      // You can register for route changes here if needed
-    }
+    if (modalRoute is PageRoute) {}
   }
 
   @override
@@ -53,19 +51,16 @@ class _HomeViewState extends State<HomeView> with RouteAware {
     super.dispose();
   }
 
-  // This method will be called when returning from friends screen
   void _refreshWhenReturning() {
     _loadFriendRequests();
     _loadInvitations();
   }
 
   Future<void> _loadInvitations() async {
-    // Load invitations when home view opens
     matchesCubit.getMatchInvitations();
   }
 
   Future<void> _loadFriendRequests() async {
-    // Load friend requests when home view opens
     friendRequestsCubit.loadReceivedFriendRequests();
   }
 
@@ -96,11 +91,9 @@ class _HomeViewState extends State<HomeView> with RouteAware {
 
   String? _buildImageUrl(String? imageUrl) {
     if (imageUrl == null || imageUrl.isEmpty) {
-      // Return null if no imageUrl provided - will show blank placeholder
       return null;
     }
 
-    // Build full URL with base server URL for API images
     return 'http://10.0.2.2:5000/$imageUrl';
   }
 
@@ -123,7 +116,6 @@ class _HomeViewState extends State<HomeView> with RouteAware {
                   fontWeight: FontWeight.bold,
                   color: kPrimaryColor)),
           actions: [
-            // Match Invitations Icon
             BlocBuilder<MatchesCubit, MatchesState>(
               builder: (context, state) {
                 int invitationCount = 0;
@@ -174,7 +166,6 @@ class _HomeViewState extends State<HomeView> with RouteAware {
                 );
               },
             ),
-            // Friends Icon with Badge
             BlocBuilder<FriendRequestsCubit, FriendRequestsState>(
               builder: (context, state) {
                 int requestCount = 0;
@@ -189,7 +180,7 @@ class _HomeViewState extends State<HomeView> with RouteAware {
                       onPressed: () async {
                         await GoRouter.of(context)
                             .push(AppRouter.kNotificationsView);
-                        // Refresh friend requests when returning from friends screen
+
                         _refreshWhenReturning();
                       },
                     ),
@@ -237,7 +228,6 @@ class _HomeViewState extends State<HomeView> with RouteAware {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 const SizedBox(height: 20),
-                // Sports Section Header
                 const Text(
                   'Browse Sports',
                   style: TextStyle(
@@ -247,7 +237,6 @@ class _HomeViewState extends State<HomeView> with RouteAware {
                   ),
                 ),
                 const SizedBox(height: 16),
-                // Sports List - Expanded to fill remaining space
                 Expanded(
                   child: isLoadingSports
                       ? const Center(

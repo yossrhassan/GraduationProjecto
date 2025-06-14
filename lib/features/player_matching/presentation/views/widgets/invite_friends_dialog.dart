@@ -25,8 +25,7 @@ class InviteFriendsDialog extends StatefulWidget {
 class _InviteFriendsDialogState extends State<InviteFriendsDialog> {
   List<FriendRequestModel> friends = [];
   bool isLoading = true;
-  Set<int> invitingFriends = {}; // Track which friends are being invited
-
+  Set<int> invitingFriends = {};
   @override
   void initState() {
     super.initState();
@@ -55,7 +54,6 @@ class _InviteFriendsDialogState extends State<InviteFriendsDialog> {
     final currentUserId = AuthManager.userId;
     if (currentUserId == null) return;
 
-    // Determine the friend's user ID (the one that's not the current user)
     final friendUserId =
         friend.senderId == currentUserId ? friend.receiverId : friend.senderId;
 
@@ -208,7 +206,6 @@ class _InviteFriendsDialogState extends State<InviteFriendsDialog> {
                             final friend = friends[index];
                             final currentUserId = AuthManager.userId;
 
-                            // Determine friend's name and ID
                             final friendName = friend.senderId == currentUserId
                                 ? friend.receiverName
                                 : friend.senderName;

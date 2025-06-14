@@ -9,7 +9,7 @@ class DeleteAccountService {
     try {
       await _apiService.post(
         endPoint: 'account/delete',
-        data: {}, // أو null حسب ما يتطلب الـ API
+        data: {},
       );
       print('✅ Account deletion successful.');
     } catch (e) {

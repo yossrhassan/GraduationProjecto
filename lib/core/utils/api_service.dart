@@ -14,30 +14,24 @@ class ApiService {
       receiveTimeout: const Duration(seconds: 60),
     );
 
-    // Add interceptor to include token in requests
     _dio.interceptors.add(
       InterceptorsWrapper(
         onRequest: (options, handler) {
-          // Always get latest token from AuthManager
           final currentToken = AuthManager.authToken;
 
-          // Add auth token if available
           if (currentToken != null && currentToken.isNotEmpty) {
             options.headers['Authorization'] = 'Bearer $currentToken';
             print(
-                '🔍 API: Adding token to request ${options.path}: ${currentToken.substring(0, 20)}...');
+                ' API: Adding token to request ${options.path}: ${currentToken.substring(0, 20)}...');
           } else {
             print(
-                '⚠️ API: No auth token available for request to ${options.path}');
+                ' API: No auth token available for request to ${options.path}');
           }
           return handler.next(options);
         },
       ),
     );
   }
-
-  // No need for static token methods in ApiService
-  // They're now handled exclusively by AuthManager
 
   Future<dynamic> get({required String endPoint}) async {
     try {
@@ -69,8 +63,7 @@ class ApiService {
         print('Response body: ${e.response?.data}');
         _handleAuthError(e);
 
-        // Preserve the original DioException so repositories can handle specific cases
-        rethrow; // This preserves the original DioException
+        rethrow;
       } else {
         print('Unexpected error during POST request: $e');
         throw Exception('Unexpected error: $e');
@@ -106,7 +99,6 @@ class ApiService {
 
   void _handleAuthError(dynamic error) {
     if (error is DioError && error.response?.statusCode == 401) {
-      // Clear token on auth failures to force re-login
       AuthManager.clearAuthToken();
     }
   }

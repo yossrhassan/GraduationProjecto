@@ -38,19 +38,16 @@ class ServerFailure extends Failure {
 
   factory ServerFailure.fromResponse(int statusCode, dynamic response) {
     if (statusCode == 400 || statusCode == 401 || statusCode == 403) {
-      // Handle null or unexpected response structures
       if (response == null) {
         return ServerFailure('Authentication error');
       }
 
       try {
-        // Try to safely access error message
         if (response is Map && response['error'] is Map) {
           return ServerFailure(response['error']['message']?.toString() ??
               'Authentication error');
         } else if (response is Map &&
             (response['message'] != null || response['messege'] != null)) {
-          // Handle both 'message' and 'messege' (API typo) fields
           String errorMessage = response['message']?.toString() ??
               response['messege']?.toString() ??
               'Request failed';
